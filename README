@@ -1,0 +1,6 @@
+Per avviare il progetto posizionati nella cartella eseguibili, apri 2 terminali e scrivi:
+make
+//primo terminale
+make run-server
+//secondo terminale
+make test-client
