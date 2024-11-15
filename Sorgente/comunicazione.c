@@ -24,7 +24,7 @@ typedef struct {
     unsigned int length; 
     char* data; 
 } message;
-
+ 
 
 //Funzione per inviare un messaggio
 void send_message(int client_socket, char type, char* data) {
