@@ -8,18 +8,28 @@ CFLAGS = -Wall -pedantic -pthread -g -O0
 HEADER = ../Header/
 SORGENTE = ../Sorgente/
 
+ 
 # Eseguibili
 SERVER = server
 CLIENT = client
+COMUNICAZIONE = comunicazione
+TRIE = Trie
+#Header
+HDRS1 = $(HEADER)$(COMUNICAZIONE).h
+HDRS2 = $(HEADER)$(TRIE).h
 
 # File Oggetto
 OBJS = $(SERVER).o
 OBJC = $(CLIENT).o
+OBJHP = $(COMUNICAZIONE).o 
+OBJHT = $(TRIE).o 
 OBJECT_FILES = $(OBJC) $(OBJS)
 
 # Sorgenti
 SRCS = $(SORGENTE)$(SERVER).c
 SRCC = $(SORGENTE)$(CLIENT).c
+SRCP = $(SORGENTE)$(COMUNICAZIONE).c
+SRCT = $(SORGENTE)$(TRIE).c
 
 # Input
 PORT = 20000
@@ -45,14 +55,23 @@ $(CLIENT): $(OBJC)
 	@echo Compilazione del Client
 	@$(CC) $(CFLAGS) $(OBJC) -o $(CLIENT)
 
+
 # Dipendenze File Oggetto
 # Server.o
-$(OBJS): $(SRCS)
-	@$(CC) $(CFLAGS) -c $(SRCS)
+$(OBJS): $(SRCS) $(HDRS1)
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCP) $(SRCT) $(HDRS1) $(HDRS2)
 
 # Client.o
 $(OBJC): $(SRCC)
-	@$(CC) $(CFLAGS) -c $(SRCC)
+	@$(CC) $(CFLAGS) -c $(SRCC) $(SRCP) $(HDRS1)
+
+#Comunicazione.o
+$(OBJHP): $(SRCP)
+	@$(CC) $(CFLAGS) -c $(SRCP) $(HDRS1)
+
+#Trie.o
+$(OBJHT): $(SRCT)
+	@$(CC) $(CFLAGS) -c $(SRCT) $(HDRS2)
 
 obj_clean:
 	@rm -f $(OBJECT_FILES)

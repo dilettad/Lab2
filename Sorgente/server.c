@@ -7,6 +7,10 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+#include "../Header/macro.h"
+#include "../Header/comunicazione.h"
+#include "../Header/Trie.h"
+
 
 /*
 int main(int argc, char* argv[]){

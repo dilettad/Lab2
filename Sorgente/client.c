@@ -4,7 +4,11 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <errno.h>
+//librerie personali
 #include "../Header/macro.h"
+#include "../Header/comunicazione.h"
+
+//define di progetto
 #define HOST "127.0.0.1"
 #define PORT 8080
 #define BUFFER_SIZE 1024 //Dimensione del buffer
