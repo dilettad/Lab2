@@ -13,9 +13,6 @@
 #define writef(retvalue,message)\
     SYSC(retvalue,write(STDOUT_FILENO,message,strlen(message)),"nella writef");
 
- enum boolean{
-    true,
-    false
-};
+
 /*NON SERVE A NIENE MA ALMENO IL PEDANTIC DEL MAKEFILE NON DA WARNING*/
 void fun();
