@@ -4,3 +4,5 @@ make
 make run-server
 //secondo terminale
 make test-client
+
+//PER LA RICERCA SULLA MATRICE AGGIUNGERE UN'ARRAY CHE SE SCORSO MI DIA LE POSIZIONI ADIACENTI IN SENSO ORARIO 
