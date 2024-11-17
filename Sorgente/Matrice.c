@@ -49,39 +49,153 @@ void stampaMatrice(cella** matrice)
 }
 int trovaParolaAux(cella*** matrice, int i, int j, char* parola, int index) 
 {
-    int cose[] = {0,1,0,-1,1,0,-1,0,1,1,1,-1,-1,1,-1,-1};
-    if (index >= strlen(parola)) 
+    //descrizione formali funzione
+    //matrice-> la matrice di riferimento
+    //i,j -> cella dell'ultima lettera convalidata
+    //parola -> la parola da cercare
+    //index -> riferimento alla prossima lettera da cercare nella matrice
+
+    //int cose[] = {0,1,0,-1,1,0,-1,0,1,1,1,-1,-1,1,-1,-1};
+    int x = j,y = i;
+    //caso base
+    if (index > strlen(parola)) 
     {
         return 1;
     }
-    
-    //IL PROBLEMA STA NEL CICLO FOR CHE NON TERMINA PERCHè LA FUNZIONE ENTRA IN RICORSIONE MA NON ABBASTANZA PER DUMPARE IL CORE
-    for (size_t c = 0; c < 16; c=+2)
-    {
-        
-        //printf("qui\n");
-        int x = i + cose[c];
-        int y = j + cose[c+1];
-        //printf("i:%d j:%d c:%d,qui\n",i,j,c);
-        //IL PROBLEMA STA NEL CICLO FOR CHE NON TERMINA
-        if (x < MATRIX_SIZE && y < MATRIX_SIZE && x > 0 && y > 0)
-        {
-            //printf("index: %d, x: %d, y: %d qui\n",index,x,y);
-            //printf("%c\n",(*matrice[x][y]).value);
-            if ((*matrice[x][y]).value == parola[index])
-            {
-                //printf("qui\n");
-                //printf("%c\n",(*matrice[x][y]).value);
-                (*matrice[x][y]).usato = true;
-                if (trovaParolaAux(matrice, x, y, parola, index+1))
-                    return 1;
-                (*matrice[x][y]).usato = false;
-                return 0;
-            }
+    //clausola ricorsiva
+    //provo la posizione centrale a sx
+    x = j-1;
+    if(trovaPos(x,i,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[i][x]->usato = true;
+        if(!trovaParolaAux(matrice,i,x,parola,index)){
+            matrice[i][x]->usato = true;
+            index++;
         }
     }
+    
+    //provo la posizione centrale a dx
+    x = j+1;
+    if(trovaPos(x,i,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[i][x]->usato = true;
+        if(!trovaParolaAux(matrice,i,x,parola,index)){
+            matrice[i][x]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sopra sx
+    y = i-1;x = j-1;
+    if(trovaPos(x,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][x]->usato = true;
+        if(!trovaParolaAux(matrice,y,x,parola,index)){
+            matrice[y][x]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sopra cx
+    y = i-1;
+    if(trovaPos(j,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][j]->usato = true;
+        if(!trovaParolaAux(matrice,y,j,parola,index)){
+            matrice[y][j]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sopra dx
+    y = i+1;x = j+1;
+    if(trovaPos(x,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][x]->usato = true;
+        if(!trovaParolaAux(matrice,y,x,parola,index)){
+            matrice[y][x]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sotto sx
+    y = i+1;x = j-1;
+    if(trovaPos(x,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][x]->usato = true;
+        if(!trovaParolaAux(matrice,y,x,parola,index)){
+            matrice[y][x]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sotto cx
+    y = i+1;
+    if(trovaPos(j,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][j]->usato = true;
+        if(!trovaParolaAux(matrice,y,x,parola,index)){
+            matrice[y][j]->usato = false;
+            index--;
+        }
+    }
+    //provo la posizione sotto dx
+    y = i+1;x = j+1;
+    if(trovaPos(x,y,parola[index],*matrice) == 1){
+        //cerco la prossima parola
+        index++;
+        matrice[y][x]->usato = true;
+        if(!trovaParolaAux(matrice,y,x,parola,index)){
+            matrice[y][x]->usato = false;
+            index--;
+        }
+    }
+
+    
+    // //IL PROBLEMA STA NEL CICLO FOR CHE NON TERMINA PERCHè LA FUNZIONE ENTRA IN RICORSIONE MA NON ABBASTANZA PER DUMPARE IL CORE
+    // for (size_t c = 0; c < 16; c=+2)
+    // {
+        
+    //     //printf("qui\n");
+    //     int x = i + cose[c];
+    //     int y = j + cose[c+1];
+    //     //printf("i:%d j:%d c:%d,qui\n",i,j,c);
+    //     //IL PROBLEMA STA NEL CICLO FOR CHE NON TERMINA
+    //     if (x < MATRIX_SIZE && y < MATRIX_SIZE && x > 0 && y > 0)
+    //     {
+    //         //printf("index: %d, x: %d, y: %d qui\n",index,x,y);
+    //         //printf("%c\n",(*matrice[x][y]).value);
+    //         if ((*matrice[x][y]).value == parola[index])
+    //         {
+    //             //printf("qui\n");
+    //             //printf("%c\n",(*matrice[x][y]).value);
+    //             (*matrice[x][y]).usato = true;
+    //             if (trovaParolaAux(matrice, x, y, parola, index+1))
+    //                 return 1;
+    //             (*matrice[x][y]).usato = false;
+    //             return 0;
+    //         }
+    //     }
+    // }
    return 0;
        
+}
+
+
+//convalida le posizioni di una matrice
+int trovaPos(int x, int y, char lettera,cella** matrice/*parolaCella*/){
+    printf("lettera: %c, cella:%d %d\n",lettera,y,x);
+    if (x <4 && x >= 0 && y<4 && y>=0){
+        cella* parolaCella = &(matrice[y][x]);
+        printf("lettera:%c\n",parolaCella->value);
+        if(parolaCella->value == lettera && parolaCella->usato == false){
+            printf("Entrato\n");
+            return 1;
+        }
+    }
+    return 0;
 }
 
 //Funzione per cercare sulla matrice

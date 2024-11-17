@@ -22,3 +22,5 @@ void InputStringa(cella** matrix, char*string);
 void stampaMatrice(cella** matrix);
 
 int trovaParola(cella** matrice, char* parola );
+
+int trovaPos(int x, int y, char lettera,cella** matrice);
