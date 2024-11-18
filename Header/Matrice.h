@@ -22,3 +22,9 @@ void InputStringa(cella** matrice, char*string);
 void stampaMatrice(cella** matrice);
 
 int trovaParola(cella** matrice, char* parola );
+
+int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index);
+
+void Carica_MatricedaFile(FILE* file, cella** matrice);
+
+void svuotaMatrice(cella** matrice);
