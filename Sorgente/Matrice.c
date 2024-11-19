@@ -54,25 +54,26 @@ void stampaMatrice(cella** matrice){
 int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) 
 {
     int cose[] = {0,1,0,-1,1,0,-1,0,1,1,1,-1,-1,1,-1,-1};
+    //printf("%c\n",parola[index]);
     if (index >= strlen(parola)) 
     {
         return 1;
     }
-   
+    
     for (size_t c = 0; c < 16; c+=2) 
     {
         int x = i + cose[c];
         int y = j + cose[c+1];
-        
+      
+        printf("%c\n",matrice[x][y].value );  
         if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0) 
         {
-            if (matrice[x][y].value == parola[index]) 
+            if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false) 
             {
                 matrice[x][y].usato = true;
                 if (trovaParolaAux(matrice, x, y, parola, index+1))
                     return 1;
                 matrice[x][y].usato = false;
-                return 0;
             }
         }
     }
@@ -85,7 +86,7 @@ int trovaParola(cella** matrice, char* parola ){
         for (size_t j = 0; j < MATRIX_SIZE; j++){  
            if (matrice[i][j].value == parola[0]){
                 matrice[i][j].usato = true;
-                if (trovaParolaAux(&matrice, i, j, parola,1))
+                if (trovaParolaAux(matrice, i, j, parola,1))
                     return 1;
                 matrice[i][j].usato = false;
             }
