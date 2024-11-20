@@ -51,29 +51,26 @@ void stampaMatrice(cella** matrice){
 
 
 //ELIA
-int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) 
-{
+int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index){
+// Variazioni coordinate in base alle 8 direzionali: verticali, orizzontali e diagonali
     int cose[] = {0,1,0,-1,1,0,-1,0,1,1,1,-1,-1,1,-1,-1};
     //printf("%c\n",parola[index]);
-    if (index >= strlen(parola)) 
-    {
+    if (index >= strlen(parola)){
         return 1;
     }
     
-    for (size_t c = 0; c < 16; c+=2) 
-    {
+    for (size_t c = 0; c < 16; c+=2){
         int x = i + cose[c];
         int y = j + cose[c+1];
       
         printf("%c\n",matrice[x][y].value );  
-        if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0) 
-        {
-            if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false) 
-            {
+        if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0){
+            if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false){
                 matrice[x][y].usato = true;
-                if (trovaParolaAux(matrice, x, y, parola, index+1))
+                if (trovaParolaAux(matrice, x, y, parola, index+1)){
                     return 1;
                 matrice[x][y].usato = false;
+                }
             }
         }
     }

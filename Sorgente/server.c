@@ -12,6 +12,12 @@
 #include "../Header/Trie.h"
 
 
+#define MAX_CLIENTS 32 
+#define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
+#define NUM_THREADS 5 //Numero di thread da creare
+#define BUFFER_SIZE 1024 //dimensione del buffer
+
+
 /*
 int main(int argc, char* argv[]){
     //Controllo se il numero di parametri passati è corretto
@@ -64,11 +70,7 @@ int main(int argc, char* argv[]){
 
 
 
-
 //SOCKET
-#define NUM_THREADS 5 //Numero di thread da creare
-#define MAX_CLIENTS 32 //Numero massimo di clienti
-#define BUFFER_SIZE 1024 //dimensione del buffer
 
 // Funzione del thread
 void* thread_func(void* arg) {
@@ -134,48 +136,48 @@ int main(int argc, char* argv[]) {
 
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
-
-    // Accetta la connessione
-    int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_len);
-    if (client_sock < 0) {
-        perror("Accept fallita");
-        close(server_sock);
-        return 1;
-    }
-
-    printf("Connessione accettata\n");
-    read(client_sock, message, 128);
-    printf("Client: %s\n", message);
-    // Chiudi i socket
-    
-    //close(client_sock); // Chiudi il socket del client
-    close(server_sock); // Chiudi il socket del server
-    return 0;
-    
-
-
-    //THREAD
-    pthread_t threads[NUM_THREADS];
-    int values[NUM_THREADS];
-    int* ret;
-
-    // Creazione dei thread
-    for (int i = 0; i < NUM_THREADS; i++) {
-        values[i] = i + 1; // Valore da passare al thread
-        if (pthread_create(&threads[i], NULL, thread_func, (void*)&values[i]) != 0) {
-            perror("Failed to create thread");
+    while(1){
+      // Accetta la connessione
+        int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_len);
+        if (client_sock < 0) {
+            perror("Accept fallita");
+            close(server_sock);
             return 1;
         }
-    }
 
-    // Aspetta che ogni thread termini e recupera il valore di ritorno
-    for (int i = 0; i < NUM_THREADS; i++) {
-        pthread_join(threads[i], (void**)&ret);
-        // Stampa il valore di ritorno dal thread
-        printf("Valore di ritorno dal thread %d: %d\n", i + 1, *ret);
-        free(ret); // Libera la memoria allocata
-    }
-    return 0;
+        printf("Connessione accettata\n");
+        read(client_sock, message, 128);
+        printf("Client: %s\n", message);
+        // Chiudi i socket
+        
+        //close(client_sock); // Chiudi il socket del client
+        close(server_sock); // Chiudi il socket del server
+        return 0;
+        
 
+
+        //THREAD
+        pthread_t threads[NUM_THREADS];
+        int values[NUM_THREADS];
+        int* ret;
+
+        // Creazione dei thread
+        for (int i = 0; i < NUM_THREADS; i++) {
+            values[i] = i + 1; // Valore da passare al thread
+            if (pthread_create(&threads[i], NULL, thread_func, (void*)&values[i]) != 0) {
+                perror("Failed to create thread");
+                return 1;
+            }
+        }
+
+        // Aspetta che ogni thread termini e recupera il valore di ritorno
+        for (int i = 0; i < NUM_THREADS; i++) {
+            pthread_join(threads[i], (void**)&ret);
+            // Stampa il valore di ritorno dal thread
+            printf("Valore di ritorno dal thread %d: %d\n", i + 1, *ret);
+            free(ret); // Libera la memoria allocata
+        }
+        return 0;
+    }
 }
 

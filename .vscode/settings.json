@@ -3,6 +3,7 @@
         "string.h": "c",
         "matrice.h": "c",
         "macro.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "lista.h": "c"
     }
 }
