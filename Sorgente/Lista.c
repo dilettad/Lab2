@@ -91,5 +91,3 @@ void libera_lista_clienti() {
 }
 
 
-
-
