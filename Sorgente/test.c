@@ -17,7 +17,8 @@ int main(int argc, char* argv[]){
 
     registrazione_client(client_fd,username);
     //stampa utente
-    printf("username: %s\n",username);
+    printf("Lista dei clienti dopo la registrazione:\n");
+    stampa_lista_clienti();
     return 0;
   
 }
