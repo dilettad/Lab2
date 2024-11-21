@@ -12,21 +12,25 @@ SORGENTE = ../Sorgente/
 SERVER = server
 CLIENT = client
 TEST = test
+LISTA = lista
 
 # Header
 HDRS_COMUNICAZIONE = $(HEADER)comunicazione.h
 HDRS_TRIE = $(HEADER)Trie.h
 HDRS_MATRICE = $(HEADER)Matrice.h
+HDRS_LISTA = $(HEADER)Lista.h
 
 # File Oggetto
 OBJS_SERVER = $(SERVER).o comunicazione.o Trie.o
 OBJS_CLIENT = $(CLIENT).o comunicazione.o
 OBJS_TEST = $(TEST).o Matrice.o
+OBJS_LISTA = $(LISTA).o Lista.o
 
 # Sorgenti
 SRCS_SERVER = $(SORGENTE)$(SERVER).c $(SORGENTE)comunicazione.c $(SORGENTE)Trie.c
 SRCS_CLIENT = $(SORGENTE)$(CLIENT).c $(SORGENTE)comunicazione.c
 SRCS_TEST = $(SORGENTE)$(TEST).c $(SORGENTE)Matrice.c
+SRCS_LISTA = $(SORGENTE)$(LISTA).c $(SORGENTE)Lista.c
 
 # Input
 PORT = 20000
