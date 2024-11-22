@@ -3,7 +3,7 @@ typedef struct{
     char type;
     unsigned int length;
     char* data;
-} message;
+} msg;
 
 //invio messaggio
 void send_message(int client_socket, char type, char* data);
