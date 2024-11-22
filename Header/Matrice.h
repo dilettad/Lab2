@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include "../Header/macro.h"
 
+#include "../Header/macro.h"
 
 
 typedef struct cella{

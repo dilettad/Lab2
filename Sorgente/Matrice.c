@@ -9,6 +9,8 @@
 #include "../Header/Matrice.h"
 
 #define MATRIX_SIZE 4
+// DA AGGIUNGERE IL CONTROLLO SU QU
+
 
 //Generazione matrice
 cella** generateMatrix(){
@@ -42,15 +44,15 @@ void stampaMatrice(cella*** matrice){
     for(int i = 0; i < MATRIX_SIZE; i++){
         for(int j = 0; j < MATRIX_SIZE; j++){
             //Stampa valore della cella
-            printf("%c ", matrice[i][j]->value);
+            printf("%d ", matrice[i][j]->value);
         }
         printf("\n");
     }
-    return ;
+    // return;
 }
 
 
-//ELIA
+//
 int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index){
 // Variazioni coordinate in base alle 8 direzionali: verticali, orizzontali e diagonali
     int cose[] = {0,1,0,-1,1,0,-1,0,1,1,1,-1,-1,1,-1,-1};
