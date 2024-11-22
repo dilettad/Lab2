@@ -11,12 +11,12 @@
 #include "../Header/Lista.h"
 
 // Creo la prima lista assegnando la testa e la coda del cliente
-Fifo* create (Client* client)
+Fifo* create ()
 {
     Fifo* lista = (Fifo*) malloc(sizeof(Fifo));
-    lista->head = client;
-    lista->tail = client;
-    lista->size = 1;
+    lista->head = NULL;
+    lista->tail = NULL;
+    lista->size = 0;
     return lista;
 }
 
@@ -62,5 +62,3 @@ int seek (Fifo * list, char* username){// 1 se trova un cliente con quel usernam
             temp = temp->next;
         }
 }
-
-

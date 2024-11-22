@@ -8,16 +8,17 @@
 #include <pthread.h>
 
 #include "../Header/macro.h"
-#include "../Header/comunicazione.h"
+#include "../Header/Comunicazione.h"
 #include "../Header/Trie.h"
-
+#include "../Header/Lista.h"
+#include "../Header/Matrice.h"
 
 #define MAX_CLIENTS 32 
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
 #define NUM_THREADS 5 //Numero di thread da creare
 #define BUFFER_SIZE 1024 //dimensione del buffer
 
-
+//MAIN
 /*
 int main(int argc, char* argv[]){
     //Controllo se il numero di parametri passati è corretto
@@ -68,6 +69,74 @@ int main(int argc, char* argv[]){
 }   
 */
 
+// // GIOCATORE 
+// //Funzione per aggiungere client alla lista
+// void add_client(Fifo* lista, int client_fd, char* username){
+//     Client* new_client = (Client*) malloc(sizeof(Client));
+//     new_client -> fd = client_fd;
+//     strcpy(new_client->username, username);
+//     new_client->next = NULL;   
+// }
+  
+// //Funzione per registrazione del cliente
+// void registrazione_client(int client_fd, char* username){
+//     Client* current = clients_head;
+//     // Controllo se l'username è già presente
+//     while(current != NULL) {
+//         // Se l'username è già presente, manda un messaggio di errore
+//         if (strcmp(current->username, username) == 0) {
+//             send_message(client_fd,MSG_ERR,"Username già esistente, scegline un altro");
+//             break; //Esco dalla funzione
+//         }
+//         current = current ->next;
+//     }
+//     // Controllo se l'username contiene solo caratteri validi
+//     if (!controlla_caratteri(client_fd)) {
+//         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
+//         return; // Esci dalla funzione se l'username non è valido
+//     }
+//     // Se l'username è valido, invio un messaggio di conferma 
+//     send_message(client_fd,MSG_OK,"username valido");
+
+//     //Inserisco il client nella lista e ne incremento il numero
+//     add_client(&clients_head, client_fd,username );
+//     num_client++;
+// }
+
+// //Controllo caratteri dell'username: non deve contenere caratteri ASCII
+// int controlla_caratteri(const char* username){
+//     while(*username){
+//         if((unsigned char)*username < 128){ // Controlla se il carattere è ASCII
+//             return 0; // Se contiene caratteri ASCII, restituisci 0
+//         }
+//         username++;
+//     }
+//     return 1; // Se tutti i caratteri sono validi (non ASCII), restituisci 1
+// }
+
+// //Funzione per stampare la lista dei client
+// void stampa_lista_clienti(){
+//     Client* current = clients_head;
+//     while (current != NULL) {
+//         printf("client_fd: %d, Usernale: %s\n", current -> fd, current -> username);
+//         current = current->next;
+//         }
+// }
+
+// // Funzione per liberare la memoria della lista
+// void libera_lista_clienti() {
+//     Client* current = clients_head; // Inizializzo il puntatore alla prima cella della lista
+//     Client* next; // Inizializzo un puntatore per iterare la lista
+// // Itero la lista e libero la memoria di ogni cella
+//     while (current != NULL) {
+//         next = current->next;
+//         free(current);
+//         current = next;
+//     }
+//     clients_head = NULL;
+// }
+
+
 
 
 //SOCKET
@@ -98,7 +167,7 @@ void* thread_func(void* arg) {
 int main(int argc, char* argv[]) {
     int server_sock;
     struct sockaddr_in server_addr;
-    char message [128];
+    //char message [128];
     
     if(argc<3){
         //Errore
@@ -146,38 +215,44 @@ int main(int argc, char* argv[]) {
         }
 
         printf("Connessione accettata\n");
-        read(client_sock, message, 128);
-        printf("Client: %s\n", message);
+        
+        /*read(client_sock, message, 128);
+        printf("Client: %s\n", message);*/
         // Chiudi i socket
         
         //close(client_sock); // Chiudi il socket del client
-        close(server_sock); // Chiudi il socket del server
-        return 0;
+        //close(server_sock); // Chiudi il socket del server
+        //return 0;
         
 
 
         //THREAD
-        pthread_t threads[NUM_THREADS];
-        int values[NUM_THREADS];
-        int* ret;
+        pthread_t thread_id;
 
-        // Creazione dei thread
-        for (int i = 0; i < NUM_THREADS; i++) {
-            values[i] = i + 1; // Valore da passare al thread
-            if (pthread_create(&threads[i], NULL, thread_func, (void*)&values[i]) != 0) {
-                perror("Failed to create thread");
-                return 1;
-            }
+        // Creazione del thread a cui passo il fd associato al socket del client
+        if(pthread_create(&thread_id, NULL, thread_func, &client_sock) != 0){
+            perror("Failed to create thread");
+            return 1;
         }
 
         // Aspetta che ogni thread termini e recupera il valore di ritorno
-        for (int i = 0; i < NUM_THREADS; i++) {
+        /*for (int i = 0; i < NUM_THREADS; i++) {
             pthread_join(threads[i], (void**)&ret);
             // Stampa il valore di ritorno dal thread
             printf("Valore di ritorno dal thread %d: %d\n", i + 1, *ret);
             free(ret); // Libera la memoria allocata
         }
-        return 0;
+        return 0;*/
     }
+
+
+    cella ** matrice = generateMatrix();
+    InputStringa(&matrice,"");
+
+
+
 }
+
+
+
 

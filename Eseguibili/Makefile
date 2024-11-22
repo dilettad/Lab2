@@ -9,28 +9,30 @@ HEADER = ../Header/
 SORGENTE = ../Sorgente/
 
 # Eseguibili
-SERVER = server
-CLIENT = client
-TEST = test
-LISTA = lista
+SERVER = Server
+CLIENT = Client
+TEST = Test
+LISTA = Lista
 
 # Header
-HDRS_COMUNICAZIONE = $(HEADER)comunicazione.h
+HDRS_COMUNICAZIONE = $(HEADER)Comunicazione.h
 HDRS_TRIE = $(HEADER)Trie.h
 HDRS_MATRICE = $(HEADER)Matrice.h
 HDRS_LISTA = $(HEADER)Lista.h
 
 # File Oggetto
-OBJS_SERVER = $(SERVER).o comunicazione.o Trie.o
-OBJS_CLIENT = $(CLIENT).o comunicazione.o
-OBJS_TEST = $(TEST).o Matrice.o
-OBJS_LISTA = $(LISTA).o Lista.o
+OBJS_LISTA = $(LISTA).o 
+OBJS_SERVER = $(SERVER).o Comunicazione.o Trie.o $(OBJS_LISTA) Matrice.o
+OBJS_CLIENT = $(CLIENT).o Comunicazione.o $(OBJS_LISTA)
+OBJS_TEST = $(TEST).o Matrice.o $(OBJS_LISTA)
+
+
 
 # Sorgenti
-SRCS_SERVER = $(SORGENTE)$(SERVER).c $(SORGENTE)comunicazione.c $(SORGENTE)Trie.c
-SRCS_CLIENT = $(SORGENTE)$(CLIENT).c $(SORGENTE)comunicazione.c
-SRCS_TEST = $(SORGENTE)$(TEST).c $(SORGENTE)Matrice.c
-SRCS_LISTA = $(SORGENTE)$(LISTA).c $(SORGENTE)Lista.c
+SRCS_SERVER = $(SORGENTE)$(SERVER).c $(SORGENTE)Comunicazione.c $(SORGENTE)Trie.c $(SORGENTE)Lista.c $(SORGENTE)Matrice.o
+SRCS_CLIENT = $(SORGENTE)$(CLIENT).c $(SORGENTE)Comunicazione.c $(SORGENTE)Lista.c
+SRCS_TEST = $(SORGENTE)$(TEST).c $(SORGENTE)Matrice.c 
+SRCS_LISTA = $(SORGENTE)$(LISTA).c 
 
 # Input
 PORT = 20000
@@ -58,7 +60,7 @@ $(TEST): $(OBJS_TEST)
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Regole generiche per file oggetto
-%.o: $(SORGENTE)%.c $(HDRS_COMUNICAZIONE) $(HDRS_TRIE) $(HDRS_MATRICE)
+%.o: $(SORGENTE)%.c $(HDRS_COMUNICAZIONE) $(HDRS_TRIE) $(HDRS_MATRICE) $(HDRS_LISTA)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Pulizia

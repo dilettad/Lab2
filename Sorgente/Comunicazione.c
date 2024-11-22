@@ -5,7 +5,7 @@
 #include <errno.h>
 //librerie di progetto
 #include "../Header/macro.h"
-#include "../Header/comunicazione.h"
+#include "../Header/Comunicazione.h"
 
 
 //Funzione per inviare un messaggio

@@ -1,5 +1,6 @@
 
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
+#define MAX_CLIENTS 32 
 
 //MSG_REGISTRA UTENTE con la gestione del MSG_ERR e MSG_OK
 //Definizione del tipo di dati per struttura utente
@@ -16,15 +17,11 @@ typedef struct Fifo{
     int size;
 }Fifo;
 
-// Puntatore alla testa della lista di clienti
-Client *clients_head = NULL;
-
-int num_client = 0; //Numero di clienti connessi    
-    
-void push (Fifo * list, Client *new_client) ;
+void push (Fifo * lista, Client *new_client);
 
 Client* pop (Fifo * list) ;
 
 int seek (Fifo * list, char* username); // 1 se trova un clienete con quel username 0 altrimenti
 
-Fifo* create (Client* client);
+Fifo* create ();
+

@@ -17,9 +17,9 @@ typedef struct cella{
 
 cella** generateMatrix();
 
-void InputStringa(cella** matrice, char*string);
+void InputStringa(cella*** matrice, char* string);
 
-void stampaMatrice(cella** matrice);
+void stampaMatrice(cella*** matrice);
 
 int trovaParola(cella** matrice, char* parola );
 

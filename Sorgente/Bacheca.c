@@ -82,7 +82,7 @@ Message *post_messaggi(int message_count) {
     pthread_mutex_lock(&mess);
 
     // Alloco memoria per l'array di messaggi da restituire
-    Message * read_message = (Message*)malloc(message_count * sizeof(Message));
+    Message* read_message = (Message*)malloc(message_count * sizeof(Message));
 
     // Controllo se già letti
     if (read_message == NULL) {

@@ -1,4 +1,6 @@
-#include "Lista.h"
+#include "../Header/macro.h"
+#include "../Header/Comunicazione.h"
+#include "../Header/Lista.h"
 
 //Funzione per aggiungere client alla lista
 void add_client(Client** head, int client_fd, char*username);

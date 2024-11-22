@@ -22,22 +22,22 @@ cella** generateMatrix(){
 }
 
 //Funzione che prende in input una stringa per la matrice
-void InputStringa(cella** matrice, char*string){
+void InputStringa(cella*** matrice, char* string){
     // Scansione della stringa
     int k = 0;
     // Scansione della matrice, per riga e colonna
     for (int i = 0; i < MATRIX_SIZE; i++){
         for(int j = 0; j < MATRIX_SIZE; j++ ){
-            matrice[i][j].value = string[k];
+            matrice[i][j]->value = string[k];
             k++;
             // Cella già visitata
-            matrice[i][j].usato = false;
+            matrice[i][j]->usato = false;
         }
     }    
 } 
 
 //Funzione per stampare la matrice
-void stampaMatrice(cella** matrice){
+void stampaMatrice(cella*** matrice){
     //Scansione della matrice, per riga e colonna
     for(int i = 0; i < MATRIX_SIZE; i++){
         for(int j = 0; j < MATRIX_SIZE; j++){
