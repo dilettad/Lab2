@@ -32,8 +32,10 @@ void push (Fifo * lista, Client *new_client){
     lista->size++;
 }
 
-Client* pop (Fifo * list){
+//Client * pop (Fifo * lista){ da errore per il return
+Client * pop (Fifo * list){
     // Controllo se la lista è vuota
+
     if (list->size == 0){
         // Se vuota allora non devo uscire quindi return null
         return NULL;
@@ -46,19 +48,22 @@ Client* pop (Fifo * list){
         return list->tail;
     }
     // Ciclo fino all'elemento priam della coda
-    Client * temp = list->head;
+    Client* temp = list->head;
     for (int i = 0; i < list->size - 1; i++){
         temp = temp->next;
     }
     // Aggiorno la coda
-    list->tail = temp;   
+    list->tail = temp;  
+    return temp; 
 }
 
 int seek (Fifo * list, char* username){// 1 se trova un cliente con quel username 0 altrimenti
     Client* temp = list->head;
     while (temp != NULL){
-        if (strcmp(temp->username, username) == 0)
+        if (temp -> username != NULL && strcmp(temp->username, username) == 0){
             return 1;
-            temp = temp->next;
         }
+        temp = temp->next;
+    }
+    return 0;
 }

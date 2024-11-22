@@ -17,6 +17,7 @@
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
 #define NUM_THREADS 5 //Numero di thread da creare
 #define BUFFER_SIZE 1024 //dimensione del buffer
+#define MATRIX_SIZE 4
 
 //MAIN
 /*
@@ -246,8 +247,18 @@ int main(int argc, char* argv[]) {
     }
 
 
-    cella ** matrice = generateMatrix();
-    InputStringa(&matrice,"");
+    cella** matrice = generateMatrix();
+        // Libera la memoria
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        free(matrice[i]);
+    }
+    free(matrice);
+
+    return 0;
+
+
+
+    InputStringa(matrice,"");
 
 
 

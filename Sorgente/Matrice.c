@@ -22,16 +22,16 @@ cella** generateMatrix(){
 }
 
 //Funzione che prende in input una stringa per la matrice
-void InputStringa(cella*** matrice, char* string){
+void InputStringa(cella** matrice, char* string){
     // Scansione della stringa
     int k = 0;
     // Scansione della matrice, per riga e colonna
     for (int i = 0; i < MATRIX_SIZE; i++){
         for(int j = 0; j < MATRIX_SIZE; j++ ){
-            matrice[i][j]->value = string[k];
+            matrice[i][j].value = string[k];
             k++;
             // Cella già visitata
-            matrice[i][j]->usato = false;
+            matrice[i][j].usato = false;
         }
     }    
 } 
@@ -42,7 +42,7 @@ void stampaMatrice(cella*** matrice){
     for(int i = 0; i < MATRIX_SIZE; i++){
         for(int j = 0; j < MATRIX_SIZE; j++){
             //Stampa valore della cella
-            printf("%c ", matrice[i][j].value);
+            printf("%c ", matrice[i][j]->value);
         }
         printf("\n");
     }
@@ -103,7 +103,7 @@ void Carica_MatricedaFile(FILE* file, cella** matrice){
     for (size_t i = 0; i < MATRIX_SIZE; i++){
         for (size_t j = 0; j < MATRIX_SIZE; j++){
             // fscanf, scansiona e legge il file e lo memorizza nella matrice come valore
-            fscanf(file, "%d", &matrice[i][j].value);
+            fscanf(file, "%c", &matrice[i][j].value);
             // Cella disponibile per inserimento, in quanto ancora non usata
             matrice[i][j].usato = false;
         }
@@ -111,7 +111,7 @@ void Carica_MatricedaFile(FILE* file, cella** matrice){
     //Chiusura del file
     fclose(file);
     //Carico la matrice dal file
-    InputStringa(matrice, file);
+    //InputStringa(matrice, file);
 }
 
 //Funzione per svuotare la matrice
