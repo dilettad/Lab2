@@ -13,7 +13,7 @@
 #include "../Header/Lista.h"
 #include "../Header/Giocatore.h"
 
-//GIOCATORE 
+//GIOCATORE : deve essere messo su client o su lista?
 //Funzione per aggiungere client alla lista
 void add_client(Fifo* lista, int client_fd, char* username){
      Client* new_client = (Client*) malloc(sizeof(Client));
