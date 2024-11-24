@@ -78,8 +78,8 @@ void receiver(void* args) {
         // Gestione del messaggio in base al tipo
         pthread_mutex_lock(&message_mutex); // Inizio sezione critica
         switch (received_msg->type) {
+            
             case MSG_OK:
-
                 printf("\n%s\n", receive_message -> msg);
                 fflush(0);
                 break;
@@ -210,6 +210,7 @@ int main(int argc, char* argv[]){
     return 0;
 
 //RECEIVER -> comunicazione
-
+// MSG_SERVER_SHUTDOWN -> terminazione della connessione
+    // In bacheca i messaggi devono essere di 126 caratteri -> controllo qua?
 }
 
