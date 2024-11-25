@@ -1,15 +1,3 @@
-//Definizione del messaggio
-typedef struct{
-    char type;
-    unsigned int length;
-    char* data;
-} msg;
-
-//invio messaggio
-void send_message(int client_socket, char type, char* data);
-//ricezione messaggio sul socket
-message receive_message(int client_socket);
-
 //definizione tipi di messaggio
 #define MSG_OK "K"
 #define MSG_ERR "E"
@@ -23,3 +11,38 @@ message receive_message(int client_socket);
 #define MSG_SERVER_SHUTDONW "B"
 #define MSG_POST_BACHECA "H"
 #define MSG_SHOW_BACHECA "S"
+#define MSG_FINE "Q"
+#define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
+#define MAX_CLIENTS 32 // Numero massimo di giocatori
+
+
+//Definizione di una struttura richiesta e risposta
+typedef struct {
+    char type; 
+    unsigned int length; 
+    char* data; 
+} message;
+
+typedef struct Fifo Fifo;
+
+
+//Funzione per inviare un messaggio
+void send_message(int client_socket, char type, char* data);
+//Funzione per ricevere un messaggio
+message receive_message(int client_socket);
+
+//Funzione per registrazione del cliente
+void registrazione_client(int client_fd, char* username);
+
+//Funzione per aggiungere client alla lista
+void add_client(Fifo* lista, int client_fd, char* username);
+
+//Controllo caratteri dell'username: non deve contenere caratteri ASCII
+int controlla_caratteri(const char* username);
+
+// Funzione per stampare la lista dei client
+void stampa_lista_clienti();
+
+// Funzione per liberare la memoria della lista
+void libera_lista_clienti();
+

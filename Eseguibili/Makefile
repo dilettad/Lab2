@@ -13,21 +13,21 @@ SERVER = Server
 CLIENT = Client
 TEST = Test
 LISTA = Lista
-GIOCATORE = Giocatore
+
 
 # Header
 HDRS_COMUNICAZIONE = $(HEADER)Comunicazione.h
 HDRS_TRIE = $(HEADER)Trie.h
 HDRS_MATRICE = $(HEADER)Matrice.h
 HDRS_LISTA = $(HEADER)Lista.h
-HDRS_GIOCATORE = $(HEADER)Giocatore.h
+
 
 # File Oggetto
 OBJS_LISTA = $(LISTA).o 
 OBJS_SERVER = $(SERVER).o Comunicazione.o Trie.o $(OBJS_LISTA) Matrice.o
 OBJS_CLIENT = $(CLIENT).o Comunicazione.o $(OBJS_LISTA)
 OBJS_TEST = $(TEST).o Matrice.o $(OBJS_LISTA)
-OBJS_GIOCATORE = $(GIOCATORE).o $(OBJS_LISTA)
+
 
 
 
@@ -36,7 +36,6 @@ SRCS_SERVER = $(SORGENTE)$(SERVER).c $(SORGENTE)Comunicazione.c $(SORGENTE)Trie.
 SRCS_CLIENT = $(SORGENTE)$(CLIENT).c $(SORGENTE)Comunicazione.c $(SORGENTE)Lista.c
 SRCS_TEST = $(SORGENTE)$(TEST).c $(SORGENTE)Matrice.c 
 SRCS_LISTA = $(SORGENTE)$(LISTA).c 
-SRCS_GIOCATORE = $(SORGENTE)$(GIOCATORE).c $(SORGENTE)Lista.c
 
 # Input
 PORT = 20000

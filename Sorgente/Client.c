@@ -84,7 +84,7 @@ void receiver(void* args) {
                 fflush(0);
                 break;
 
-            case MSG_ERROR:
+            case MSG_ERR:
                 pthread_mutex_unlock(&messagge_mutex);
                 printf("\n%s\n", receive_message -> msg);
                 fflush(0);
@@ -199,6 +199,11 @@ int main(int argc, char* argv[]){
         // Stampare la risposta del server
         printf("\nRisposta del server: %s", buffer);
     }
+
+    //TASK DI OGGI: OCCUPARSI DELLA CAMPIONATURA DEI MESSAGGI SCRITTI DA RIGA DI COMANDO SUL CLIENT
+    
+
+
 
     /* Invio del messaggio
     strcpy(message, "ciao");
