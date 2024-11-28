@@ -202,6 +202,72 @@ int main(int argc, char* argv[]){
 
 //TASK DI OGGI: OCCUPARSI DELLA CAMPIONATURA DEI MESSAGGI SCRITTI DA RIGA DI COMANDO SUL CLIENT   
 
+// aiuto -> mostrare i comandi disponibili, quindi registra_utente, nome_utente, matrice parola_indicata
+char* aiuto =   "I comandi disponibili sono: \n
+                aiuto -> mostra i comandi disponibili\n
+                registra_utente nome_utente --> per registrarsi\n
+                matrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \n
+                p parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\n
+                fine --> usci dal giorco \n
+"; 
+
+char* fine =  "Hai deciso di uscire dal gioco!"
+
+// registra_utente nome_utente -> registra un nuovo utente e manda mess registra utente con ok o err
+
+
+void client_sender (void * args) {
+    int client_fd = *(int*)args; // Estrae il file descriptor del client
+    int value;
+    char buffer[BUFFER_SIZE];  // Buffer per lettura dell'input dell'utente
+    ssize_t n_read;
+
+    // Ciclo infinito per gestire i messaggi dell'utente
+    while (1) {
+        char * token;
+        SYSC(n_read, read(STDIN_FILENO, buffer, BUFFER_SIZE), "Errore lettura");
+
+        // Rimuove il newline finale, se presente
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        // Controllo "aiuto"
+        if (strcmp(buffer, "aiuto") == 0) {
+            SYSC(value, writef (STDOUT_FILENO, aiuto, strlen(aiuto)), "Errore scrittura aiuto");
+            continue;
+        }
+        // Controllo registra utente
+        else if (strcmp(buffer, "registra_utente") == 0) {
+            token = strtok(NULL, "\n");
+            if (token == NULL) {
+                writef (STDOUT_FILENO, "Nome utente non valido\n", 23);
+                continue;
+            }
+            sender(client_fd, token, MSG_REGISTRA_UTENTE);
+        }   
+        // Controllo matrice
+        else if (strcmp(buffer, "matrice") == 0) {
+            sender(client_fd, NULL, MSG_MATRICE);
+        } 
+        else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
+            token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
+            if (token == NULL) {
+                writef (STDOUT_FILENO, "Parola non valida\n", 18);
+                continue;
+            } 
+            else if (strlen(token) < 4) {
+                writef (STDOUT_FILENO, "Parola troppo corta non valida\n", 32);
+                continue;
+            } 
+            sender(client_fd, token, MSG_PAROLA);
+        }
+        else if (strcmp(buffer, "fine") == 0) {
+            sender(client_fd, NULL, MSG_FINE);
+            break;
+        }        
+    }
+}    
+
+
 
 
 

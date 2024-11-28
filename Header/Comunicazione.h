@@ -12,6 +12,8 @@
 #define MSG_POST_BACHECA "H"
 #define MSG_SHOW_BACHECA "S"
 #define MSG_FINE "Q"
+#define MSG_CANCELLA_UTENTE "D" // DA FARE
+#define MSG_LOGIN_UTENTE "L"  // DA FARE
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
 #define MAX_CLIENTS 32 // Numero massimo di giocatori
 
