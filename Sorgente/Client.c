@@ -242,11 +242,11 @@ void client_sender (void * args) {
                 writef (STDOUT_FILENO, "Nome utente non valido\n");
                 continue;
             }
-            sender(client_fd, token, MSG_REGISTRA_UTENTE);
+            send_message(client_fd, token, MSG_REGISTRA_UTENTE);
         }   
         // Controllo matrice
         else if (strcmp(buffer, "matrice") == 0) {
-            sender(client_fd, NULL, MSG_MATRICE);
+            send_message(client_fd, NULL, MSG_MATRICE);
         } 
         else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
             token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
@@ -258,10 +258,10 @@ void client_sender (void * args) {
                 writef (STDOUT_FILENO, "Parola troppo corta non valida\n");
                 continue;
             } 
-            sender(client_fd, token, MSG_PAROLA);
+            send_message(client_fd, token, MSG_PAROLA);
         }
         else if (strcmp(buffer, "fine") == 0) {
-            sender(client_fd, NULL, MSG_FINE);
+            send_message(client_fd, NULL, MSG_FINE);
             break;
         }        
     }

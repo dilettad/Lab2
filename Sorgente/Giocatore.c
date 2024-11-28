@@ -67,17 +67,4 @@ void stampa_lista_clienti(){
     }
 }
 
-// // Funzione per liberare la memoria della lista
-void libera_lista_clienti() {
-    Client* current = clients_head; // Inizializzo il puntatore alla prima cella della lista
-    Client* next; // Inizializzo un puntatore per iterare la lista
-    // Itero la lista e libero la memoria di ogni cella
-    while (current != NULL) {
-         next = current->next;
-         free(current);
-         current = next;
-    }
-    clock = NULL;
-}
-
 
