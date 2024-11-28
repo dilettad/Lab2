@@ -239,7 +239,7 @@ void client_sender (void * args) {
         else if (strcmp(buffer, "registra_utente") == 0) {
             token = strtok(NULL, "\n");
             if (token == NULL) {
-                writef (STDOUT_FILENO, "Nome utente non valido\n", 23);
+                writef (STDOUT_FILENO, "Nome utente non valido\n");
                 continue;
             }
             sender(client_fd, token, MSG_REGISTRA_UTENTE);
@@ -251,11 +251,11 @@ void client_sender (void * args) {
         else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
             token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
             if (token == NULL) {
-                writef (STDOUT_FILENO, "Parola non valida\n", 18);
+                writef (STDOUT_FILENO, "Parola non valida\n");
                 continue;
             } 
             else if (strlen(token) < 4) {
-                writef (STDOUT_FILENO, "Parola troppo corta non valida\n", 32);
+                writef (STDOUT_FILENO, "Parola troppo corta non valida\n");
                 continue;
             } 
             sender(client_fd, token, MSG_PAROLA);
