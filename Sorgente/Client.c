@@ -66,70 +66,66 @@ void GestoreSigint(int sig){
 
 void receiver(void* args) {
     int client_sock = *(int*)args; // Assumiamo che args contenga il socket
-    msg * received_msg;
+    message received_msg;
 
     while (1) {
         received_msg = receive_message(client_sock);
-        if (received_msg == NULL) {
-            perror("Errore nella ricezione del messaggio");
-            break; // Esci dal loop se c'è un errore
-        }
-
+        cella** matrice = generateMatrix();
         // Gestione del messaggio in base al tipo
         pthread_mutex_lock(&message_mutex); // Inizio sezione critica
-        switch (received_msg->type) {
+        switch (received_msg.type) {
             
             case MSG_OK:
-                printf("\n%s\n", receive_message -> msg);
+                printf("\n%s\n", received_msg.data);
                 fflush(0);
                 break;
 
             case MSG_ERR:
-                pthread_mutex_unlock(&messagge_mutex);
-                printf("\n%s\n", receive_message -> msg);
+                pthread_mutex_unlock(&message_mutex);
+                printf("\n%s\n", received_msg.data);
                 fflush(0);
                 break;
 
 
             case MSG_FINE:
-                pthread_mutex_unlock(&messagge_mutex);
-                printf("\n%s\n", receive_message -> msg);
+                pthread_mutex_unlock(&message_mutex);
+                printf("\n%s\n", received_msg.data);
                 exit(EXIT_SUCCESS);
 
 
             case MSG_MATRICE:
-                void* matrice = generateMatrix();
+                
                 if (matrice == NULL) {
                     fprintf(stderr, "Errore nell'allocazione della matrice\n");
                     pthread_mutex_unlock(&message_mutex);
                     break;
                 }
-                InputStringa(matrice, received_msg->msg);
+                InputStringa(matrice, received_msg.data);
                 printf("\nMatrice: \n");
-                stampaMatrice(matrice);
+                stampaMatrice(&matrice);
                 free(matrice); // Dealloca la memoria della matrice
                 break;
 
             case MSG_PUNTI_PAROLA:
-                printf("\nTotalizzato Punti parola: %d\n", *((int*)received_msg->msg));
+                printf("\nTotalizzato Punti parola: %d\n", *((int*)received_msg.data));
                 break;
 
             case MSG_TEMPO_PARTITA:
-                printf("\nTempo partita: %d\n", *((int*)received_msg->msg));
+                printf("\nTempo partita: %d\n", *((int*)received_msg.data));
                 break;
 
             case MSG_PUNTI_FINALI:
                 printf("\nClassifica generale:\n");
-                printf("%s\n", (char*)received_msg->msg);
+                printf("%s\n", (char*)received_msg.data);
                 break;
 
             default:
-                fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg->type);
+                fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type);
                 break;
         }
         pthread_mutex_unlock(&message_mutex); // Fine sezione critica
 
-        free(received_msg); // Dealloca la memoria del messaggio ricevuto
+        free(&received_msg); // Dealloca la memoria del messaggio ricevuto
     }
 
     // Chiusura del socket e pulizia
@@ -201,76 +197,7 @@ int main(int argc, char* argv[]){
     }
 
 //TASK DI OGGI: OCCUPARSI DELLA CAMPIONATURA DEI MESSAGGI SCRITTI DA RIGA DI COMANDO SUL CLIENT   
-
-// aiuto -> mostrare i comandi disponibili, quindi registra_utente, nome_utente, matrice parola_indicata
-char* aiuto =   "I comandi disponibili sono: \n
-                aiuto -> mostra i comandi disponibili\n
-                registra_utente nome_utente --> per registrarsi\n
-                matrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \n
-                p parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\n
-                fine --> usci dal giorco \n
-"; 
-
-char* fine =  "Hai deciso di uscire dal gioco!"
-
 // registra_utente nome_utente -> registra un nuovo utente e manda mess registra utente con ok o err
-
-
-void client_sender (void * args) {
-    int client_fd = *(int*)args; // Estrae il file descriptor del client
-    int value;
-    char buffer[BUFFER_SIZE];  // Buffer per lettura dell'input dell'utente
-    ssize_t n_read;
-
-    // Ciclo infinito per gestire i messaggi dell'utente
-    while (1) {
-        char * token;
-        SYSC(n_read, read(STDIN_FILENO, buffer, BUFFER_SIZE), "Errore lettura");
-
-        // Rimuove il newline finale, se presente
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        // Controllo "aiuto"
-        if (strcmp(buffer, "aiuto") == 0) {
-            SYSC(value, writef (STDOUT_FILENO, aiuto, strlen(aiuto)), "Errore scrittura aiuto");
-            continue;
-        }
-        // Controllo registra utente
-        else if (strcmp(buffer, "registra_utente") == 0) {
-            token = strtok(NULL, "\n");
-            if (token == NULL) {
-                writef (STDOUT_FILENO, "Nome utente non valido\n");
-                continue;
-            }
-            send_message(client_fd, token, MSG_REGISTRA_UTENTE);
-        }   
-        // Controllo matrice
-        else if (strcmp(buffer, "matrice") == 0) {
-            send_message(client_fd, NULL, MSG_MATRICE);
-        } 
-        else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
-            token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
-            if (token == NULL) {
-                writef (STDOUT_FILENO, "Parola non valida\n");
-                continue;
-            } 
-            else if (strlen(token) < 4) {
-                writef (STDOUT_FILENO, "Parola troppo corta non valida\n");
-                continue;
-            } 
-            send_message(client_fd, token, MSG_PAROLA);
-        }
-        else if (strcmp(buffer, "fine") == 0) {
-            send_message(client_fd, NULL, MSG_FINE);
-            break;
-        }        
-    }
-}    
-
-
-
-
-
     /* Invio del messaggio
     strcpy(message, "ciao");
     send(client_sock, message, strlen(message), 0);
@@ -285,3 +212,58 @@ void client_sender (void * args) {
     // In bacheca i messaggi devono essere di 126 caratteri -> controllo qua?
 }
 
+
+void client_sender (void * args) {
+    int client_fd = *(int*)args; // Estrae il file descriptor del client
+    int value;
+    char buffer[BUFFER_SIZE];  // Buffer per lettura dell'input dell'utente
+    ssize_t n_read;
+    // aiuto -> mostrare i comandi disponibili, quindi registra_utente, nome_utente, matrice parola_indicata
+    char* aiuto =   "I comandi disponibili sono: \naiuto -> mostra i comandi disponibili\nregistra_utente nome_utente --> per registrarsi\nmatrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \np parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\nfine --> uscire dal giorco \n"; 
+    char* fine =  "Hai deciso di uscire dal gioco!\n";
+
+    // Ciclo infinito per gestire i messaggi dell'utente
+    while (1) {
+        char * token;
+        int retvalue;
+        SYSC(n_read, read(STDIN_FILENO, buffer, BUFFER_SIZE), "Errore lettura");
+
+        // Rimuove il newline finale, se presente
+        buffer[strcspn(buffer, "\n")] = 0;
+
+        // Controllo "aiuto"
+        if (strcmp(buffer, "aiuto") == 0) {
+            writef(retvalue, aiuto);
+            continue;
+        }
+        // Controllo registra utente
+        else if (strcmp(buffer, "registra_utente") == 0) {
+            token = strtok(NULL, "\n");
+            if (token == NULL) {
+                writef (retvalue, "Nome utente non valido\n");
+                continue;
+            }
+            send_message(client_fd, token, MSG_REGISTRA_UTENTE);
+        }   
+        // Controllo matrice
+        else if (strcmp(buffer, "matrice") == 0) {
+            send_message(client_fd, NULL, MSG_MATRICE);
+        } 
+        else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
+            token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
+            if (token == NULL) {
+                writef (retvalue, "Parola non valida\n");
+                continue;
+            } 
+            else if (strlen(token) < 4) {
+                writef (retvalue, "Parola troppo corta non valida\n");
+                continue;
+            } 
+            send_message(client_fd, token, MSG_PAROLA);
+        }
+        else if (strcmp(buffer, "fine") == 0) {
+            send_message(client_fd, NULL, MSG_FINE);
+            break;
+        }        
+    }
+}
