@@ -32,20 +32,27 @@ void InputStringa(cella** matrice, char* string){
         for(int j = 0; j < MATRIX_SIZE; j++ ){
             matrice[i][j].value = string[k];
             k++;
+            //printf("%c ",matrice[i][j].value);
             // Cella già visitata
             matrice[i][j].usato = false;
         }
+        //printf("\n");
     }    
 } 
 
 //Funzione per stampare la matrice
-void stampaMatrice(cella*** matrice){
+void stampaMatrice(cella** matrice){
+    int j = 0;
     //Scansione della matrice, per riga e colonna
     for(int i = 0; i < MATRIX_SIZE; i++){
-        for(int j = 0; j < MATRIX_SIZE; j++){
+        //printf("entro ciclio i:%d j:%d\n",i,j);
+        for(j = 0; j < MATRIX_SIZE; j++){
             //Stampa valore della cella
-            printf("%d ", matrice[i][j]->value);
+            
+            printf("%c ", matrice[i][j].value);
+            //printf("i:%d, j:%d\n",i,j);
         }
+        //j = 0;
         printf("\n");
     }
     // return;
@@ -65,7 +72,7 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index){
         int x = i + cose[c];
         int y = j + cose[c+1];
       
-        printf("%c\n",matrice[x][y].value );  
+        //printf("%c\n",matrice[x][y].value );  
         if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0){
             if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false){
                 matrice[x][y].usato = true;

@@ -5,19 +5,21 @@ gcc server.c Lista.c Client.c Comunicazione.c -lrt -pthread
 #include <stdio.h>
 #include "../Header/Matrice.h"
 #include "../Header/Lista.h"
+#include <errno.h>
 
 int main(int argc, char* argv[]){
     printf("Esecuzione dei test --- \n");
-
-    // cella** matrice = generateMatrix();
-
-    // InputStringa(matrice,"ATLCIOQADVESISBI");
+    int retvalue;
+    cella** matrice = generateMatrix();
+    writef(retvalue,"casa\n");
+    InputStringa(matrice,"ATLCIOQADVESISBI");
     
     
-    // stampaMatrice(matrice);
+    stampaMatrice(matrice);
     
-    // printf( "%d",trovaParola(matrice, "CASE"));
-
+    printf("%d\n",trovaParola(matrice, "CASE"));
+    
+    // writef(retvalue,"mamma\n");
     // int client_fd = 1;
     // char username[5] = "test";
     // Fifo* lista = create();
