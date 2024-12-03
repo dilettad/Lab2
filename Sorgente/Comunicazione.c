@@ -16,23 +16,23 @@
 void send_message(int client_socket, char type, char* data) {
     int retvalue;
     int len = strlen(data);
-    printf("invio messaggio\n");
+    //printf("invio messaggio\n");
     //invio lunghezza messaggio
     SYSC(retvalue,write(client_socket,&len,sizeof(int)),"errore lettura lunghezza messaggio\n");
-    printf("invio messaggio\n");
+    //printf("invio messaggio\n");
     //invio tipo messaggio
     SYSC(retvalue,write(client_socket,&type,sizeof(char)),"errore lettur atipo messaggio\n")
-    printf("invio messaggio\n");
+    //printf("invio messaggio\n");
     //invio del campo data
     SYSC(retvalue,write(client_socket,data,len),"nell'invio del payload")
-    printf("invio messaggio\n");
+    //printf("invio messaggio\n");
 }
 
 //Funzione per ricevere un messaggio
 message receive_message(int client_socket){
     message msg;int retvalue;
     //ricevo lunghezza messaggio
-    printf("attendo messaggio\n");
+    //printf("attendo messaggio\n");
     SYSC(retvalue,read(client_socket,&msg.length,sizeof(int)),"errore lettura lunghezza messaggio\n");
     //ricevo tipo messaggio
     SYSC(retvalue,read(client_socket,&msg.type,sizeof(char)),"errore lettur atipo messaggio\n")

@@ -55,6 +55,8 @@ HOST = 127.0.0.1
 # Comandi di esecuzione
 SERVER_RUN = ./$(SERVER) $(HOST) $(PORT) --matrici ../Text/Matrici.txt --diz ../Text/Dizionario.txt 
 CLIENT_RUN = ./$(CLIENT) $(HOST) $(PORT)
+SERVER_RUN2 = ./$(SERVER) $(HOST) 3000 --matrici ../Text/Matrici.txt --diz ../Text/Dizionario.txt 
+CLIENT_RUN2 = ./$(CLIENT) $(HOST) 3000
 TEST_RUN = ./$(TEST)
 
 # Target principali
@@ -116,6 +118,14 @@ run-server:
 run-client:
 	@echo Esecuzione client sulla porta $(PORT)
 	@$(CLIENT_RUN)
+
+run-server2:
+	@echo Esecuzione server sulla porta $(3000)
+	@$(SERVER_RUN2)
+
+run-client2:
+	@echo Esecuzione client sulla porta $(3000)
+	@$(CLIENT_RUN2)
 
 run-test:
 	@echo Esecuzione dei test
