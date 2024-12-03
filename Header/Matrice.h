@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include "../Header/macro.h"
 
+#include "../Header/macro.h"
 
 
 typedef struct cella{
@@ -17,10 +17,18 @@ typedef struct cella{
 
 cella** generateMatrix();
 
-void InputStringa(cella** matrix, char*string);
+void InputStringa(cella** matrice, char* string);
 
-void stampaMatrice(cella** matrix);
+void stampaMatrice(cella*** matrice);
 
 int trovaParola(cella** matrice, char* parola );
 
+<<<<<<< HEAD
 int trovaPos(int x, int y, char lettera,cella** matrice);
+=======
+int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index);
+
+void Carica_MatricedaFile(FILE* file, cella** matrice);
+
+void svuotaMatrice(cella** matrice);
+>>>>>>> master

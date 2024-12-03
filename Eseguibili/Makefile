@@ -9,24 +9,43 @@ HEADER = ../Header/
 SORGENTE = ../Sorgente/
 
 # Eseguibili
-SERVER = server
-CLIENT = client
-TEST = test
+SERVER = Server
+CLIENT = Client
+TEST = Test
+LISTA = Lista
+TRIE = Trie
+MATRICE = Matrice
+COMMS = Comunicazione
 
 # Header
-HDRS_COMUNICAZIONE = $(HEADER)comunicazione.h
-HDRS_TRIE = $(HEADER)Trie.h
-HDRS_MATRICE = $(HEADER)Matrice.h
+HDRS_COMUNICAZIONE = $(HEADER)Comunicazione.h
+HDRS_TRIE = $(HEADER)$(TRIE).h
+HDRS_MATRICE = $(HEADER)$(MATRICE).h
+HDRS_LISTA = $(HEADER)$(LISTA).h
+SERVER_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE)
+CLIENT_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE)
+TEST_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE)
 
 # File Oggetto
-OBJS_SERVER = $(SERVER).o comunicazione.o Trie.o
-OBJS_CLIENT = $(CLIENT).o comunicazione.o
-OBJS_TEST = $(TEST).o Matrice.o
+OBJS = $(SERVER).o
+OBJC = $(CLIENT).o
+OBJHM = $(MATRICE).o
+OBJHT = $(TRIE).o
+OBJHL = $(LISTA).o
+OBJHCS = $(COMMS).o
+OBJT = $(TEST).o
+SERVER_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
+CLIENT_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
+TEST_OBJS = $(OBHM) $(OBJHL)
 
 # Sorgenti
-SRCS_SERVER = $(SORGENTE)$(SERVER).c $(SORGENTE)comunicazione.c $(SORGENTE)Trie.c
-SRCS_CLIENT = $(SORGENTE)$(CLIENT).c $(SORGENTE)comunicazione.c
-SRCS_TEST = $(SORGENTE)$(TEST).c $(SORGENTE)Matrice.c
+SRCS = $(SORGENTE)$(SERVER).c
+SRCC = $(SORGENTE)$(CLIENT).c
+SRCHM = $(SORGENTE)$(MATRICE).c
+SRCHT = $(SORGENTE)$(TRIE).c
+SRCHCS = $(SORGENTE)$(COMMS).c
+SRCHL = $(SORGENTE)$(LISTA).c
+SRCT = $(SORGENTE)$(TEST).c
 
 # Input
 PORT = 20000
@@ -41,25 +60,48 @@ TEST_RUN = ./$(TEST)
 # Target principali
 all: $(SERVER) $(CLIENT) $(TEST) clean_objs
 
-$(SERVER): $(OBJS_SERVER)
+$(SERVER): $(SERVER_OBJS)
 	@echo Compilazione del Server
-	$(CC) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) -o $(SERVER)
 
-$(CLIENT): $(OBJS_CLIENT)
+$(CLIENT): $(CLIENT_OBJS)
 	@echo Compilazione del Client
-	$(CC) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS)  $(SRCC) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(CLIENT_HEADERS) -o $(CLIENT)
 
-$(TEST): $(OBJS_TEST)
+$(TEST): $(TEST_OBJS)
 	@echo Compilazione dei Test
-	$(CC) $(CFLAGS) $^ -o $@
+	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
 
-# Regole generiche per file oggetto
-%.o: $(SORGENTE)%.c $(HDRS_COMUNICAZIONE) $(HDRS_TRIE) $(HDRS_MATRICE)
-	$(CC) $(CFLAGS) -c $< -o $@
+
+
+$(OBJHM):$(SRCHM)
+	@$(CC) $(CFLAGS) -c $(SRCHM) $(HDRS_MATRICE)
+
+$(OBJHCS):$(SRCHCS)
+	@$(CC) $(CFLAGS) -c $(SRCHCS) $(HDRS_COMUNICAZIONE)
+
+$(OBJHL):$(SRCHL)
+	@$(CC) $(CFLAGS) -c $(SRCHL) $(HDRS_LISTA)
+
+#Server.o
+$(OBJS):$(SRCS)
+	@echo compilo 
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SERVER_HEADERS)
+
+#Client.o
+$(OBJC):$(SRCC)
+	@$(CC) $(CFLAGS) -c $(SRCC) $(CLIENT_HEADERS)
+#Test.o
+$(OBJT):$(SRCT)
+	@$(CC) $(CFLAGS) -c $(SRCT) 
+
+$(OBJHT):$(SRCHT)
+	@$(CC) $(CFLAGS) -c $(SRCHT) $(HDRS_TRIE)
 
 # Pulizia
 clean_objs:
 	@rm -f *.o
+	@rm -f ../Header/*.gch
 	@echo File oggetto rimossi
 
 clean_all: clean_objs
