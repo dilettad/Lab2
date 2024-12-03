@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include "../Header/macro.h"
 #include "../Header/Comunicazione.h"
@@ -76,23 +77,17 @@ int main(int argc, char* argv[]){
 // Funzione del thread
 void* thread_func(void* arg) {
     // Dichiara un puntatore per il valore di ritorno
-    int* retdata = (int*)malloc(sizeof(int));
-    if (retdata == NULL) {
-        perror("malloc failed");
-        pthread_exit(NULL); // Termina il thread se la malloc fallisce
+    int client_sock = *(int*)arg;
+
+    
+    int retvalue;
+    while(1){
+        message client_message = receive_message(client_sock);
+        writef(retvalue,client_message.data);
+        send_message(client_sock,MSG_OK,"ciao diletta");
     }
-
-    // Recupero del thread corrente
-    pthread_t thread = pthread_self();
-
-    // Stampa del valore passato al thread
-    printf("Thread %ld, value: %d\n", (long)thread, *(int*)arg);
-
-    // Assegna valore di ritorno
-    *retdata = *(int*)arg * 2; // Restituisce il valore passato moltiplicato per 2
-
     // Terminazione del thread con valore di ritorno
-    pthread_exit(retdata);
+    pthread_exit(NULL);
 }
 
 
@@ -140,11 +135,6 @@ int main(int argc, char* argv[]) {
     while(1){
       // Accetta la connessione
         int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_len);
-        if (client_sock < 0) {
-            perror("Accept fallita");
-            close(server_sock);
-            return 1;
-        }
 
         printf("Connessione accettata\n");
         
@@ -156,8 +146,6 @@ int main(int argc, char* argv[]) {
         //close(server_sock); // Chiudi il socket del server
         //return 0;
         
-
-
         //THREAD
         pthread_t thread_id;
 
@@ -167,14 +155,14 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        // Aspetta che ogni thread termini e recupera il valore di ritorno
-        /*for (int i = 0; i < NUM_THREADS; i++) {
-            pthread_join(threads[i], (void**)&ret);
-            // Stampa il valore di ritorno dal thread
-            printf("Valore di ritorno dal thread %d: %d\n", i + 1, *ret);
-            free(ret); // Libera la memoria allocata
+        //Aspetta che ogni thread termini e recupera il valore di ritorno
+        for (int i = 0; i < NUM_THREADS; i++) {
+            pthread_join(thread_id,NULL);
+            //Stampa il valore di ritorno dal thread
+            //free(ret); // Libera la memoria allocata
+            printf("thread ucciso\n");
         }
-        return 0;*/
+        return 0;
     }
 
 

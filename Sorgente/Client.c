@@ -124,8 +124,6 @@ void receiver(void* args) {
                 break;
         }
         pthread_mutex_unlock(&message_mutex); // Fine sezione critica
-
-        free(&received_msg); // Dealloca la memoria del messaggio ricevuto
     }
 
     // Chiusura del socket e pulizia
@@ -158,42 +156,27 @@ int main(int argc, char* argv[]){
     }
     //CICLO DI GIOCO
     while (1) {
-        printf("Inserisci il messaggio da inviare al server (o 'exit' per uscire): ");
-        if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
-            perror("Errore nella lettura dell'input");
-            continue; // Riprova a leggere l'input
-        }
-
-        // Rimuovere il carattere di nuova linea se presente
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        // Condizione per uscire dal ciclo //cambiare in base al testo
-        if (strcmp(buffer, "exit") == 0) {
-            printf("Uscita dal programma...\n");
-            break;
-        }
+        int nread;
+        printf("Inserisci il messaggio da inviare al server (o 'exit' per uscire): \n");
+        SYSC(nread,read(STDIN_FILENO,buffer,BUFFER_SIZE),"errore lettura utente");
+        char* input = (char*)malloc(nread+1);
+        printf("input:%s\n",buffer);
+        strncpy(input,buffer,nread);
+        input[nread] = '\0';
+        printf("buffer:%s, input:%s\n",buffer,input);
 
         // Inviare messaggio al server
-        if (send(client_sock, buffer, strlen(buffer), 0) < 0) {
-            perror("Errore nell'invio del messaggio");
-            continue; // Riprova a inviare un nuovo messaggio
-        }
+        send_message(client_sock,MSG_OK,input);
 
         // Azzerare il buffer prima di ricevere la risposta
-        memset(buffer, 0, BUFFER_SIZE);
+        //memset(buffer, 0, BUFFER_SIZE);
 
         // Ricevere risposta dal server
-        ssize_t bytes_received = recv(client_sock, buffer, BUFFER_SIZE, 0);
-        if (bytes_received < 0) {
-            perror("Errore nella ricezione della risposta");
-            continue; // Riprova a inviare un nuovo messaggio
-        } else if (bytes_received == 0){
-            printf("Il server ha chiuso la connessione.\n");
-            break; // Uscire se il server ha chiuso la connessione
-        }
-
+        //ssize_t bytes_received = recv(client_sock, buffer, BUFFER_SIZE, 0);
+        message response_message = receive_message(client_sock);
+        printf("esco dalla receive\n");
         // Stampare la risposta del server
-        printf("\nRisposta del server: %s", buffer);
+        printf("Risposta del server: %s\n", response_message.data);
     }
 
 //TASK DI OGGI: OCCUPARSI DELLA CAMPIONATURA DEI MESSAGGI SCRITTI DA RIGA DI COMANDO SUL CLIENT   
@@ -213,57 +196,58 @@ int main(int argc, char* argv[]){
 }
 
 
-void client_sender (void * args) {
-    int client_fd = *(int*)args; // Estrae il file descriptor del client
-    int value;
-    char buffer[BUFFER_SIZE];  // Buffer per lettura dell'input dell'utente
-    ssize_t n_read;
-    // aiuto -> mostrare i comandi disponibili, quindi registra_utente, nome_utente, matrice parola_indicata
-    char* aiuto =   "I comandi disponibili sono: \naiuto -> mostra i comandi disponibili\nregistra_utente nome_utente --> per registrarsi\nmatrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \np parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\nfine --> uscire dal giorco \n"; 
-    char* fine =  "Hai deciso di uscire dal gioco!\n";
+// void client_sender (void * args) {
+//     int client_fd = *(int*)args; // Estrae il file descriptor del client
+//     int value;
+//     char buffer[BUFFER_SIZE];  // Buffer per lettura dell'input dell'utente
+//     ssize_t n_read;
+//     // aiuto -> mostrare i comandi disponibili, quindi registra_utente, nome_utente, matrice parola_indicata
+//     char* aiuto =   "I comandi disponibili sono: \naiuto -> mostra i comandi disponibili\nregistra_utente nome_utente --> per registrarsi\nmatrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \np parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\nfine --> uscire dal giorco \n"; 
+//     char* fine =  "Hai deciso di uscire dal gioco!\n";
 
-    // Ciclo infinito per gestire i messaggi dell'utente
-    while (1) {
-        char * token;
-        int retvalue;
-        SYSC(n_read, read(STDIN_FILENO, buffer, BUFFER_SIZE), "Errore lettura");
+//     // Ciclo infinito per gestire i messaggi dell'utente
+//     while (1) {
+//         char * token;
+//         int retvalue;
+//         SYSC(n_read, read(STDIN_FILENO, buffer, BUFFER_SIZE), "Errore lettura");
 
-        // Rimuove il newline finale, se presente
-        buffer[strcspn(buffer, "\n")] = 0;
+//         // Rimuove il newline finale, se presente
+//         buffer[strcspn(buffer, "\n")] = 0;
 
-        // Controllo "aiuto"
-        if (strcmp(buffer, "aiuto") == 0) {
-            writef(retvalue, aiuto);
-            continue;
-        }
-        // Controllo registra utente
-        else if (strcmp(buffer, "registra_utente") == 0) {
-            token = strtok(NULL, "\n");
-            if (token == NULL) {
-                writef (retvalue, "Nome utente non valido\n");
-                continue;
-            }
-            send_message(client_fd, token, MSG_REGISTRA_UTENTE);
-        }   
-        // Controllo matrice
-        else if (strcmp(buffer, "matrice") == 0) {
-            send_message(client_fd, NULL, MSG_MATRICE);
-        } 
-        else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
-            token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
-            if (token == NULL) {
-                writef (retvalue, "Parola non valida\n");
-                continue;
-            } 
-            else if (strlen(token) < 4) {
-                writef (retvalue, "Parola troppo corta non valida\n");
-                continue;
-            } 
-            send_message(client_fd, token, MSG_PAROLA);
-        }
-        else if (strcmp(buffer, "fine") == 0) {
-            send_message(client_fd, NULL, MSG_FINE);
-            break;
-        }        
-    }
-}
+//         // Controllo "aiuto"
+//         if (strcmp(buffer, "aiuto") == 0) {
+//             writef(retvalue, aiuto);
+//             continue;
+//         }
+//         // Controllo registra utente
+//         else if (strcmp(buffer, "registra_utente") == 0) {
+//             token = strtok(NULL, "\n");
+//             if (token == NULL) {
+//                 writef (retvalue, "Nome utente non valido\n");
+//                 continue;
+//             }
+//             send_message(client_fd, token, MSG_REGISTRA_UTENTE);
+//         }   
+//         // Controllo matrice
+//         else if (strcmp(buffer, "matrice") == 0) {
+//             send_message(client_fd, NULL, MSG_MATRICE);
+//         } 
+//         else if (strncmp(buffer, "p ", 2) == 0) { // Controllo per parola
+//             token = strtok(buffer + 2, "\n"); // Ottiene la parola dopo "p "
+//             if (token == NULL) {
+//                 writef (retvalue, "Parola non valida\n");
+//                 continue;
+//             } 
+//             else if (strlen(token) < 4) {
+//                 writef (retvalue, "Parola troppo corta non valida\n");
+//                 continue;
+//             } 
+//             send_message(client_fd, token, MSG_PAROLA);
+//         }
+//         else if (strcmp(buffer, "fine") == 0) {
+//             send_message(client_fd, NULL, MSG_FINE);
+//             break;
+//         }
+//         writef(retvalue,"comando non valido");
+//     }
+// }

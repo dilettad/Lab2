@@ -1,8 +1,8 @@
-Eseguibili/test
-Eseguibili/client
-Eseguibili/server
-Header/comunicazione.h.gch
+Eseguibili/Test
+Eseguibili/Client
+Eseguibili/Server
+Header/Comunicazione.h.gch
 Header/Matrice.h.gch
 Header/macro.h.gch
-Header/comunicazione.h.gch
+Header/Lista-h.gch
 Header/Trie.h.gch

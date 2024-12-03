@@ -58,44 +58,50 @@ CLIENT_RUN = ./$(CLIENT) $(HOST) $(PORT)
 TEST_RUN = ./$(TEST)
 
 # Target principali
-all: $(SERVER) $(CLIENT) $(TEST) clean_all
+all: $(SERVER) $(CLIENT) $(TEST) clean_objs
 
 $(SERVER): $(SERVER_OBJS)
 	@echo Compilazione del Server
-	$(CC) $(CFLAGS) $(OBJS) $(SERVER_OBJS) $(SERVER_HEADERS) -o $(SERVER)
+	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) -o $(SERVER)
 
 $(CLIENT): $(CLIENT_OBJS)
 	@echo Compilazione del Client
-	$(CC) $(CFLAGS) $(OBJC) $(CLIENT_OBJS) $(CLIENT_HEADERS) -o $(CLIENT)
+	@$(CC) $(CFLAGS)  $(SRCC) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(CLIENT_HEADERS) -o $(CLIENT)
 
 $(TEST): $(TEST_OBJS)
 	@echo Compilazione dei Test
-	$(CC) $(CFLAGS) $(OBJT) $(TEST_OBJS) $(TEST_HEADERS)
+	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
+
+
+
+$(OBJHM):$(SRCHM)
+	@$(CC) $(CFLAGS) -c $(SRCHM) $(HDRS_MATRICE)
+
+$(OBJHCS):$(SRCHCS)
+	@$(CC) $(CFLAGS) -c $(SRCHCS) $(HDRS_COMUNICAZIONE)
+
+$(OBJHL):$(SRCHL)
+	@$(CC) $(CFLAGS) -c $(SRCHL) $(HDRS_LISTA)
 
 #Server.o
 $(OBJS):$(SRCS)
-	$(CC) $(CFLAGS) -c $(SRCS) $(SERVER_HEADERS)
+	@echo compilo 
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SERVER_HEADERS)
+
 #Client.o
 $(OBJC):$(SRCC)
-	$(CC) $(CFLAGS) -c $(SRCC) $(CLIENT_HEADERS)
+	@$(CC) $(CFLAGS) -c $(SRCC) $(CLIENT_HEADERS)
 #Test.o
 $(OBJT):$(SRCT)
-	$(CC) $(CFLAGS) -c $(SRCT) 
-
-$(OBJHM):$(SRCHM)
-	$(CC) $(CFLAGS) -c $(SRCHM) $(HDRS_MATRICE)
-
-$(OBJHCS):$(SRCHCS)
-	$(CC) $(CFLAGS) -c $(SRCHCS) $(HDRS_COMUNICAZIONE)
-
-$(OBJHL):$(SRCHL)
-	$(CC) $(CFLAGS) -c $(SRCHL) $(HDRS_LISTA)
+	@$(CC) $(CFLAGS) -c $(SRCT) 
 
 $(OBJHT):$(SRCHT)
-	$(CC) $(CFLAGS) -c $(SRCHT) $(HDRS_TRIE)
+	@$(CC) $(CFLAGS) -c $(SRCHT) $(HDRS_TRIE)
+
 # Pulizia
 clean_objs:
 	@rm -f *.o
+	@rm -f ../Header/*.gch
 	@echo File oggetto rimossi
 
 clean_all: clean_objs
