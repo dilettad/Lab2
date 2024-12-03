@@ -1,29 +1,33 @@
-/*
-gcc server.c Lista.c Client.c Comunicazione.c -lrt -pthread
-*/
-
 #include <stdio.h>
+#include <errno.h>
+
 #include "../Header/Matrice.h"
 #include "../Header/Lista.h"
-#include <errno.h>
+#include "../Header/Giocatore.h"
+
 
 int main(int argc, char* argv[]){
     printf("Esecuzione dei test --- \n");
+
+    // TEST MATRICE
     int retvalue;
     cella** matrice = generateMatrix();
     writef(retvalue,"casa\n");
     InputStringa(matrice,"ATLCIOQADVESISBI");
-    
-    
     stampaMatrice(matrice);
-    
     printf("%d\n",trovaParola(matrice, "CASE"));
-    
-    // writef(retvalue,"mamma\n");
-    // int client_fd = 1;
-    // char username[5] = "test";
+
+    // TEST GIOCATORE
+ 
+    /*int risultato =  controlla_caratteri("DJ0Q..");
+    printf("%d\n",risultato);
+    */
+    // char username[5] = "test";    
     // Fifo* lista = create();
-    // //registrazione_client(client_fd,username);
+
+    //Prova registrazione_client
+   
+    // printf("%d\n", risultato);
     // //stampa utente
     // printf("Lista dei clienti dopo la registrazione:\n");
     //stampa_lista_clienti();

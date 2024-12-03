@@ -9,8 +9,6 @@
 //librerie personali
 #include "../Header/macro.h"
 #include "../Header/Comunicazione.h"
-#include "../Header/Trie.h"
-#include "../Header/Lista.h"
 #include "../Header/Matrice.h"
 #include "../Header/Client.h"
 // #include "../Header/Giocatore.h"
@@ -86,7 +84,6 @@ void* receiver(void* args) {
 
 
             case MSG_MATRICE:
-                
                 if (matrice == NULL) {
                     fprintf(stderr, "Errore nell'allocazione della matrice\n");
                     pthread_mutex_unlock(&message_mutex);
@@ -94,7 +91,7 @@ void* receiver(void* args) {
                 }
                 InputStringa(matrice, received_msg.data);
                 printf("\nMatrice: \n");
-                stampaMatrice(&matrice);
+                stampaMatrice(matrice);
                 free(matrice); // Dealloca la memoria della matrice
                 break;
 
