@@ -19,61 +19,9 @@
 #define NUM_THREADS 5 //Numero di thread da creare
 #define BUFFER_SIZE 1024 //dimensione del buffer
 #define MATRIX_SIZE 4
-
-//MAIN
-/*
-int main(int argc, char* argv[]){
-    //Controllo se il numero di parametri passati è corretto
-    if(argc<3){
-        //Errore
-        printf("Errore: Numero errato di parametri passati");
-        return 0; 
-    }
-    //Prendo il parametro nome_server
-    char* nome_server = argv[1];
-     //Controllo se il nome del server preso è quello corretto
-    if(argv[1]!= "serverd"){
-        printf("Errore:Nome del server errato");
-        return 0;
-    }
-    //Prendo il parametro porta_server
-    int porta_server = atoi(argv<[2]);
-    
-  //Parametri opzionali: [--matrici data_filename] [--durata durata_in_minuti] [--seed rnd_seed] [--diz dizionario] 
-  //!! riguarda in base alla struttura che scegli
-  
-    //Gestione
-    int opt;
-    while((opt = getopt(argc, argv, "m:d:s:x:")) != -1){
-        switch (opt) {
-        //--matrici `e seguito dal nome del file dal quale caricare le matrici 
-        case 'm':
-            parametri.data_filename= optarg;
-            break;
-        //--durata permette di indicare la durata del gioco in minuti. Se non espresso di default va considerato 3 minuti
-        case 'd':
-                parametri.durata = atoi(optarg);
-                break;
-        //--seed permette di indicare il seed da usare per la generazione dei numeri pseudocasuali
-            case 's':
-                parametri.rnd_seed = atoi(optarg);
-                break;
-        //--diz permette di indicare il dizionario da usare per la verifica di leicità delle parole ricevute dal client.
-            case 'x':
-                parametri.dizionario = optarg;
-                break;
-            default:
-                fprintf(stderr, "Uso: %s nome_server porta_server [-m data_filename] [-d durata_in_minuti] [-s rnd_seed] [-x dizionario]\n", argv[0]);
-                return 1;
-        }
-    }
-
-}   
-*/
-
+#define DIZIONARIO "../Dizionario.txt"
 
 //SOCKET
-
 // Funzione del thread
 void* thread_func(void* arg) {
     // Dichiara un puntatore per il valore di ritorno
@@ -180,6 +128,126 @@ int main(int argc, char* argv[]) {
 
 }
 
+// La partita dura 5 minuti quindi 300s
+int durata_partita = 300;
+//La pausa della partita dura 1.5 minuti
+int durata_pausa = 90;
+int pausa_gioco = 1; // 1 = si, 0 = no
+
+// Calcola tempo rimanente
+void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
+    time_t tempo_attuale = time(NULL);
+    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
+    int tempo_rimanente_secondi = durata - (int)tempo_trascorso;
+
+    if (tempo_rimanente_secondi < 0) {
+        printf("Il gioco è già terminato\n");
+    } else {
+        printf("Il tempo rimanente è: %d secondi\n", tempo_rimanente_secondi);
+    }
+}
+
+// Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
+void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
+    int length = MATRIX_SIZE * MATRIX_SIZE;
+    char data[length];
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            data [i * MATRIX_SIZE + j] = matrix[i][j];
+        }
+    }    
+    printf("Invio matrice al client %d\n", client_fd);
+    send_message(client_fd, length, MSG_MATRICE, data);
+}
 
 
 
+// Gestione dei comandi ricevuti dal client
+// MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
+
+switch (){
+case MSG_MATRICE:
+    if(pausa_gioco == 0){
+        invio_matrice(client_sock, matrice);
+        char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+        send_message(client_sock, strlen(temp), MSG_TEMPO_PARTITA, temp);
+    } else {
+        char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+        send_message(client_sock, strlen(temp), MSG_TEMPO_ATTESA, temp);
+    }
+    break;
+
+case MSG_PAROLA:
+
+    break;
+
+case MSG_REGISTRA_UTENTE:
+    send_message(client_sock, MSG_ERR, "Utente già registrato");
+    break;
+
+case MSG_PUNTI_FINALI:
+
+    break;  
+}
+
+// MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
+// MSG_REGISTRA_UTENTE: registra l'utente e controllo se già registrato
+// MSG_PUNTI_FINALI: calcolo i punti totali
+
+
+// Calcolo dei tempi
+
+
+
+
+
+
+/*MAIN
+int main(int argc, char* argv[]){
+    //Controllo se il numero di parametri passati è corretto
+    if(argc<3){
+        //Errore
+        printf("Errore: Numero errato di parametri passati");
+        return 0; 
+    }
+    //Prendo il parametro nome_server
+    char* nome_server = argv[1];
+     //Controllo se il nome del server preso è quello corretto
+    if(argv[1]!= "serverd"){
+        printf("Errore:Nome del server errato");
+        return 0;
+    }
+    //Prendo il parametro porta_server
+    int porta_server = atoi(argv<[2]);
+    
+  //Parametri opzionali: [--matrici data_filename] [--durata durata_in_minuti] [--seed rnd_seed] [--diz dizionario] 
+
+  
+    //Gestione
+    int opt;
+    while((opt = getopt(argc, argv, "m:d:s:x:")) != -1){
+        switch (opt) {
+        //--matrici `e seguito dal nome del file dal quale caricare le matrici 
+        case 'm':
+            parametri.data_filename= optarg;
+            break;
+        //--durata permette di indicare la durata del gioco in minuti. Se non espresso di default va considerato 3 minuti
+        case 'd':
+                parametri.durata = atoi(optarg);
+                break;
+        //--seed permette di indicare il seed da usare per la generazione dei numeri pseudocasuali
+            case 's':
+                parametri.rnd_seed = atoi(optarg);
+                break;
+        //--diz permette di indicare il dizionario da usare per la verifica di leicità delle parole ricevute dal client.
+            case 'x':
+                parametri.dizionario = optarg;
+                break;
+            default:
+                fprintf(stderr, "Uso: %s nome_server porta_server [-m data_filename] [-d durata_in_minuti] [-s rnd_seed] [-x dizionario]\n", argv[0]);
+                return 1;
+        }
+    }
+
+}   
+*/
