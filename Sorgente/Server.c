@@ -21,6 +21,15 @@
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
 
+void invio_matrice(int client_fd, char matrix[MATRIX_SIZE][MATRIX_SIZE]);
+void calcola_tempo_rimanente(time_t tempo_iniziale, int durata);
+
+int pausa_gioco = 0;
+// La partita dura 5 minuti quindi 300s
+int durata_partita = 300;
+//La pausa della partita dura 1.5 minuti
+int durata_pausa = 90;
+
 //SOCKET
 // Funzione del thread
 void* thread_func(void* arg) {
@@ -32,6 +41,31 @@ void* thread_func(void* arg) {
     while(1){
         message client_message = receive_message(client_sock);
         writef(retvalue,client_message.data);
+        switch (client_message.type){
+            case MSG_MATRICE:
+                if(pausa_gioco == 0){
+                //     invio_matrice(client_sock, matrice);
+                //     char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                //     send_message(client_sock, MSG_TEMPO_PARTITA, temp);
+                // } else {
+                //     char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+                //     send_message(client_sock, MSG_TEMPO_ATTESA, temp);
+                // }
+                }
+                continue;
+            case MSG_PAROLA:
+                /*controllare parola*/
+                continue;
+
+            case MSG_REGISTRA_UTENTE:
+                //controllare nome utente
+                send_message(client_sock, MSG_ERR, "Utente già registrato");
+                continue;
+
+            case MSG_PUNTI_FINALI:
+            //non sono sicuro che questo messaggio lo mandi il client, controlla meglio il testo
+                continue;  
+            }
         send_message(client_sock,MSG_OK,"ciao diletta");
     }
     // Terminazione del thread con valore di ritorno
@@ -128,11 +162,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-// La partita dura 5 minuti quindi 300s
-int durata_partita = 300;
-//La pausa della partita dura 1.5 minuti
-int durata_pausa = 90;
-int pausa_gioco = 1; // 1 = si, 0 = no
+//int pausa_gioco = 1; // 1 = si, 0 = no
 
 // Calcola tempo rimanente
 void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
@@ -157,7 +187,7 @@ void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
         }
     }    
     printf("Invio matrice al client %d\n", client_fd);
-    send_message(client_fd, length, MSG_MATRICE, data);
+    send_message(client_fd, MSG_MATRICE, data);
 }
 
 
@@ -165,30 +195,7 @@ void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
 
-switch (){
-case MSG_MATRICE:
-    if(pausa_gioco == 0){
-        invio_matrice(client_sock, matrice);
-        char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-        send_message(client_sock, strlen(temp), MSG_TEMPO_PARTITA, temp);
-    } else {
-        char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
-        send_message(client_sock, strlen(temp), MSG_TEMPO_ATTESA, temp);
-    }
-    break;
 
-case MSG_PAROLA:
-
-    break;
-
-case MSG_REGISTRA_UTENTE:
-    send_message(client_sock, MSG_ERR, "Utente già registrato");
-    break;
-
-case MSG_PUNTI_FINALI:
-
-    break;  
-}
 
 // MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
 // MSG_REGISTRA_UTENTE: registra l'utente e controllo se già registrato
