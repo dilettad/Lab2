@@ -135,3 +135,19 @@ void svuotaMatrice(cella** matrice){
     }
 }        
 
+//Controlla se parola è stata già trovata dall'utente
+void esiste_paroleTrovate(paroleTrovate* head, const char* parola){
+    if(head == NULL){
+        return 0; //lista vuota
+    }
+    paroleTrovate* current = head;
+    while(current != NULL){
+        if(strcmp(current->parola, parola) == 0){
+            return 1; //parola trovata, quindi già proposta precedentemente
+        }
+        current = current->next;
+    }
+    return 0; //parola non trovata, quindi valida
+}
+
+

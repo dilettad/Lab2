@@ -15,6 +15,12 @@ typedef struct cella{
     char value;
 }cella;
 
+typedef struct paroleTrovate{
+    char* parola;
+    struct paroleTrovate* next;
+}paroleTrovate;
+
+
 cella** generateMatrix();
 
 void InputStringa(cella** matrice, char* string);
@@ -28,3 +34,5 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index);
 void Carica_MatricedaFile(FILE* file, cella** matrice);
 
 void svuotaMatrice(cella** matrice);
+
+void esiste_paroleTrovate(paroleTrovate* head, const char* parola);

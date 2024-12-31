@@ -24,19 +24,27 @@
 void invio_matrice(int client_fd, char matrix[MATRIX_SIZE][MATRIX_SIZE]);
 void calcola_tempo_rimanente(time_t tempo_iniziale, int durata);
 
-int pausa_gioco = 0;
+int pausa_gioco = 0; //Gioco
 // La partita dura 5 minuti quindi 300s
 int durata_partita = 300;
 //La pausa della partita dura 1.5 minuti
 int durata_pausa = 90;
-
+int punteggio = 0; // Devo aggiungere il punteggio tramite le mutex?
+int classifica = 0; // Classifica non disponibile
+char*  classificaError = "Classifica non disponibile"
 //SOCKET
 // Funzione del thread
 void* thread_func(void* arg) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)arg;
 
-    
+
+// Gestione dei comandi ricevuti dal client
+// MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
+// MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
+// MSG_REGISTRA_UTENTE: registra l'utente e controllo se già registrato
+// MSG_PUNTI_FINALI: calcolo i punti totali
+    char parola = receive_message(client_sock);
     int retvalue;
     while(1){
         message client_message = receive_message(client_sock);
@@ -44,27 +52,70 @@ void* thread_func(void* arg) {
         switch (client_message.type){
             case MSG_MATRICE:
                 if(pausa_gioco == 0){
-                //     invio_matrice(client_sock, matrice);
-                //     char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-                //     send_message(client_sock, MSG_TEMPO_PARTITA, temp);
-                // } else {
-                //     char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
-                //     send_message(client_sock, MSG_TEMPO_ATTESA, temp);
-                // }
+                    // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
+                    invio_matrice(client_sock, matrice);
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                    send_message(client_sock, MSG_TEMPO_PARTITA, temp);
+                } else {
+                    // Invio il tempo di pausa rimanente
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+                    send_message(client_sock, MSG_TEMPO_ATTESA, temp);
                 }
-                continue;
-            case MSG_PAROLA:
-                /*controllare parola*/
-                continue;
+                break;
 
+            case MSG_PAROLA:
+                if (pausa_gioco==0){
+                // Controllo se la parola è già stata trovata 
+                   // Inserire una lista parole per confrontare
+                    if(esiste_paroleTrovate(listaParoleTrovate, data)){ //SISTEMARE 
+                        send_message(client_sock, 1, MSG_PUNTI_PAROLA, "0");
+                        break;
+                    }
+                //Controllo se parola è in matrice
+                    else if(!trovaParola(matrice, data)){
+                        send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
+                        break;
+                    }
+                   
+                //Controllo se parola è nel dizionario
+                    else if(!search_Trie(root, data)){
+                        send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
+                        break;
+                    }
+                // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
+                else{
+                    // Aggiungo la parola alla lista delle parole trovate
+                    paroleTrovate = aggiungiParolaTrovata(listaParoleTrovate, data); //DA SISTEMARE LA LISTA
+                    int puntiparola = strlen(data);
+                    // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
+                    if (strstr(data,"Qu")){
+                        puntiparola--;
+                    } 
+                    // Invio i punti della parola
+                    send_message(client_sock, puntiparola, MSG_PUNTI_PAROLA, data);
+                    punteggio += puntiparola;
+                }
+            } else {
+                // Invio il messaggio di errore
+                send_message(client_sock, strlen(errno), MSG_ERR, errno);
+            }
+            break;             
+            
             case MSG_REGISTRA_UTENTE:
                 //controllare nome utente
                 send_message(client_sock, MSG_ERR, "Utente già registrato");
-                continue;
+                break;
 
             case MSG_PUNTI_FINALI:
-            //non sono sicuro che questo messaggio lo mandi il client, controlla meglio il testo
-                continue;  
+                if(pausa_gioco == 1 && classifica == 1){
+                    send_message(client_sock, strlen(classifica), MSG_PUNTI_FINALI, classifica);
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata);
+                    send_message(client_sock, strlen(temp), MSG_TEMPO_ATTESA, temp);
+                }
+                else{
+                    send_message(client_sock, strlen(classificaError), MSG_ERR, classificaError);
+                }
+                break;
             }
         send_message(client_sock,MSG_OK,"ciao diletta");
     }
@@ -189,21 +240,6 @@ void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
     printf("Invio matrice al client %d\n", client_fd);
     send_message(client_fd, MSG_MATRICE, data);
 }
-
-
-
-// Gestione dei comandi ricevuti dal client
-// MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
-
-
-
-// MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
-// MSG_REGISTRA_UTENTE: registra l'utente e controllo se già registrato
-// MSG_PUNTI_FINALI: calcolo i punti totali
-
-
-// Calcolo dei tempi
-
 
 
 
