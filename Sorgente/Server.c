@@ -97,7 +97,7 @@ void* thread_func(void* arg) {
                 }
             } else {
                 // Invio il messaggio di errore
-                send_message(client_sock, strlen(errno), MSG_ERR, errno);
+                send_message(client_sock, MSG_ERR, "Gioco in pausa!");
             }
             break;             
             
