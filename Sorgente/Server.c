@@ -13,6 +13,7 @@
 #include "../Header/Trie.h"
 #include "../Header/Lista.h"
 #include "../Header/Matrice.h"
+#include "../Header/FunzioniServer.h"
 
 #define MAX_CLIENTS 32 
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
@@ -31,12 +32,100 @@ int durata_partita = 300;
 int durata_pausa = 90;
 int punteggio = 0; // Devo aggiungere il punteggio tramite le mutex?
 int classifica = 0; // Classifica non disponibile
-char*  classificaError = "Classifica non disponibile"
+int scorer = 0; // Scorer
+
+// MUTEX
+pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Handler dei segnali
+void alarm_handler(int sig){
+    //Quando scade il tempo se il gioco era in pausa, cambia lo stato in modo da ricominciare
+    if(pausa_gioco == 1){
+        pthread_mutex_lock(&pausa_gioco);
+        pausa_gioco = 0;
+        printf("Il gioco è in corso.\n");
+        pthread_mutex_unlock(&pausa_gioco);
+    }
+    else{
+        //Quando scade il tempo, il gioco si ferma e cambia lo stato
+        int retvalue;
+        pthread_mutex_lock(&pausa_gioco);
+        pausa_gioco = 1;
+        printf("Il gioco è in pausa. \n");
+        pthread_mutex_unlock(&pausa_gioco);
+        //Invio del segnale a tutti i thread giocatori notificando che il gioco è finito
+        if(listaGiocatori.count > 0){
+            scorer = 1;
+            invia_SIG(&lista, SIGUSR1, lista_mutex);
+            //Creazione dello scorer
+            SYSC(retvalue, pthread_create(&scorer_tid, NULL, scorer, NULL), "Errore nella pthread_create dello scorer");
+        }
+    }
+}
+
+void sigusr1_handler(int sig){
+    // Quando ricevo il segnale SIGUSR1, il thread giocatore deve inviare il punteggio e l'username al server
+    pthread_mutex_lock(%lista_mutex);
+    // Prende il punteggio e l'username della lista dei giocatori
+    char* username = get_username (%lista, pthread_self());
+    if (username == NULL) {
+        pthread_mutex_unlock(&lista_mutex);
+        return;
+    }
+    int punteggio = get_punteggio(&lista, pthread_self());
+    aggiorna_punteggio (&lista, username, 0);
+    pthread_mutex_unlock(&lista_mutex);
+    //mandare il punteggio e l'username allo scorer
+    pthread_mutex_lock(&scorer_mutex);
+    if (pushRisList(&scoreList, username, punteggio) != 0){
+        free(username); // Libera la memoria se l'aggiunta fallisce
+    }
+    pthread_cond_signal(&scorer_cond);
+    pthread_mutex_unlock(&scorer_mutex);
+} 
+
+void sigusr2_handler(int sig){
+    // Quando ricevo il segnale SIGUSR2, lo scorer manda la classifica a tutti i thread giocatori
+    scorer = 0;
+    sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_pausa);
+}
+
+// Funzione per terminazione del server
+void sigint_handler(int sig){
+    int retvalue;
+    // Scorro la lista dei thread attivi, in modo da chiuderli
+    if (listaGiocatori.count != 0){
+        pthread_mutex_lock(&lista_mutex);
+        for (int i = 0; i < listaGiocatori.count; i++){
+        // Invia un messaggio di chiusura a ciascun giocatore
+            if (send_message(listaGiocatori.array[i].client_sock, "Il gioco è finito.\n") < 0) {
+                perror("Errore nell'invio del messaggio di chiusura");
+            }
+            // Cancella il thread del giocatore
+            if (pthread_cancel(listaGiocatori.array[i].thread_id) != 0) {
+                perror("Errore nella cancellazione del thread");
+            }
+        pthread_mutex_unlock(&lista_mutex);
+    }
+   // Distruggi lista dei giocatori 
+   distruggi_lista(&listaGiocatori);
+   // Chiudi socket
+   if (close(server_fd) == -1) {
+   perror("Errore nella chiusura del socket del server");
+}
+printf("Chiusura del server \n");
+exit(EXIT_SUCCESS);
+}
+}
+
+
+
 //SOCKET
 // Funzione del thread
 void* thread_func(void* arg) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)arg;
+
 
 
 // Gestione dei comandi ricevuti dal client
@@ -113,7 +202,7 @@ void* thread_func(void* arg) {
                     send_message(client_sock, strlen(temp), MSG_TEMPO_ATTESA, temp);
                 }
                 else{
-                    send_message(client_sock, strlen(classificaError), MSG_ERR, classificaError);
+                    send_message(client_sock, MSG_ERR, "Classifica non disponibile");
                 }
                 break;
             }
@@ -123,6 +212,91 @@ void* thread_func(void* arg) {
     pthread_exit(NULL);
 }
 
+// Funzione per gestire lo scorer
+typedef struct{
+    char* username;
+    int punteggio;
+} risGiocatore;
+
+pthread_mutex_t lista_mutex;
+pthread_mutex_t scorer_mutex;
+pthread_mutex_t scorer_cond;
+ /* QUESTA FUNZIONE NON FUNZIONA 
+void *scorer(void* arg){
+    printf("Scorer in esecuzione \n");
+    //Registrazione dei segnali
+    signal(SIGINT, sigusr2_handler);
+    pthread_mutex_lock(&lista_mutex);
+    int num_giocatori = listaGiocatori.count
+    pthread_mutex_unlock(&lista_mutex);
+
+    risGiocatore scorerVector[MAX_CLIENTS];
+
+    for (int i = 0, i < num_giocatori; i++){
+        pthread_mutex_lock(&scorer_mutex);
+        while (scoreList ==  NULL){
+            pthread_cond_wait(&scorer_cond, &scorer_mutex);
+        }
+        risGiocatore *temp = PopRisList (&scoreList);
+        if (temp == NULL){
+            pthread_mutex_unlock(&scorer_mutex);
+            return NULL;
+        }
+        scorerVector[i].username = temp -> username;
+        scorerVector[i].punteggio = temp -> punteggio;
+        free(temp);
+        pthread_mutex_unlock(&scorer_mutex);
+    }
+    compare_score(scorerVector, num_giocatori, sizeof(risGiocatore), &compare_score_func);
+    pthread_mutex_lock(&scorer_mutex);
+    
+    invia_SIG(&listaGiocatori, SIGINT, lista_mutex);
+    return NULL;
+}
+*/
+// FUNZIONE AGGIUSTATA DA CHAT
+void *scorer(void *arg) {
+    printf("Scorer in esecuzione\n");
+
+    // Registrazione dei segnali
+    signal(SIGUSR2, sigusr2_handler); // Cambiato SIGINT in SIGUSR2 per evitare conflitti
+
+    // Prendo il numero di giocatori registrati
+    pthread_mutex_lock(&lista_mutex);
+    int num_giocatori = listaGiocatori.count; // Assicurati che listaGiocatori sia definito correttamente
+    pthread_mutex_unlock(&lista_mutex);
+
+    risGiocatore scorerVector[MAX_CLIENTS];
+
+    // Ciclo per raccogliere i risultati
+    for (int i = 0; i < num_giocatori; i++) {
+        pthread_mutex_lock(&scorer_mutex);
+        while (scoreList == NULL) {
+            pthread_cond_wait(&scorer_cond, &scorer_mutex);
+        }
+
+        risGiocatore *temp = PopRisList(&scoreList);
+        if (temp == NULL) {
+            pthread_mutex_unlock(&scorer_mutex);
+            fprintf(stderr, "Errore: impossibile popolare la lista dei risultati.\n");
+            return NULL; // Esci in caso di errore
+        }
+
+        scorerVector[i].username = temp->username; // Assicurati che username sia allocato correttamente
+        scorerVector[i].punteggio = temp->punteggio;
+        free(temp); // Libera la memoria allocata per temp
+        pthread_mutex_unlock(&scorer_mutex);
+    }
+
+    // Ordinamento dei risultati
+    qsort(scorerVector, num_giocatori, sizeof(risGiocatore), compare_score_func);
+
+    // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
+    invia_SIG(&listaGiocatori, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
+
+    printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
+    return NULL;
+} 
 
 int main(int argc, char* argv[]) {
     int server_sock;
@@ -240,8 +414,6 @@ void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
     printf("Invio matrice al client %d\n", client_fd);
     send_message(client_fd, MSG_MATRICE, data);
 }
-
-
 
 
 
