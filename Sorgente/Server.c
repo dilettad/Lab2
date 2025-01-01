@@ -36,6 +36,10 @@ int scorer = 0; // Scorer
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t matrix_mutex;
+pthread_mutex_t lista_mutex;
+pthread_mutex_t scorer_mutex;
+pthread_mutex_t scorer_cond;
 
 // Handler dei segnali
 void alarm_handler(int sig){
@@ -218,9 +222,7 @@ typedef struct{
     int punteggio;
 } risGiocatore;
 
-pthread_mutex_t lista_mutex;
-pthread_mutex_t scorer_mutex;
-pthread_mutex_t scorer_cond;
+
  /* QUESTA FUNZIONE NON FUNZIONA 
 void *scorer(void* arg){
     printf("Scorer in esecuzione \n");
@@ -297,6 +299,66 @@ void *scorer(void *arg) {
     printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
     return NULL;
 } 
+
+// Funzione che gestisce il thread di gioco - aggiustata da chat
+void* game(void* arg){
+    printf("Giocatore in esecuzione\n");
+    int round = 0;
+    time_t tempo_iniziale;
+
+    while(1){
+        pthread_mutex_lock(&lista_mutex);
+        // Attesa fino a quando non ci sono giocatori registrati
+        while (listaGiocatori.count == 0){
+            printf("Nessun giocatore registrato. Attesa...\n");
+            pthread_cond_wait(&listaGiocatori.cond, &listaGiocatori.mutex);
+        }   
+        pthread_mutex_unlock(&lista_mutex);
+        // Inizia la pausa
+        sleep(1);
+        alarm(durata_pausa);
+        printf("La partita è in pausa, inizierà: %d secondi\n", durata_pausa);
+        
+        //PREPARAZIONE DEL ROUND
+        if (round == 0){
+            pthread_mutex_lock(&matrix_mutex);
+           if(Carica_MatricedaFile("file-txt", matrice !=0)){
+              perror("Errore nel caricamento della matrice");
+           }    
+            pthread_mutex_unlock(&matrix_mutex);
+            round = 1;
+        }
+        // Se alla fine della pausa non ci sono giocatori registrati, si ripete il ciclo
+        pthread_mutex_lock(&lista_mutex);
+        if (listaGiocatori.count == 0){
+            pausa_gioco = 1;
+            pthread_mutex_unlock(&lista_mutex);
+            continue;
+        }
+        pthread_mutex_unlock(&lista_mutex);    
+       
+        // Inizia la pausa
+        time_(&tempo_iniziale);
+        alarm(durata_partita);
+        printf("La partita è iniziata, terminerà: %d secondi con %d giocatori\n" , time_t tempo_iniziale); // Perchè non mi prende il tempo iniziale?
+        pthread_mutex_lock(&lista_mutex);
+        giocatore* current = listaGiocatori.head;
+        while(current != NULL){
+            char* temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+            if (send_message(current -> client_fd, strlen(temp), MSG_TEMPO_PARTITA, temp)< 0){
+                perror("Errore nell'invio del messaggio");
+            }
+            current = current -> next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+    while (!pausa_gioco){
+        // Attesa
+    }
+    //Reset dalla pausa per il prossimo round 
+    pausa_gioco = 0;
+    round = 0;
+    }    
+}
 
 int main(int argc, char* argv[]) {
     int server_sock;
