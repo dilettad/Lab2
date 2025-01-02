@@ -10,8 +10,6 @@
 
 #define MATRIX_SIZE 4
 // DA AGGIUNGERE IL CONTROLLO SU QU
-
-
 //Generazione matrice
 cella** generateMatrix(){
     // Allocazione memoria le celle della matrice
@@ -136,7 +134,7 @@ void svuotaMatrice(cella** matrice){
 }        
 
 //Controlla se parola è stata già trovata dall'utente
-void esiste_paroleTrovate(paroleTrovate* head, const char* parola){
+int esiste_paroleTrovate(paroleTrovate* head, const char* parola){
     if(head == NULL){
         return 0; //lista vuota
     }

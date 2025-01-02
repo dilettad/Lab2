@@ -97,14 +97,13 @@ int compare_score (const void *a, const void *b){
 
 pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER; 
 
-/* Funzione di invio segnali ai tutti i giocatori della lista
-void invia_SIG(listaGiocatori* lista, int SIG, pthread_mutex_t* lista_mutex){
+//Funzione di invio segnali ai tutti i giocatori della lista
+void invia_SIG(listaGiocatori* lista, int SIG, pthread_mutex_t lista_mutex){
     pthread_mutex_lock(&lista_mutex);
     giocatore* current = lista->head;
     while(current != NULL){
-       pthread_kill(current->tid, SIG);
+        pthread_kill(current->tid, SIG);
         current = current->next;
         }
-        pthread_mutex_unlock(lista_mutex);
+        pthread_mutex_unlock(&lista_mutex);
 }
-*/

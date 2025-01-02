@@ -42,12 +42,6 @@ pthread_mutex_t scorer_cond;
 pthread_mutex_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
 
-
-// Definizione dei segnali 
-signal(SIGINT, sigint_handler);
-signal(SIGUSR1, alarm_handler);
-signal(SIGUSR2, scorer_handler); 
-
 // Handler dei segnali
 void alarm_handler(int sig){
     //Quando scade il tempo se il gioco era in pausa, cambia lo stato in modo da ricominciare
@@ -69,7 +63,7 @@ void alarm_handler(int sig){
         if(lista.count > 0){
             scorer = 1;
             invia_SIG(&lista, SIGUSR1, &lista_mutex);
-            retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL);
+            int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL);
             if (retvalue != 0) {
                 perror("Errore nella pthread_create dello scorer");
             }    
@@ -143,7 +137,7 @@ void* thread_func(void* arg) {
                 if (pausa_gioco==0){
                 // Controllo se la parola è già stata trovata 
                    // Inserire una lista parole per confrontare
-                    if(esiste_paroleTrovate(listaParoleTrovate, data)){ //SISTEMARE 
+                    if(esiste_paroleTrovate(paroleTrovate, data)){ //SISTEMARE 
                         send_message(client_sock, 1, MSG_PUNTI_PAROLA, "0");
                         break;
                     }
@@ -321,7 +315,7 @@ void* game(void* arg){
         pthread_mutex_unlock(&lista_mutex);    
        
         // Inizia la pausa
-        time_(&tempo_iniziale);
+        time_t (tempo_iniziale);
         alarm(durata_partita);
         printf("La partita è iniziata, terminerà: %d secondi con %d giocatori\n" , time_t tempo_iniziale); // Perchè non mi prende il tempo iniziale?
         pthread_mutex_lock(&lista_mutex);
@@ -345,6 +339,11 @@ void* game(void* arg){
 
 int main(int argc, char* argv[]) {
     listaGiocatori lista; // Lista giocatori
+ 
+    // Definizione dei segnali 
+    signal(SIGINT, sigint_handler);
+    signal(SIGUSR1, alarm_handler);
+    
     int server_sock;
     struct sockaddr_in server_addr;
     //char message [128];

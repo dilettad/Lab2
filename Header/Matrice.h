@@ -35,4 +35,4 @@ void Carica_MatricedaFile(FILE* file, cella** matrice);
 
 void svuotaMatrice(cella** matrice);
 
-void esiste_paroleTrovate(paroleTrovate* head, const char* parola);
+int esiste_paroleTrovate(paroleTrovate* head, const char* parola);
