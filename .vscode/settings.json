@@ -5,7 +5,8 @@
         "macro.h": "c",
         "stdio.h": "c",
         "lista.h": "c",
-        "comunicazione.h": "c"
+        "comunicazione.h": "c",
+        "ProveSERVER.C": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

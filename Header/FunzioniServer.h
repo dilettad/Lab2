@@ -25,13 +25,6 @@ typedef struct{
     int count;
 }listaGiocatori;
 
-int pausa_gioco = 0; //Gioco
-// La partita dura 5 minuti quindi 300s
-int durata_partita = 300;
-//La pausa della partita dura 1.5 minuti
-int durata_pausa = 90;
-
-
 // Calcola tempo rimanente
 // Char perchè mi restituisce un messaggio
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
