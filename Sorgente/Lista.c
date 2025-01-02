@@ -9,6 +9,7 @@
 #include "../Header/Comunicazione.h"
 #include "../Header/Trie.h"
 #include "../Header/Lista.h"
+#include "../Header/FunzioniServer.h"
 
 // Creo la prima lista assegnando la testa e la coda del cliente
 Fifo * create (){
@@ -65,4 +66,30 @@ int seek (Fifo * list, char* username){// 1 se trova un cliente con quel usernam
         temp = temp->next;
     }
     return 0;
+}
+
+//Funzione sulla lista dei giocatori, aggiorna punteggio
+void aggiorna_punteggio(listaGiocatori* lista, char* username, int punteggio){
+    giocatore* current = lista -> head;
+    while(current != NULL){
+        if (strcmp(current->username, username) == 0){
+            current->punteggio = punteggio;
+            return;
+        }
+    current = current -> next;        
+    }
+}    
+
+// Funzione per eliminare la lista dei giocatori 
+void distruggi_lista (listaGiocatori* lista){
+    giocatore* current = lista->head;
+    giocatore* next = NULL;
+    while (current != NULL){
+        next = current->next;
+        free(current);
+        current = next;
+        }
+        lista->head = NULL;
+        lista->tail = NULL;
+        lista->count = 0;
 }

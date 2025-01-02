@@ -4,7 +4,8 @@
         "matrice.h": "c",
         "macro.h": "c",
         "stdio.h": "c",
-        "lista.h": "c"
+        "lista.h": "c",
+        "comunicazione.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
