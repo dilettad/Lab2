@@ -23,7 +23,7 @@
 #define DIZIONARIO "../Dizionario.txt"
 
 void invio_matrice(int client_fd, char matrix[MATRIX_SIZE][MATRIX_SIZE]);
-void calcola_tempo_rimanente(time_t tempo_iniziale, int durata);
+//void calcola_tempo_rimanente(time_t tempo_iniziale, int durata);
 
 int pausa_gioco = 0; //Gioco
 // La partita dura 5 minuti quindi 300s
@@ -451,18 +451,7 @@ int main(int argc, char* argv[]) {
 
 //int pausa_gioco = 1; // 1 = si, 0 = no
 
-// Calcola tempo rimanente
-void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
-    time_t tempo_attuale = time(NULL);
-    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    int tempo_rimanente_secondi = durata - (int)tempo_trascorso;
 
-    if (tempo_rimanente_secondi < 0) {
-        printf("Il gioco è già terminato\n");
-    } else {
-        printf("Il tempo rimanente è: %d secondi\n", tempo_rimanente_secondi);
-    }
-}
 
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
