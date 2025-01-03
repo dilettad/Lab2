@@ -23,26 +23,29 @@
 #define DIZIONARIO "../Dizionario.txt"
 
 void invio_matrice(int client_fd, char matrix[MATRIX_SIZE][MATRIX_SIZE]);
-char* calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
+// char* calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
+
 int pausa_gioco = 0; //Gioco
-// La partita dura 5 minuti quindi 300s
-int durata_partita = 300;
-//La pausa della partita dura 1.5 minuti
-int durata_pausa = 90;
-int punteggio = 0; // Devo aggiungere il punteggio tramite le mutex?
+int durata_partita = 300; // La partita dura 5 minuti quindi 300s
+int durata_pausa = 90; //La pausa della partita dura 1.5 minuti
+int punteggio = 0; 
 int classifica = 0; // Classifica non disponibile
 int scorer = 0; // Scorer
+int server_fd;
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t matrix_mutex;
-pthread_mutex_t lista_mutex;
-pthread_mutex_t scorer_mutex;
+pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_cond;
 pthread_mutex_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
+time_t tempo_iniziale;
+
 
 // Handler dei segnali
+// Funzione per cambiare stato del gioco
 void alarm_handler(int sig){
     //Quando scade il tempo se il gioco era in pausa, cambia lo stato in modo da ricominciare
     if(pausa_gioco == 1){
@@ -62,7 +65,7 @@ void alarm_handler(int sig){
         //Invio del segnale a tutti i thread giocatori 
         if(lista.count > 0){
             scorer = 1;
-            invia_SIG(&lista, SIGUSR1, &lista_mutex);
+            invia_SIG(&lista, SIGUSR1, lista_mutex);
             int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL);
             if (retvalue != 0) {
                 perror("Errore nella pthread_create dello scorer");
@@ -70,35 +73,76 @@ void alarm_handler(int sig){
         }
     }
 }
+signal(SIGUSR2, sig_classifica);
+/*Funzione per invio della classifica
+void sig_classifica(int sig){
+    pthread_mutex_lock(&lista_mutex);
 
-// Funzione per terminazione del server
-void sigint_handler(int sig){
+    if(listaGiocatori == NULL){
+        printf("Nessun giocatore registrato, classifica non disponibile \n");
+        pthread_mutex_unlock(&lista_mutex);
+        return;
+    }
+
+    giocatore* current = listaGiocatori.head;
+    while (current != NULL){
+        send_message(current ->client_fd, strlen(classifica), MSG_PUNTI_FINALI, classifica);
+        current = current -> next;
+    }
+
+    pthread_mutex_unlock(&lista_mutex);
+} 
+*/
+// Funzione per invio della classifica
+void sig_classifica(int sig){
+    pthread_mutex_lock(&lista_mutex);
+    // Controllo se ci sono giocatori registrati
+    if (listaGiocatori.head == NULL){
+        printf("Nessun giocatore registrato, classifica non disponibile \n");
+        pthread_mutex_unlock(&lista_mutex);
+        return;
+    }
+    scorer = 0;
+    sendClassifica(&listaGiocatori, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_pausa);
+    pthread_mutex_unlock(&lista_mutex);
+}
+
+signal(SIGINT, sigint_handler);
+// Funzione per la chiusura del server
+void sigint_handler(int sig) {
     int retvalue;
-    // Scorro la lista dei thread attivi, in modo da chiuderli
-    if (listaGiocatori.count != 0){
+
+    // Scorro la lista dei giocatori, in modo da chiuderli
+    if (listaGiocatori.count != 0) {
         pthread_mutex_lock(&lista_mutex);
-        for (int i = 0; i < listaGiocatori.count; i++){
-        // Invia un messaggio di chiusura a ciascun giocatore
-            if (send_message(listaGiocatori.array[i].client_sock, "Il gioco è finito.\n") < 0) {
+        
+        giocatore* current = listaGiocatori.head; // Inizializza il puntatore alla testa della lista
+        while (current != NULL) { // Ciclo sulla lista
+            // Invia un messaggio di chiusura a ciascun giocatore
+            if (send_message(current->client_sock, "Il gioco è finito.\n") < 0) {
                 perror("Errore nell'invio del messaggio di chiusura");
             }
             // Cancella il thread del giocatore
-            if (pthread_cancel(listaGiocatori.array[i].thread_id) != 0) {
+            if (pthread_cancel(current->thread_id) != 0) {
                 perror("Errore nella cancellazione del thread");
             }
+            current = current->next; // Passa al prossimo giocatore
+        }
+        
         pthread_mutex_unlock(&lista_mutex);
     }
+
     // Distruggi lista dei giocatori 
-    distruggi_lista(&listaGiocatori);
+    distruggi_lista(listaGiocatori); // Assicurati che questa funzione gestisca correttamente la lista collegata
+
     // Chiudi socket
-        if (close(server_fd) == -1) {
+    if (close(server_fd) == -1) {
         perror("Errore nella chiusura del socket del server");
-        }
+    }
+    
     printf("Chiusura del server \n");
     exit(EXIT_SUCCESS);
-    }
 }
-
 
 
 //SOCKET
@@ -106,8 +150,6 @@ void sigint_handler(int sig){
 void* thread_func(void* arg) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)arg;
-
-
 
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
@@ -193,160 +235,150 @@ void* thread_func(void* arg) {
     pthread_exit(NULL);
 }
 
-// Funzione per gestire lo scorer
-typedef struct{
-    char* username;
+/* Funzione per gestire i thread giocatori 
+void* gestisci_giocatore(void* args){
+    int client_fd = *(int*)args;
     int punteggio;
-} risGiocatore;
+    char* username = NULL;
+    char MSG;
 
+    while(1){
+        char *data = receive_message(client_fd, &MSG);
+        if (MSG == MSG_CHIUSURA_CLIENT);
+        rimuovi_thread(&listaGiocatori)
 
- /* QUESTA FUNZIONE NON FUNZIONA 
-void *scorer(void* arg){
-    printf("Scorer in esecuzione \n");
-    //Registrazione dei segnali
-    signal(SIGINT, sigusr2_handler);
-    pthread_mutex_lock(&lista_mutex);
-    int num_giocatori = listaGiocatori.count
-    pthread_mutex_unlock(&lista_mutex);
-
-    risGiocatore scorerVector[MAX_CLIENTS];
-
-    for (int i = 0, i < num_giocatori; i++){
-        pthread_mutex_lock(&scorer_mutex);
-        while (scoreList ==  NULL){
-            pthread_cond_wait(&scorer_cond, &scorer_mutex);
-        }
-        risGiocatore *temp = PopRisList (&scoreList);
-        if (temp == NULL){
-            pthread_mutex_unlock(&scorer_mutex);
-            return NULL;
-        }
-        scorerVector[i].username = temp -> username;
-        scorerVector[i].punteggio = temp -> punteggio;
-        free(temp);
-        pthread_mutex_unlock(&scorer_mutex);
     }
-    compare_score(scorerVector, num_giocatori, sizeof(risGiocatore), &compare_score_func);
-    pthread_mutex_lock(&scorer_mutex);
-    
-    invia_SIG(&listaGiocatori, SIGINT, lista_mutex);
-    return NULL;
-}
-*/
-// FUNZIONE AGGIUSTATA DA CHAT
-void *scorer(void *arg) {
-    printf("Scorer in esecuzione\n");
 
-    // Registrazione dei segnali
-    signal(SIGUSR2, sigusr2_handler); // Cambiato SIGINT in SIGUSR2 per evitare conflitti
+
+}   
+*/ 
+
+pthread_mutex_t classifica_mutex;
+void *scorer(void *arg) {
+
+    printf("Scorer in esecuzione\n");
 
     // Prendo il numero di giocatori registrati
     pthread_mutex_lock(&lista_mutex);
-    int num_giocatori = listaGiocatori.count; // Assicurati che listaGiocatori sia definito correttamente
+    int num_giocatori = listaGiocatori.count; 
     pthread_mutex_unlock(&lista_mutex);
 
-    risGiocatore scorerVector[MAX_CLIENTS];
-
+    giocatore  scorerVector[MAX_CLIENTS];
+    giocatore *current = listaGiocatori.head;
+    
+    pthread_mutex_lock(&lista_mutex); 
     // Ciclo per raccogliere i risultati
-    for (int i = 0; i < num_giocatori; i++) {
-        pthread_mutex_lock(&scorer_mutex);
-        while (scoreList == NULL) {
-            pthread_cond_wait(&scorer_cond, &scorer_mutex);
-        }
-
-        risGiocatore *temp = PopRisList(&scoreList);
-        if (temp == NULL) {
-            pthread_mutex_unlock(&scorer_mutex);
-            fprintf(stderr, "Errore: impossibile popolare la lista dei risultati.\n");
-            return NULL; // Esci in caso di errore
-        }
-
-        scorerVector[i].username = temp->username; // Assicurati che username sia allocato correttamente
-        scorerVector[i].punteggio = temp->punteggio;
-        free(temp); // Libera la memoria allocata per temp
-        pthread_mutex_unlock(&scorer_mutex);
+    for (int i = 0; current != NULL && i< num_giocatori; i++) {
+        scorerVector[i].username =strdup(current -> username); // copia l'username
+        scorerVector[i].punteggio = current -> punteggio; //Copia punteggio
+        current = current -> next; //Passa al prossimo giocatore
     }
+    pthread_mutex_unlock(&lista_mutex);    
 
     // Ordinamento dei risultati
-    qsort(scorerVector, num_giocatori, sizeof(risGiocatore), compare_score_func);
+    qsort(scorerVector, num_giocatori, sizeof(giocatore), compare_score);
 
+    pthread_mutex_lock(&classifica_mutex);
+    memset(classifica, 0, sizeof(classifica)); //Svuota la classifica
+    char msg[MAX_BUFFER];
+    for (int i = 0; i < num_giocatori; i++){
+        sprintf(msg, "%s %d\n", scorerVector[i].username, scorerVector[i].punteggio);
+        strcat(classifica, msg, sizeof(classifica) - strlen (classifica) - 1 );
+    }
+
+    pthread_mutex_unlock(&classifica_mutex);
+    for (int i = 0; i < num_giocatori; i++){
+        free(scorerVector[i].username);
+    }
+    printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
     // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
     invia_SIG(&listaGiocatori, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
-
-    printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
     return NULL;
 } 
 
 // Funzione che gestisce il thread di gioco - aggiustata da chat
-void* game(void* arg){
+
+void* game(void* arg) {
     printf("Giocatore in esecuzione\n");
     int round = 0;
     time_t tempo_iniziale;
 
-    while(1){
+    while (1) {
         pthread_mutex_lock(&lista_mutex);
         // Attesa fino a quando non ci sono giocatori registrati
-        while (listaGiocatori.count == 0){
+        while (listaGiocatori.count == 0) {
             printf("Nessun giocatore registrato. Attesa...\n");
             pthread_cond_wait(&listaGiocatori.cond, &listaGiocatori.mutex);
         }   
         pthread_mutex_unlock(&lista_mutex);
+
         // Inizia la pausa
         sleep(1);
         alarm(durata_pausa);
-        printf("La partita è in pausa, inizierà: %d secondi\n", durata_pausa);
-        
-        //PREPARAZIONE DEL ROUND
-        if (round == 0){
+        printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
+
+        // PREPARAZIONE DEL ROUND
+        if (round == 0) {
             pthread_mutex_lock(&matrix_mutex);
-           if(Carica_MatricedaFile("file-txt", matrice !=0)){
-              perror("Errore nel caricamento della matrice");
-           }    
+            if (Carica_MatricedaFile("file-txt", matrice) != 0) {
+                perror("Errore nel caricamento della matrice");
+                pthread_mutex_unlock(&matrix_mutex);
+                continue;  // Salta l'inizio del round se non riesce a caricare la matrice
+            }    
             pthread_mutex_unlock(&matrix_mutex);
             round = 1;
         }
+
         // Se alla fine della pausa non ci sono giocatori registrati, si ripete il ciclo
         pthread_mutex_lock(&lista_mutex);
-        if (listaGiocatori.count == 0){
+        if (listaGiocatori.count == 0) {
             pausa_gioco = 1;
             pthread_mutex_unlock(&lista_mutex);
-            continue;
+            continue;  // Riprende il ciclo se non ci sono giocatori
         }
         pthread_mutex_unlock(&lista_mutex);    
-       
-        // Inizia la pausa
-        time_t (tempo_iniziale);
+
+        // Inizio del round di gioco
+        tempo_iniziale = time(NULL);
         alarm(durata_partita);
-        printf("La partita è iniziata, terminerà: %d secondi con %d giocatori\n" , time_t tempo_iniziale); // Perchè non mi prende il tempo iniziale?
+        printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, listaGiocatori.count); 
+
+        // Invio il tempo rimanente a ciascun giocatore
         pthread_mutex_lock(&lista_mutex);
         giocatore* current = listaGiocatori.head;
-        while(current != NULL){
+        while (current != NULL) {
             char* temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-            if (send_message(current -> client_fd, strlen(temp), MSG_TEMPO_PARTITA, temp)< 0){
+            if (send_message(current->client_fd, strlen(temp), MSG_TEMPO_PARTITA, temp) < 0) {
                 perror("Errore nell'invio del messaggio");
             }
-            current = current -> next;
-    }
-    pthread_mutex_unlock(&lista_mutex);
-    while (!pausa_gioco){
-        // Attesa
-    }
-    //Reset dalla pausa per il prossimo round 
-    pausa_gioco = 0;
-    round = 0;
+            current = current->next;
+        }
+        pthread_mutex_unlock(&lista_mutex);
+
+        // Attendere che la partita finisca (usando condizione di attesa)
+        pthread_mutex_lock(&game_mutex);
+        while (!pausa_gioco) {
+            pthread_cond_wait(&game_cond, &game_mutex); // Attendi la fine della partita o la pausa
+        }
+        pthread_mutex_unlock(&game_mutex);
+
+        // Reset dalla pausa per il prossimo round
+        pausa_gioco = 0;
+        round = 0;
     }    
 }
 
+
+
+
+//
 int main(int argc, char* argv[]) {
-    listaGiocatori lista; // Lista giocatori
- 
-    // Definizione dei segnali 
-    signal(SIGINT, sigint_handler);
-    signal(SIGUSR1, alarm_handler);
-    
     int server_sock;
     struct sockaddr_in server_addr;
     //char message [128];
+
+    // Definizione dei segnali 
+    signal(SIGUSR1, alarm_handler);
     
     if(argc<3){
         //Errore
@@ -432,37 +464,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-//int pausa_gioco = 1; // 1 = si, 0 = no
-
-// Calcola tempo rimanente
-void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
-    time_t tempo_attuale = time(NULL);
-    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    int tempo_rimanente_secondi = durata - (int)tempo_trascorso;
-
-    if (tempo_rimanente_secondi < 0) {
-        printf("Il gioco è già terminato\n");
-    } else {
-        printf("Il tempo rimanente è: %d secondi\n", tempo_rimanente_secondi);
-    }
-}
-
-// Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
-void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
-    int length = MATRIX_SIZE * MATRIX_SIZE;
-    char data[length];
-    for (int i = 0; i < MATRIX_SIZE; i++) {
-        for (int j = 0; j < MATRIX_SIZE; j++) {
-            data [i * MATRIX_SIZE + j] = matrix[i][j];
-        }
-    }    
-    printf("Invio matrice al client %d\n", client_fd);
-    send_message(client_fd, MSG_MATRICE, data);
-}
-
-
-
-/*MAIN
+/* MAIN DA AGGIUNGERE
 int main(int argc, char* argv[]){
     //Controllo se il numero di parametri passati è corretto
     if(argc<3){

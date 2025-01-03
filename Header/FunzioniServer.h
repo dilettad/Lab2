@@ -23,6 +23,7 @@ typedef struct{
     giocatore* head;
     giocatore* tail;
     int count;
+    pthread_mutex_t lista_mutex;
 }listaGiocatori;
 
 // Calcola tempo rimanente
@@ -47,33 +48,7 @@ char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
     return messaggio;  
 }
 
-/* Funzioni get
-// void get_username(listaGiocatori* lista, pthread_t tid, int num_giocatori){
-//     listaGiocatori* lista_cpy = lista;
-//     for (int i = 0; i < num_giocatori; i++) {
-//         if (pthread_equal(lista->head->tid, tid)){
-//             return lista->head.username;
-//         }else{
-//             lista_cpy->head = lista_cpy->head->next;
-//         }
-//     }
-//     return NULL; // ID non trovato
-// }
-
-ATTRAVERSO IL TID RISALE AL PUNTEGGIO DEL GIOCATORE
-int get_punteggio(listaGiocatori* lista, pthread_t tid) {
-    listaGiocatori* lista_cpy = lista;
-    while(lista_cpy->head != NULL){
-        if (pthread_equal(lista_cpy->head->tid, tid)) {
-            return lista_cpy->head->punteggio;
-        }
-        lista_cpy->head = lista_cpy->head->next;
-    }
-    return -1; // Thread ID non trovato (o punteggio non valido)
-}
-*/
-
-//Funzione di invio classifica ai giocatori
+//Funzione di invio classifica ai giocatori è necessaria?
 void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica, time_t tempo_iniziale, int durata_pausa_){
     pthread_mutex_lock(&lista_mutex);
     giocatore* current = lista->head;
@@ -95,8 +70,6 @@ int compare_score (const void *a, const void *b){
     return (playerB->punteggio - playerA->punteggio); // Ordinamento decrescente
 }
 
-pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER; 
-
 //Funzione di invio segnali ai tutti i giocatori della lista
 void invia_SIG(listaGiocatori* lista, int SIG, pthread_mutex_t lista_mutex){
     pthread_mutex_lock(&lista_mutex);
@@ -107,3 +80,19 @@ void invia_SIG(listaGiocatori* lista, int SIG, pthread_mutex_t lista_mutex){
         }
         pthread_mutex_unlock(&lista_mutex);
 }
+
+
+/* Calcola tempo rimanente
+void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
+    time_t tempo_attuale = time(NULL);
+    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
+    int tempo_rimanente_secondi = durata - (int)tempo_trascorso;
+
+    if (tempo_rimanente_secondi < 0) {
+        printf("Il gioco è già terminato\n");
+    } else {
+        printf("Il tempo rimanente è: %d secondi\n", tempo_rimanente_secondi);
+    }
+}
+*/
+

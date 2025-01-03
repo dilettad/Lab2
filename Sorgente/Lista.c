@@ -80,7 +80,7 @@ void aggiorna_punteggio(listaGiocatori* lista, char* username, int punteggio){
     }
 }    
 
-// Funzione per eliminare la lista dei giocatori 
+/* Funzione per eliminare la lista dei giocatori 
 void distruggi_lista (listaGiocatori* lista){
     giocatore* current = lista->head;
     giocatore* next = NULL;
@@ -93,3 +93,19 @@ void distruggi_lista (listaGiocatori* lista){
         lista->tail = NULL;
         lista->count = 0;
 }
+*/
+
+ //Funzione per eliminare la lista dei giocatori 
+ void distruggi_lista(listaGiocatori * lista) {
+    pthread_mutex_lock(&lista->lista_mutex);
+    giocatore *current = lista->head;
+    while (current != NULL) {
+        giocatore *temp = current;
+        current = current->next;
+        free(temp);
+    }
+    lista->head = NULL;
+    pthread_mutex_unlock(&lista->lista_mutex);
+    pthread_mutex_destroy(&lista->lista_mutex);
+}
+

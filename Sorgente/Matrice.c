@@ -7,6 +7,7 @@
 #include <stdbool.h> 
 #include "../Header/macro.h"
 #include "../Header/Matrice.h"
+#include "../Header/Comunicazione.h"
 
 #define MATRIX_SIZE 4
 // DA AGGIUNGERE IL CONTROLLO SU QU
@@ -148,4 +149,16 @@ int esiste_paroleTrovate(paroleTrovate* head, const char* parola){
     return 0; //parola non trovata, quindi valida
 }
 
+// Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
+void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
+    int length = MATRIX_SIZE * MATRIX_SIZE;
+    char data[length];
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            data [i * MATRIX_SIZE + j] = matrix[i][j];
+        }
+    }    
+    printf("Invio matrice al client %d\n", client_fd);
+    send_message(client_fd, MSG_MATRICE, data);
+}
 
