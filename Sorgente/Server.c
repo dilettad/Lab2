@@ -39,7 +39,7 @@ pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_cond;
-pthread_mutex_t scorer_tid;
+pthread_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
 time_t tempo_iniziale;
 
@@ -254,7 +254,7 @@ void* gestisci_giocatore(void* args){
 */ 
 
 pthread_mutex_t classifica_mutex;
-void *scorer(void *arg) {
+void* scorer(void *arg) {
 
     printf("Scorer in esecuzione\n");
 
