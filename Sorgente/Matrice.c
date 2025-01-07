@@ -150,15 +150,27 @@ int esiste_paroleTrovate(paroleTrovate* head, const char* parola){
 }
 
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
-void invio_matrice(int client_fd, char matrix [MATRIX_SIZE][MATRIX_SIZE]){
+void invio_matrice(int client_fd, cella** matrix){
     int length = MATRIX_SIZE * MATRIX_SIZE;
     char data[length];
-    for (int i = 0; i < MATRIX_SIZE; i++) {
-        for (int j = 0; j < MATRIX_SIZE; j++) {
-            data [i * MATRIX_SIZE + j] = matrix[i][j];
-        }
-    }    
+    matrice_to_string(matrix,16);
     printf("Invio matrice al client %d\n", client_fd);
     send_message(client_fd, MSG_MATRICE, data);
 }
 
+char* matrice_to_string(cella** matrix, int size) {
+    // Calcoliamo la lunghezza totale della stringa (con '\0' finale)
+    int length = size * size + 1; 
+    char* result = (char*)malloc(length * sizeof(char));
+
+    // Copiamo i valori della matrice nella stringa
+    int index = 0;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            result[index++] = matrix[i][j].value;
+        }
+    }
+    result[index] = '\0';  // Aggiungiamo il terminatore di stringa
+
+    return result;
+}
