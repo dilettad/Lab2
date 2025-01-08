@@ -33,6 +33,7 @@ int classifica = 0; // Classifica non disponibile
 int scorer = 0; // Scorer
 int server_fd;
 
+
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -42,7 +43,7 @@ pthread_mutex_t scorer_cond;
 pthread_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
 time_t tempo_iniziale;
-
+pthread_mutex_t game_mutex, game_cond;
 
 // Handler dei segnali
 // Funzione per cambiare stato del gioco
@@ -89,7 +90,6 @@ void sig_classifica(int sig){
         send_message(current ->client_fd, strlen(classifica), MSG_PUNTI_FINALI, classifica);
         current = current -> next;
     }
-
     pthread_mutex_unlock(&lista_mutex);
 } 
 */
@@ -297,7 +297,6 @@ void* scorer(void *arg) {
 } 
 
 // Funzione che gestisce il thread di gioco - aggiustata da chat
-
 void* game(void* arg) {
     printf("Giocatore in esecuzione\n");
     int round = 0;
@@ -317,7 +316,7 @@ void* game(void* arg) {
         alarm(durata_pausa);
         printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
 
-        // PREPARAZIONE DEL ROUND
+        // Preparazione del round 
         if (round == 0) {
             pthread_mutex_lock(&matrix_mutex);
             if (Carica_MatricedaFile("file-txt", matrice) != 0) {
@@ -461,10 +460,48 @@ int main(int argc, char* argv[]) {
     InputStringa(matrice,"");
 
 
+// int optarg;
+// Inizializzazione parametri
+struct parametri Parametri[] = {
+    {"matrici", required_argument, 0, 'm'},
+    {"durata", required_argument, 0, 'd'},
+    {"seed", required_argument, 0, 's'},
+    {"dizinario", required_argument, 0, 'x'},   
+    {0,0,0,0} 
+}; 
+
+int opt;
+
+ while((opt = getopt(argc, argv, "m:d:s:x:")) != -1){
+        switch (opt) {
+        //--matrici `e seguito dal nome del file dal quale caricare le matrici 
+        case 'm':
+            Parametri.data_filename = optarg;
+            break;
+        //--durata permette di indicare la durata del gioco in minuti. Se non espresso di default va considerato 3 minuti
+        case 'd':
+                Parametri.durata_partita = atoi(optarg);
+                break;
+        //--seed permette di indicare il seed da usare per la generazione dei numeri pseudocasuali
+            case 's':
+                Parametri.rnd_seed = atoi(optarg);
+                break;
+        //--diz permette di indicare il dizionario da usare per la verifica di leicità delle parole ricevute dal client.
+            case 'x':
+                Parametri.dizionario = optarg;
+                break;
+            default:
+                fprintf(stderr, "Uso: %s nome_server porta_server [-m data_filename] [-d durata_in_minuti] [-s rnd_seed] [-x dizionario]\n", argv[0]);
+                return 1;
+        }
+    }
 
 }
 
-/* MAIN DA AGGIUNGERE
+
+
+
+/* MAIN Iniziale -> già inserito
 int main(int argc, char* argv[]){
     //Controllo se il numero di parametri passati è corretto
     if(argc<3){
