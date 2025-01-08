@@ -36,3 +36,8 @@ void Carica_MatricedaFile(FILE* file, cella** matrice);
 void svuotaMatrice(cella** matrice);
 
 int esiste_paroleTrovate(paroleTrovate* head, const char* parola);
+
+char* matrice_to_string(cella** matrix, int size);
+
+
+void invio_matrice(int client_fd, cella** matrix);
