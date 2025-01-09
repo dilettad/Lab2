@@ -6,3 +6,6 @@ Header/Matrice.h.gch
 Header/macro.h.gch
 Header/Lista-h.gch
 Header/Trie.h.gch
+Eseguibili/Server
+Eseguibili/Client
+Eseguibili/Test
