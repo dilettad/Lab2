@@ -1,5 +1,4 @@
-//#ifndef lista_H
-//#ifndef lista_H
+
 //MSG_REGISTRA UTENTE con la gestione del MSG_ERR e MSG_OK
 
 //Definizione del tipo di dati per struttura utente
@@ -23,5 +22,5 @@ void push (Fifo * lista, Client *new_client);
 Client * pop (Fifo * list) ;
 int seek (Fifo * list, char* username); // 1 se trova un cliente con quel username 0 altrimenti
 Fifo* create ();
-
-//#endif
+void aggiorna_punteggio(listaGiocatori* lista, char* username, int punteggio);
+void distruggi_lista (listaGiocatori* lista);

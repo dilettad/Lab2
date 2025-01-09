@@ -6,7 +6,10 @@
         "stdio.h": "c",
         "lista.h": "c",
         "comunicazione.h": "c",
-        "ProveSERVER.C": "cpp"
+        "ProveSERVER.C": "cpp",
+        "compare": "cpp",
+        "*.tcc": "cpp",
+        "type_traits": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

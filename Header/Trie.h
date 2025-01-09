@@ -1,9 +1,10 @@
 #define NUM_CHAR 26
 
-typedef struct t{
+typedef struct Trie{
     struct t* figli[NUM_CHAR];
     int is_word;
 }Trie;
+
 //creo un nodo dell'albero
 Trie* create_node();
 //inserisco una parola all'interno dell'albero
