@@ -24,6 +24,7 @@ typedef struct{
     giocatore* tail;
     int count;
     pthread_mutex_t lista_mutex;
+    pthread_cond_t lista_cond;
 }listaGiocatori;
 
 

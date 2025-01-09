@@ -154,7 +154,7 @@ void sig_classifica(int sig){
 //signal(SIGINT, sigint_handler);
 // Funzione per la chiusura del server
 void sigint_handler(int sig) {
-    // int retvalue;
+    int retvalue;
 
     // Scorro la lista dei giocatori, in modo da chiuderli
     if (lista.count != 0) {
@@ -195,7 +195,7 @@ void* thread_func(void* arg) {
 // MSG_REGISTRA_UTENTE: registra l'utente e controllo se già registrato
 // MSG_PUNTI_FINALI: calcolo i punti totali
     int retvalue;
-    
+    int durata_partita;
     while(1){
         message client_message = receive_message(client_sock);
         writef(retvalue,client_message.data);
@@ -204,7 +204,7 @@ void* thread_func(void* arg) {
                 if(pausa_gioco == 0){
                     // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
                     invio_matrice(client_sock, matrice);
-                    char* temp =  calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                    char* temp =  calcola_tempo_rimanente(tempo_iniziale,durata_partita);
                     send_message(client_sock, MSG_TEMPO_PARTITA, temp);
                 } else {
                     // Invio il tempo di pausa rimanente
@@ -235,13 +235,13 @@ void* thread_func(void* arg) {
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                 else{
                     // Aggiungo la parola alla lista delle parole trovate
-                    listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); //DA SISTEMARE LA LISTA
+                    listaParoleTrovate = aggiungiParolaTrovata(listaParoleTrovate, client_message.data); //DA SISTEMARE LA LISTA
                     int puntiparola = strlen(client_message.data);
                     // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
                     if (strstr(client_message.data,"Qu")){
                         puntiparola--;
                     } 
-                    // Invio i punti della parola
+                    // Invio i punti della parolaù
                     char* messaggiopuntiparola = "diletta crea il messaggio";
                     send_message(client_sock, MSG_PUNTI_PAROLA,messaggiopuntiparola);
                     punteggio += puntiparola;
@@ -322,8 +322,7 @@ void* game(void* arg) {
     //Thread del giocatore è attivo
     printf("Giocatore in esecuzione\n");
     int round = 0; // Inizializzo il round a 0
-    //time_t tempo_iniziale;
-     //Dichiaro per memorizzare tempo di inizio 
+    time_t tempo_iniziale; //Dichiaro per memorizzare tempo di inizio 
     while (1) {
         /*
         pthread_mutex_lock(&lista_mutex);
@@ -349,7 +348,7 @@ void* game(void* arg) {
         if (round == 0) {
             // Blocco per accedere alla matrice di gioco
             pthread_mutex_lock(&matrix_mutex);
-            FILE* file = fopen (DIZIONARIO, "r"); //
+            FILE* file;//aprire il file "file-txt" e metterlo nella variabile file
             Carica_MatricedaFile(file, matrice);  // Carica i dati della matrice dal file
             pthread_mutex_unlock(&matrix_mutex);  // Sblocca la mutex 
             round = 1; //Round attivo
@@ -357,7 +356,7 @@ void* game(void* arg) {
 
 
         // Inizio del round di gioco 
-        //tempo_iniziale = time(NULL); // Registro tempo attuale, inizio del round
+        tempo_iniziale = time(NULL); // Registro tempo attuale, inizio del round
         alarm(durata_partita); // Allarme per durata della partita, dopo quei secondi si segna la fine
         printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, lista.count); // abbastanza sicuro ceh non serva una lock
 
@@ -387,18 +386,9 @@ void* game(void* arg) {
         round = 0;
     }    
 }
-int main(int argc, char* argv[]) {
-    printf("ciao");
-    time_t tempo_iniziale = time(NULL);
-    sleep(3);
-    int durata_partita = 20;
-    char* messaggio = calcola_tempo_rimanente( tempo_iniziale, durata_partita);
-    printf("%s", messaggio);
-    free(messaggio);
-}
+
  
-int mainciao(int argc, char* argv[]) {
-    
+int main(int argc, char* argv[]) {
     int server_sock;
     struct sockaddr_in server_addr;
     //char message [128];

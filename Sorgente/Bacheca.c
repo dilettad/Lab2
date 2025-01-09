@@ -40,44 +40,7 @@ void add_message(char* text, char* username){
     pthread_mutex_unlock(&mess);    
 }
 
-/*Funzione per post messaggi sulla bacheca -> c'è un errore
-Message *post_messaggi(int *message_count){
-    pthread_mutex_lock(&mess);
-
-    //Alloco memoria per l'array di messaggi da restituire
-    Message *read_message = (Message*)malloc(message_count * sizeof(Message));
- 
-    //Controllo se già letti
-    if (read_message == NULL){
-        pthread_mutex_unlock(&mess);
-        return NULL;
-    }
-
-    // Inserisco i messaggi 
-    for (int i = 0; i < message_count; i++){
-        read_message[i].text = malloc(strlen(messages[i].text) + 1);
-        if (read_message[i].message == NULL) {
-            // Gestire l'errore di allocazione
-            pthread_mutex_unlock(&mess);
-            return NULL; // O gestire la deallocazione già allocata
-        }
-        strcpy(read_message[i].message, messages[i].text);
-        
-        read_message[i].username = malloc(strlen(messages[i].username) + 1);
-        if (read_message[i].username == NULL) {
-            // Gestire l'errore di allocazione
-            free(read_message[i].text); // Dealloca il messaggio già allocato
-            pthread_mutex_unlock(&mess);
-            return NULL; // O gestire la deallocazione già allocata
-        }
-        strcpy(read_message[i].username, messages[i].username);
-    }
-    pthread_mutex_unlock(&mess);
-    return read_message;
-}
-*/
-
-//CORREZIONE BLACK BOX
+//
 Message *post_messaggi(int message_count) {
     pthread_mutex_lock(&mess);
 

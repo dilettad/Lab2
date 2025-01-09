@@ -1,12 +1,17 @@
+//#ifndef lista_H
+//#ifndef lista_H
 //MSG_REGISTRA UTENTE con la gestione del MSG_ERR e MSG_OK
 
 //Definizione del tipo di dati per struttura utente
+
+struct Client; 
+
 typedef struct Client {
-    char* username; //Nome utente
-    int fd; // File descriptor del client
-    int score; //Punteggio utente
-    struct Client* next; //Puntatore al prossimo utente
-} Client; 
+    char* username;  // Nome utente
+    int fd;          // File descriptor del client
+    int score;       // Punteggio utente
+    struct Client* next; // Puntatore al prossimo utente (per la lista)
+} Client;
 
 typedef struct Fifo {
     Client* head;
@@ -19,3 +24,4 @@ Client * pop (Fifo * list) ;
 int seek (Fifo * list, char* username); // 1 se trova un cliente con quel username 0 altrimenti
 Fifo* create ();
 
+//#endif

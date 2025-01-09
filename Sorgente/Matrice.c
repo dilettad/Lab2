@@ -149,6 +149,22 @@ int esiste_paroleTrovate(paroleTrovate* head, const char* parola){
     return 0; //parola non trovata, quindi valida
 }
 
+//AGGIUNGE UNA PAROLA TROVATA ALLA LISTA DI PAROLE TROVATE DA QUEL GIOCATORE DURANTE QUELLA PARTITA
+paroleTrovate* aggiungi_parolaTrovata(paroleTrovate* head, const char* parola){
+    paroleTrovate* new_node = (paroleTrovate*)malloc(sizeof(paroleTrovate));
+    if(!new_node){
+        perror("Errore di allocazione della memoria\n");
+        return head;
+    }
+    new_node->parola = strdup(parola);
+    if(!new_node->parola){
+        perror("Errore di allocazione della memoria per la parola\n");
+        return head;
+    }
+    new_node->next = head;
+    return new_node;
+}
+
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 void invio_matrice(int client_fd, cella** matrix){
     int length = MATRIX_SIZE * MATRIX_SIZE;

@@ -119,7 +119,6 @@ void* receiver(void* args) {
     close(client_sock);
 }
 
-
 //Match tra accept e connect, viene creato un nuovo socket locale
 int main(int argc, char* argv[]){
     int client_sock,retvalue;
