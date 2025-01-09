@@ -81,7 +81,7 @@ void alarm_handler(int sig){
         
         //Invio del segnale a tutti i thread giocatori 
         if(lista.count > 0){
-            scorer = 1; 
+            //scorer = 1; 
             invia_SIG(&lista, SIGUSR1, lista_mutex); // Invia segnale ai giocatori
             int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL); // Crea un nuovo thread per eseguire la funzione 
             if (retvalue != 0) {
@@ -92,8 +92,8 @@ void alarm_handler(int sig){
 }
 // TESTATE: RUNTIME ERROR
 
-signal(SIGUSR2, sig_classifica);
-signal(SIGINT, sigint_handler);
+// signal(SIGUSR2, sig_classifica);
+// signal(SIGINT, sigint_handler);
 
 // Funzione per la chiusura del server
 void sigint_handler(int sig) {
