@@ -1,6 +1,6 @@
 #define NUM_CHAR 26
 
-typedef struct Trie{
+typedef struct t{
     struct t* figli[NUM_CHAR];
     int is_word;
 }Trie;

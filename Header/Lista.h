@@ -2,6 +2,7 @@
 //MSG_REGISTRA UTENTE con la gestione del MSG_ERR e MSG_OK
 
 //Definizione del tipo di dati per struttura utente
+#include <pthread.h>
 
 struct Client; 
 
@@ -17,6 +18,24 @@ typedef struct Fifo {
     Client* tail;
     int size;
 }Fifo;
+
+//Struttura del giocatore registrato
+typedef struct giocatore {
+    char* username;
+    pthread_t tid;
+    int client_fd;
+    int punteggio;
+    struct giocatore* next;
+}giocatore;
+
+//Lista giocatori registrati
+typedef struct{
+    giocatore* head;
+    giocatore* tail;
+    int count;
+    pthread_mutex_t lista_mutex;
+    pthread_cond_t lista_cond;
+}listaGiocatori;
 
 void push (Fifo * lista, Client *new_client);
 Client * pop (Fifo * list) ;

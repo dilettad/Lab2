@@ -108,45 +108,45 @@ void distruggi_lista (listaGiocatori* lista){
     pthread_mutex_destroy(&lista->lista_mutex);
 }
 */
-int main(){
-     // Test delle funzioni della lista FIFO
-    Fifo* lista = create();
-    Client* client1 = (Client*)malloc(sizeof(Client));
-    client1->username = "user1";
-    client1->next = NULL;
-    push(lista, client1);
+// int main(){
+//      // Test delle funzioni della lista FIFO
+//     Fifo* lista = create();
+//     Client* client1 = (Client*)malloc(sizeof(Client));
+//     client1->username = "user1";
+//     client1->next = NULL;
+//     push(lista, client1);
 
-    Client* client2 = (Client*)malloc(sizeof(Client));
-    client2->username = "user2";
-    client2->next = NULL;
-    push(lista, client2);
+//     Client* client2 = (Client*)malloc(sizeof(Client));
+//     client2->username = "user2";
+//     client2->next = NULL;
+//     push(lista, client2);
 
-    printf("Seek 'user1': %d\n", seek(lista, "user1")); // Dovrebbe restituire 1
-    printf("Seek 'user3': %d\n", seek(lista, "user3")); // Dovrebbe restituire 0
+//     printf("Seek 'user1': %d\n", seek(lista, "user1")); // Dovrebbe restituire 1
+//     printf("Seek 'user3': %d\n", seek(lista, "user3")); // Dovrebbe restituire 0
 
-    Client* popped_client = pop(lista);
-    printf("Popped client: %s\n", popped_client->username); // Dovrebbe restituire "user2"
+//     Client* popped_client = pop(lista);
+//     printf("Popped client: %s\n", popped_client->username); // Dovrebbe restituire "user2"
 
-    // Test delle funzioni della lista dei giocatori
-    listaGiocatori giocatori;
-    giocatori.head = NULL;
-    pthread_mutex_init(&giocatori.lista_mutex, NULL);
+//     // Test delle funzioni della lista dei giocatori
+//     listaGiocatori giocatori;
+//     giocatori.head = NULL;
+//     pthread_mutex_init(&giocatori.lista_mutex, NULL);
 
-    giocatore* giocatore1 = (giocatore*)malloc(sizeof(giocatore));
-    giocatore1->username = "player1";
-    giocatore1->punteggio = 0;
-    giocatore1->next = NULL;
-    giocatori.head = giocatore1;
+//     giocatore* giocatore1 = (giocatore*)malloc(sizeof(giocatore));
+//     giocatore1->username = "player1";
+//     giocatore1->punteggio = 0;
+//     giocatore1->next = NULL;
+//     giocatori.head = giocatore1;
 
-    aggiorna_punteggio(&giocatori, "player1", 100);
-    printf("Punteggio di 'player1': %d\n", giocatore1->punteggio); // Dovrebbe restituire 100
+//     aggiorna_punteggio(&giocatori, "player1", 100);
+//     printf("Punteggio di 'player1': %d\n", giocatore1->punteggio); // Dovrebbe restituire 100
 
-    distruggi_lista(&giocatori);
+//     distruggi_lista(&giocatori);
 
-    // Pulizia
-    free(client1);
-    free(client2);
-    free(lista);
+//     // Pulizia
+//     free(client1);
+//     free(client2);
+//     free(lista);
 
-    return 0;
-}
+//     return 0;
+// }

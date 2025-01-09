@@ -8,26 +8,9 @@
 #include <errno.h>
 #include <signal.h>
 
-
-//Struttura del giocatore registrato
-typedef struct giocatore {
-    char* username;
-    pthread_t tid;
-    int client_fd;
-    int punteggio;
-    struct giocatore* next;
-}giocatore;
-
-//Lista giocatori registrati
-typedef struct{
-    giocatore* head;
-    giocatore* tail;
-    int count;
-    pthread_mutex_t lista_mutex;
-    pthread_cond_t lista_cond;
-}listaGiocatori;
-
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
+
+void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica, time_t tempo_iniziale, int durata_pausa_);
 /* Calcola tempo rimanente
 void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
     time_t tempo_attuale = time(NULL);

@@ -49,7 +49,7 @@ void stampaMatrice(cella** matrice){
     //Scansione della matrice, per riga e colonna
     for(int i = 0; i < MATRIX_SIZE; i++){
         //printf("entro ciclio i:%d j:%d\n",i,j);
-        for(j = 0; j < MATRIX_SIZE; j++){ 
+        for(int j = 0; j < MATRIX_SIZE; j++){ 
             printf("%c ", matrice[i][j].value); //Stampa valore della cella
             //printf("i:%d, j:%d\n",i,j);
         }

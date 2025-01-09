@@ -73,7 +73,7 @@ void alarm_handler(int sig){
         pthread_mutex_unlock(&pausa_gioco_mutex);
     }
     else{ // Gestione scandeza tempo
-        int retvalue;
+        //int retvalue;
         pthread_mutex_lock(&pausa_gioco_mutex);
         pausa_gioco = 1; // cambia lo stato del gioco 
         printf("Il gioco è in pausa. \n");
