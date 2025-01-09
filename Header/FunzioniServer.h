@@ -27,8 +27,7 @@ typedef struct{
     pthread_cond_t lista_cond;
 }listaGiocatori;
 
-
-
+char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
 /* Calcola tempo rimanente
 void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
     time_t tempo_attuale = time(NULL);

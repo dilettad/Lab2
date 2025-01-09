@@ -4,12 +4,14 @@
 #include "../Header/Matrice.h"
 #include "../Header/Lista.h"
 #include "../Header/Giocatore.h"
+#include "../Header/FunzioniServer.h"
+
 int main(int argc, char* argv[]){
     
     // TEST MATRICE
     int retvalue;
     cella** matrice = generateMatrix();
-    // writef(retvalue,"casa\n");
+    writef(retvalue,"casa\n");
     InputStringa(matrice,"ATLCIOQADVESISBI");
     stampaMatrice(matrice);
     
@@ -31,12 +33,13 @@ int main(int argc, char* argv[]){
 
 
 
-    //TEST SERVER
+    /*TEST SERVER
     time_t tempo_iniziale = time(NULL) - 18; // Simula che il gioco è iniziato 18 secondi fa
     int durata_partita = 20;    
     char* messaggio = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
     printf("%s\n", messaggio);  // Usa %s per stampare una stringa
     return 0;
+    */
 }
 
 /*
