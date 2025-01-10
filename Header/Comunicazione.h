@@ -33,18 +33,3 @@ void send_message(int client_socket, char type, char* data);
 //Funzione per ricevere un messaggio
 message receive_message(int client_socket);
 
-//Funzione per registrazione del cliente
-void registrazione_client(int client_fd, char* username);
-
-//Funzione per aggiungere client alla lista
-void add_client(Fifo* lista, int client_fd, char* username);
-
-//Controllo caratteri dell'username: non deve contenere caratteri ASCII
-int controlla_caratteri(const char* username);
-
-// Funzione per stampare la lista dei client
-void stampa_lista_clienti();
-
-// Funzione per liberare la memoria della lista
-void libera_lista_clienti();
-

@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
     printf("Contenuto del Trie:\n");
     Print_Trie(root, buffer, 0);
  printf("TEST TRIE FINE ----\n");
-
+ 
 // TEST SU LISTA.C 
  printf("TEST LISTA INIZIO\n");
      Fifo* lista = create();
@@ -140,7 +140,14 @@ int main(int argc, char* argv[]){
      free(client1);
      free(client2);
      free(lista);
- printf("TEST LISTA FINE ----\n");
+printf("TEST LISTA FINE ----\n");
+
+
+//TEST SU GIOCATORE 
+printf("TEST INIZIO GIOCATORE -----\n");
+
+
+printf("TEST FINE GIOCATORE -----\n");
 
     return 0;
 }
