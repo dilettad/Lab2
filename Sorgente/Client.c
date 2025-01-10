@@ -100,7 +100,7 @@ void* receiver(void* args) {
                 break;
 
             case MSG_TEMPO_PARTITA:
-                printf("\nTempo partita: %d\n", *((int*)received_msg.data));
+                printf("\n%s\n", received_msg.data);
                 break;
 
             case MSG_PUNTI_FINALI:

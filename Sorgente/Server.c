@@ -28,8 +28,8 @@ void *scorer(void *arg);
 // char* calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
 
 int pausa_gioco = 0; //Gioco
-int durata_partita = 300; // La partita dura 5 minuti quindi 300s
-int durata_pausa = 90; //La pausa della partita dura 1.5 minuti
+int durata_partita = 30; // La partita dura 5 minuti quindi 30s
+int durata_pausa = 5; //La pausa della partita dura 1 minuti
 int punteggio = 0; 
 char* classifica; // Classifica non disponibile
 int server_fd;
@@ -65,8 +65,6 @@ void invia_SIG(listaGiocatori* lista, int SIG, pthread_mutex_t lista_mutex){
 
 // Funzione per cambiare stato del gioco
 void alarm_handler(int sig){
-    // DEVO CAPIRE COME USARE SIG CORRETTAMENTE
-
     // Gestione del controllo dello stato del gioco
     if(pausa_gioco == 1){  // Se il gioco è in pausa
         pthread_mutex_lock(&pausa_gioco_mutex);
@@ -75,7 +73,7 @@ void alarm_handler(int sig){
         pthread_mutex_unlock(&pausa_gioco_mutex);
     }
     else{ // Gestione scandeza tempo
-        //int retvalue;
+        int retvalue;
         pthread_mutex_lock(&pausa_gioco_mutex);
         pausa_gioco = 1; // cambia lo stato del gioco 
         printf("Il gioco è in pausa. \n");
@@ -148,7 +146,7 @@ void sig_classifica(int sig){
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
     time_t tempo_attuale = time(NULL);
     double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    int tempo_rimanente = durata_partita - (int)tempo_trascorso;
+    double tempo_rimanente = durata_partita - tempo_trascorso;
 
     // Se il tempo rimanente è minore di 0 allora vuol dire che il gioco è finito
     if (tempo_rimanente < 0) {
@@ -156,7 +154,7 @@ char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
     } 
 
     // Calcolo lunghezza del messaggio e alloco memoria
-    int length = snprintf(NULL, 0 , "Il tempo rimanente è: %d secondi\n", tempo_rimanente);
+    int length = 64;
     char* messaggio = (char*)malloc(length + 1);
 
     // Verifica se l'allocazione è riuscita
@@ -164,7 +162,7 @@ char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
         return "Errore di allocaione della memoria \n";
     }
     //Scrive il messaggio formattato nella memeoria allocata
-    snprintf(messaggio, length+1, "Il tempo rimanente è: %d secondi\n", tempo_rimanente);  
+    snprintf(messaggio, length+1, "Il tempo rimanente è: %f secondi\n", tempo_rimanente);  
     //return il messaggio
     return messaggio;  
 }
@@ -221,6 +219,7 @@ void* thread_func(void* arg) {
                     stampaMatrice(matrice);
                     invio_matrice(client_sock, matrice);
                     char* temp =  calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                    printf("Il tempo è %s", temp);
                     send_message(client_sock, MSG_TEMPO_PARTITA, temp);
                 } else {
                     // Invio il tempo di pausa rimanente
@@ -342,6 +341,7 @@ void* game(void* arg) {
      //Dichiaro per memorizzare tempo di inizio 
     int retvalue;
     while (1) {
+
         writef(retvalue,"sono nel thread di gioco");
         if (round == 0) {
             // Blocco per accedere alla matrice di gioco
@@ -350,13 +350,18 @@ void* game(void* arg) {
             round = 1; //Round attivo
         }
         while (&lista == NULL){
-            ;
+           //INVIO MATRICE AI GIOCATORI 
+           ;
         }
         
         // Inizia la pausa
         printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
         sleep(durata_pausa);
-        // PREPARAZIONE DEL ROUND
+
+        //INIZIO GIOCO/TURNO/ROUND
+        pthread_mutex_lock(&lista_mutex);
+        
+
         
         alarm(durata_partita); // Allarme per durata della partita, dopo quei secondi si segna la fine
         printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, lista.count);
