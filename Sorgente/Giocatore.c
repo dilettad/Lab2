@@ -84,3 +84,4 @@ void stampa_lista_clienti(Fifo* lista){
 }
 //TESTATA: FUNZIONA
 
+// Serve un libera lista? Non posso fare un free(lista)
