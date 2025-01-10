@@ -120,8 +120,6 @@ void Carica_MatricedaFile(FILE* file, cella** matrice){
             matrice[i][j].usato = false;
         }
     }
-    //Chiusura del file
-    fclose(file);
     //Carico la matrice dal file
     //InputStringa(matrice, file);
 }
@@ -178,9 +176,8 @@ paroleTrovate* aggiungi_parolaTrovata(paroleTrovate* head, const char* parola){
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket
 void invio_matrice(int client_fd, cella** matrix){
-    int length = MATRIX_SIZE * MATRIX_SIZE; // Calcola la lunghezza totale della matrice
-    char data[length]; //Array di caratteri per contenere i dati
-    matrice_to_string(matrix,16); //Conversione matrice in stringa
+    char* data = matrice_to_string(matrix,4); //Conversione matrice in stringa
+    //printf("%s\n", data);
     printf("Invio matrice al client %d\n", client_fd); //Stampa messaggio
     send_message(client_fd, MSG_MATRICE, data); //Invia la matrice al client
 }

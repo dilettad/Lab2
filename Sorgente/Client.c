@@ -152,13 +152,13 @@ int main(int argc, char* argv[]){
     //writef(retvalue,"prima del thread\n");
     while (1) {
         int nread;
-        printf("Inserisci il messaggio da inviare al server (o 'exit' per uscire): \n");
+        printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
         SYSC(nread,read(STDIN_FILENO,buffer,BUFFER_SIZE),"errore lettura utente");
         char* input = (char*)malloc(nread+1);
-        printf("input:%s\n",buffer);
+        //printf("input:%s\n",buffer);
         strncpy(input,buffer,nread);
         input[nread] = '\0';
-        printf("buffer:%s, input:%s\n",buffer,input);
+        //printf("buffer:%s, input:%s\n",buffer,input);
         char* token;
         memset(buffer, 0, BUFFER_SIZE);
 
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]){
         }    
         
         // Controllo se contiene "p"
-        else if (strncmp(input, "p", 1) == 0) {
+        else if (strncmp(input, "p",1) == 0) {
             token = strtok (token, "\0");
             if (token == NULL) {
                 printf("Errore, manca la parola da controllare\n");
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]){
         }  
 
         // Controllo se contiene "fine"
-        else if (strcmp(input, "fine") == 0) {
+        else if (strcmp(input, "fine\n") == 0) {
             send_message(client_sock,MSG_FINE, input);
             break;
         }    

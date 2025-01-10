@@ -41,7 +41,7 @@ message receive_message(int client_socket){
     //ricevo messagio 
     SYSC(retvalue,read(client_socket,msg.data,msg.length),"nella ricezione del payload");
     msg.data[msg.length+1] = '\0';
-    printf("messaggio arrivato:\ntipo:%c\nlunghezza:%d\npayload:%s\n",msg.type,msg.length,msg.data);
+    //printf("messaggio arrivato:\ntipo:%c\nlunghezza:%d\npayload:%s\n",msg.type,msg.length,msg.data);
 
     return msg;
 }
