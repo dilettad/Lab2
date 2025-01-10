@@ -44,7 +44,7 @@ pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t scorer_cond, game_cond, lista_cond;
 
-pthread_mutex_t classifica_mutex;
+pthread_mutex_t classifica_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t game_mutex;
 pthread_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
@@ -194,7 +194,6 @@ void sig_classifica(int sig){
 // TESTATE: RUNTIME ERROR
 
 
-
 //SOCKET
 // Funzione del thread
 void* thread_func(void* arg) {
@@ -289,8 +288,9 @@ void* thread_func(void* arg) {
     pthread_exit(NULL);
 }
 
-void *scorer(void *arg) {
 
+
+void *scorer(void *arg) {
     printf("Scorer in esecuzione\n");
 
     // Prendo il numero di giocatori registrati
@@ -314,13 +314,14 @@ void *scorer(void *arg) {
     qsort(scorerVector, num_giocatori, sizeof(giocatore), compare_score);
 
     pthread_mutex_lock(&classifica_mutex);
-    classifica = NULL;
+    classifica = (char*)malloc(256 *  sizeof(char));
+    classifica[0] = '\0';
     char msg[256];
     for (int i = 0; i < num_giocatori; i++){
         sprintf(msg, "%s %d\n", scorerVector[i].username, scorerVector[i].punteggio);
-        //strcat(classifica, msg,strlen (classifica) - 1 );
+        //strcat(classifica, msg, strlen(classifica) - 1 );
+        strcat(classifica, msg);
     }
-
     pthread_mutex_unlock(&classifica_mutex);
     for (int i = 0; i < num_giocatori; i++){
         free(scorerVector[i].username);
@@ -330,6 +331,10 @@ void *scorer(void *arg) {
     invia_SIG(&lista, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
     return NULL;
 } 
+
+
+
+
 
 //GESTISCE DEL GIOCO: perchè non funzionaa
 void *game(void *arg){
