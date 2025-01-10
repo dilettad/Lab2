@@ -332,46 +332,72 @@ void *scorer(void *arg) {
     return NULL;
 } 
 
-// Funzione che gestisce il ciclo di un round di gioco 
-void* game(void* arg) {
-    //Thread del giocatore è attivo
-    printf("Giocatore in esecuzione\n");
-    int round = 0; // Inizializzo il round a 0
-    //time_t tempo_iniziale;
-     //Dichiaro per memorizzare tempo di inizio 
-    int retvalue;
-    while (1) {
-
-        writef(retvalue,"sono nel thread di gioco");
-        if (round == 0) {
-            // Blocco per accedere alla matrice di gioco
-            FILE* file = fopen ("../Matrici.txt", "rb"); //
-            Carica_MatricedaFile(file, matrice);  // Carica i dati della matrice dal file
-            round = 1; //Round attivo
+//GESTISCE DEL GIOCO
+void *game(void *arg){
+    int round = 0;
+    while(1){
+        if(lista.count == 0){
+            printf("Nessun giocatore registrato, attesa...\n");
+            //ATTESA FINO A QUANDO NON SI REGISTRA UN NUOVO GIOCATORE
+            while(lista.count == 0){
+                time(&tempo_iniziale);
+            }
         }
-        while (&lista == NULL){
-           //INVIO MATRICE AI GIOCATORI 
-           ;
-        }
-        
+      
         // Inizia la pausa
         printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
         sleep(durata_pausa);
 
-        //INIZIO GIOCO/TURNO/ROUND
-        pthread_mutex_lock(&lista_mutex);
-        
+        printf ("Sono nel thread del gioco \n");
+        //SE IL ROUND NON è STATO PREPARATO ALLORA LO PREPARA
+        if(round == 0){
+            
+            // Blocco per accedere alla matrice di gioco
+            FILE* file = fopen ("../Matrici.txt", "rb"); //
+            Carica_MatricedaFile(file, matrice);  // Carica i dati della matrice dal file
+            round = 1;
+        }
 
+        while(pausa_gioco){
+            //attesa
+        }
+        //FINE ATTESA
+
+        //SE ALLA FINE DELLA PAUSA NON CI SONO GIOCATORI REGISTRATI, SI RIPETE IL CICLO DA CAPO E SI ATTENDONO NUOVI GIOCATPORI, MANTENENDO IL ROUND GIÀ PREPARATO
+        if(lista.count == 0){
+            pausa_gioco = 1;
+            continue;
+        }
+
+        //INIZIA IL GIOCO
+        time(&tempo_iniziale);
+        sleep(durata_partita);
+        printf("-----------------------------------------------------------------------\n");
+        printf("la partita è iniziata alle %ld con %d giocatori\n", tempo_iniziale, lista.count);
         
-        alarm(durata_partita); // Allarme per durata della partita, dopo quei secondi si segna la fine
-        printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, lista.count);
-        // Reset dalla pausa per il prossimo round
-        pausa_gioco = 0;
+        //INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
+        pthread_mutex_lock(&lista_mutex);
+        giocatore* current = lista.head;
+        while (current != NULL){
+            invio_matrice(current->client_fd, matrice);
+            char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+            send_message(current->client_fd, MSG_TEMPO_PARTITA,temp);
+            printf("Qua ci arrivo \n");
+            current = current->next;
+        }
+        pthread_mutex_unlock(&lista_mutex);
+        
+        while(!pausa_gioco){
+            //attesa
+        }
+        //FINE GIOCO
+
+        //NOTIFICA CHE IL ROUND PREPARATO È STATO UTILIZZATO E QUINDI BISOGNA PREPARARNE UNO NUOVO
         round = 0;
-    }    
+    }
 }
 
- 
+
 int main(int argc, char* argv[]) {
     
     int server_sock;
