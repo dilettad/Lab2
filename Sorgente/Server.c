@@ -200,7 +200,6 @@ void* thread_func(void* args) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)args;
     
-
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
 // MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
@@ -211,7 +210,7 @@ void* thread_func(void* args) {
     while(1){
         message client_message = receive_message(client_sock);
         printf("Ci arrivo? \n");
-        //writef(retvalue,client_message.data);
+        writef(retvalue,client_message.data);
         switch (client_message.type){
             case MSG_MATRICE:
                 if(pausa_gioco == 0){
