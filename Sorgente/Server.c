@@ -196,9 +196,10 @@ void sig_classifica(int sig){
 
 //SOCKET
 // Funzione del thread
-void* thread_func(void* arg) {
+void* thread_func(void* args) {
     // Dichiara un puntatore per il valore di ritorno
-    int client_sock = *(int*)arg;
+    int client_sock = *(int*)args;
+    
 
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
@@ -209,7 +210,8 @@ void* thread_func(void* arg) {
     
     while(1){
         message client_message = receive_message(client_sock);
-        writef(retvalue,client_message.data);
+        printf("Ci arrivo? \n");
+        //writef(retvalue,client_message.data);
         switch (client_message.type){
             case MSG_MATRICE:
                 if(pausa_gioco == 0){
@@ -229,8 +231,7 @@ void* thread_func(void* arg) {
             case MSG_PAROLA:
                 if (pausa_gioco==0){
                 // Controllo se la parola è già stata trovata 
-                   //Inserire una lista parole per confrontare
-                    if(1/*esiste_paroleTrovate(paroleTrovate, data)*/){
+                    if(esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
                         send_message(client_sock,MSG_PUNTI_PAROLA, "0");
                         break;
                     }
@@ -289,7 +290,6 @@ void* thread_func(void* arg) {
 }
 
 
-
 void *scorer(void *arg) {
     printf("Scorer in esecuzione\n");
 
@@ -331,10 +331,6 @@ void *scorer(void *arg) {
     invia_SIG(&lista, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
     return NULL;
 } 
-
-
-
-
 
 //GESTISCE DEL GIOCO: perchè non funzionaa
 void *game(void *arg){
