@@ -32,17 +32,18 @@ void push (Fifo * lista, Client *new_client){
     lista->size++; 
 }
 
-//Funzione rimuove e restituisce il cliente dalla coda
-Client * pop (Fifo * list){
+//Funzione rimuove e restituisce il cliente dalla coda - NON CORRETTA
+/* Client * pop (Fifo * list){
     if (list->size == 0){ //Se lista vuota restituisce NULL
         return NULL;
     }
     // Controllo se la lista è di dimensione 1 
     if (list->size == 1){
-        list->head = list->tail; //Assegna la testa alla coda 
+        Client * temp = list->head; 
+        list->head = NULL; //Assegna la testa alla coda 
         list->tail = NULL; //Imposta la coda come NULL
         list->size = 0; // Imposta la dimensione a 0
-        return list->tail; // Restituisce il cliente
+        return temp; // Restituisce il cliente
     }
     // Ciclo fino all'elemento prima della coda
     Client* temp = list->head;
@@ -52,6 +53,20 @@ Client * pop (Fifo * list){
     // Aggiorno la coda
     list->tail = temp;  
     return temp; 
+}*/
+
+// Funzione rimuove e restituisce il cliente dalla coda
+Client * pop (Fifo * list) {
+    if (list->size == 0) { // Se lista vuota restituisce NULL
+        return NULL;
+    }
+    Client * temp = list->head; // Salva il cliente da restituire
+    list->head = list->head->next; // Aggiorna la testa della lista
+    if (list->head == NULL) { // Se la lista è vuota dopo la rimozione
+        list->tail = NULL; // Imposta la coda come NULL
+    }
+    list->size--; // Decrementa la dimensione della lista
+    return temp; // Restituisce il cliente
 }
 
 // Funzione cerca un cliente nella lista in base all'username

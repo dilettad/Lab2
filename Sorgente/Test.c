@@ -10,6 +10,7 @@
 int main(int argc, char* argv[]){
 
 // TEST SU MATRICE.C    
+    printf("TEST MATRICE INIZIO \n");
      // Genera la matrice
     cella** matrice = generateMatrix();
 
@@ -72,10 +73,11 @@ int main(int argc, char* argv[]){
         free(temp->parola);
         free(temp);
     }
-
+ printf("TEST MATRICE FINE ---- \n");
 
 //TEST SU TRIE.C
 // Inizializza il Trie
+ printf("TEST TRIE INIZIO \n");
     Trie* root = create_node();
 
     // Inserisci alcune parole nel Trie
@@ -97,10 +99,48 @@ int main(int argc, char* argv[]){
     char buffer[256];
     printf("Contenuto del Trie:\n");
     Print_Trie(root, buffer, 0);
+ printf("TEST TRIE FINE ----\n");
 
-// TEST SU LISTA.C
+// TEST SU LISTA.C 
+ printf("TEST LISTA INIZIO\n");
+     Fifo* lista = create();
+     Client* client1 = (Client*)malloc(sizeof(Client));
+     client1->username = "user1";
+     client1->next = NULL;
+     push(lista, client1);
 
+     Client* client2 = (Client*)malloc(sizeof(Client));
+     client2->username = "user2";
+     client2->next = NULL;
+     push(lista, client2);
 
+     printf("Seek 'user1': %d\n", seek(lista, "user1")); // Dovrebbe restituire 1
+     printf("Seek 'user3': %d\n", seek(lista, "user3")); // Dovrebbe restituire 0
+
+     Client* popped_client = pop(lista);
+     printf("Popped client: %s\n", popped_client->username); // Dovrebbe restituire "user2"
+
+     // Test delle funzioni della lista dei giocatori
+    listaGiocatori giocatori;
+        giocatori.head = NULL;
+       pthread_mutex_init(&giocatori.lista_mutex, NULL);
+
+     giocatore* giocatore1 = (giocatore*)malloc(sizeof(giocatore));
+     giocatore1->username = "player1";
+     giocatore1->punteggio = 0;
+     giocatore1->next = NULL;
+     giocatori.head = giocatore1;
+
+     aggiorna_punteggio(&giocatori, "player1", 100);
+     printf("Punteggio di 'player1': %d\n", giocatore1->punteggio); // Dovrebbe restituire 100
+
+     distruggi_lista(&giocatori);
+
+     // Pulizia
+     free(client1);
+     free(client2);
+     free(lista);
+ printf("TEST LISTA FINE ----\n");
 
     return 0;
 }
