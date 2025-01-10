@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <errno.h>
+#include <time.h>
 #include <signal.h>
 #include <stddef.h>
 
@@ -43,8 +44,6 @@ pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t scorer_cond, game_cond, lista_cond;
-
-pthread_mutex_t classifica_mutex;
 pthread_mutex_t game_mutex;
 pthread_t scorer_tid;
 listaGiocatori lista; // Lista giocatori
@@ -75,7 +74,7 @@ void alarm_handler(int sig){
         pthread_mutex_unlock(&pausa_gioco_mutex);
     }
     else{ // Gestione scandeza tempo
-        //int retvalue;
+        int retvalue;
         pthread_mutex_lock(&pausa_gioco_mutex);
         pausa_gioco = 1; // cambia lo stato del gioco 
         printf("Il gioco è in pausa. \n");
@@ -148,7 +147,7 @@ void sig_classifica(int sig){
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
     time_t tempo_attuale = time(NULL);
     double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    int tempo_rimanente = durata_partita - (int)tempo_trascorso;
+    double tempo_rimanente = durata_partita - tempo_trascorso;
 
     // Se il tempo rimanente è minore di 0 allora vuol dire che il gioco è finito
     if (tempo_rimanente < 0) {
@@ -156,7 +155,7 @@ char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
     } 
 
     // Calcolo lunghezza del messaggio e alloco memoria
-    int length = snprintf(NULL, 0 , "Il tempo rimanente è: %d secondi\n", tempo_rimanente);
+    int length = 64;
     char* messaggio = (char*)malloc(length + 1);
 
     // Verifica se l'allocazione è riuscita
@@ -218,7 +217,6 @@ void* thread_func(void* arg) {
             case MSG_MATRICE:
                 if(pausa_gioco == 0){
                     // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
-                    stampaMatrice(matrice);
                     invio_matrice(client_sock, matrice);
                     char* temp =  calcola_tempo_rimanente(tempo_iniziale, durata_partita);
                     send_message(client_sock, MSG_TEMPO_PARTITA, temp);
@@ -270,8 +268,7 @@ void* thread_func(void* arg) {
             
             case MSG_REGISTRA_UTENTE:
                 //controllare nome utente
-                //send_message(client_sock, MSG_ERR, "Utente già registrato");
-                send_message(client_sock,MSG_OK,"Utente correttamente registrato");
+                send_message(client_sock, MSG_ERR, "Utente già registrato");
                 break;
 
             case MSG_PUNTI_FINALI:
@@ -285,12 +282,13 @@ void* thread_func(void* arg) {
                 }
                 break;
             }
-        //send_message(client_sock,MSG_OK,"ciao diletta");
+        send_message(client_sock,MSG_OK,"ciao diletta");
     }
     // Terminazione del thread con valore di ritorno
     pthread_exit(NULL);
 }
 
+pthread_mutex_t classifica_mutex;
 void *scorer(void *arg) {
 
     printf("Scorer in esecuzione\n");
@@ -340,26 +338,64 @@ void* game(void* arg) {
     int round = 0; // Inizializzo il round a 0
     //time_t tempo_iniziale;
      //Dichiaro per memorizzare tempo di inizio 
-    int retvalue;
     while (1) {
-        writef(retvalue,"sono nel thread di gioco");
-        if (round == 0) {
-            // Blocco per accedere alla matrice di gioco
-            FILE* file = fopen ("../Matrici.txt", "rb"); //
-            Carica_MatricedaFile(file, matrice);  // Carica i dati della matrice dal file
-            round = 1; //Round attivo
-        }
-        while (&lista == NULL){
-            ;
-        }
-        
+        /*
+        pthread_mutex_lock(&lista_mutex);
+        // Attesa fino a quando non ci sono giocatori registrati
+    
+        while (lista.count == 0) {
+            printf("Nessun giocatore registrato. Attesa...\n");
+            pthread_cond_wait(&lista_cond, &lista_mutex);
+        } 
+
+        //Segnale che il buffer è vuoto
+        pthread_cond_signal(&lista_cond);
+                
+        pthread_mutex_unlock(&lista_mutex);
+        */
+
         // Inizia la pausa
         printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
-        sleep(durata_pausa);
+        sleep(durata_pausa); 
+       
+       
         // PREPARAZIONE DEL ROUND
-        
+        if (round == 0) {
+            // Blocco per accedere alla matrice di gioco
+            pthread_mutex_lock(&matrix_mutex);
+            FILE* file = fopen (DIZIONARIO, "rb"); //
+            Carica_MatricedaFile(file, matrice);  // Carica i dati della matrice dal file
+            pthread_mutex_unlock(&matrix_mutex);  // Sblocca la mutex 
+            round = 1; //Round attivo
+        }
+
+
+        // Inizio del round di gioco 
+        //tempo_iniziale = time(NULL); // Registro tempo attuale, inizio del round
         alarm(durata_partita); // Allarme per durata della partita, dopo quei secondi si segna la fine
-        printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, lista.count);
+        printf("La partita è iniziata, terminerà tra: %d secondi con %d giocatori\n", durata_partita, lista.count); // abbastanza sicuro ceh non serva una lock
+
+        /* Invio il tempo rimanente a ciascun giocatore
+        pthread_mutex_lock(&lista_mutex);
+        giocatore* current = lista.head; // Puntatore al primo elemento della lista
+        while (current != NULL) {
+            char* temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita); //Calcolo tempo rimanente
+            send_message(current->client_fd,MSG_TEMPO_PARTITA, temp);  //Invia un messaggio a ciascun giocatore indicando il tempo
+            current = current->next; // Passo al nuovo elemento della lista
+        }
+        pthread_mutex_unlock(&lista_mutex);
+        */
+
+        // Attendere che la partita finisca (usando condizione di attesa)
+        /*
+        pthread_mutex_lock(&game_mutex);
+        while (!pausa_gioco) {
+            pthread_cond_wait(&game_cond, &game_mutex); // Attendi la fine della partita o la pausa
+        }
+        pthread_cond_signal(&game_cond);
+        pthread_mutex_unlock(&game_mutex);
+        */
+
         // Reset dalla pausa per il prossimo round
         pausa_gioco = 0;
         round = 0;
@@ -374,7 +410,7 @@ int main(int argc, char* argv[]) {
     //char message [128];
 
     // Definizione dei segnali 
-    // signal(SIGUSR1, alarm_handler);
+    signal(SIGUSR1, alarm_handler);
     
     if(argc<3){
         //Errore se numero dei parametri < 3
@@ -415,14 +451,20 @@ int main(int argc, char* argv[]) {
 
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
-    pthread_t gamer;
-    int retvalue;
-    matrice = generateMatrix();
-    SYST(retvalue,pthread_create(&gamer,NULL,game,NULL),"nella creazione del thread di gioco");
     while(1){
       // Accetta la connessione
         int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_len);
+
         printf("Connessione accettata\n");
+        
+        /*read(client_sock, message, 128);
+        printf("Client: %s\n", message);*/
+        
+        // Chiudi i socket
+        //close(client_sock); // Chiudi il socket del client
+        //close(server_sock); // Chiudi il socket del server
+        //return 0;
+        
         //THREAD
         //Dichiara thread
         pthread_t thread_id;
@@ -443,4 +485,16 @@ int main(int argc, char* argv[]) {
         }
         //return 0;
     }
+
+/* Prove
+    matrice = generateMatrix();
+        // Libera la memoria
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        free(matrice[i]);
+    }
+    free(matrice);
+
+    return 0;
+    InputStringa(matrice,"");
+*/
 }
