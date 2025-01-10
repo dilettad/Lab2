@@ -7,38 +7,9 @@
 #include "../Header/FunzioniServer.h"
 #include "../Header/Trie.h"
 
-// Calcola tempo rimanente
-char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita) {
-    time_t tempo_attuale = time(NULL);
-    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    printf("Il tempo trascorso è: %f secondi\n", tempo_trascorso);
-    double tempo_rimanente = durata_partita - tempo_trascorso;
-    printf("Il tempo rimanente è: %f secondi\n", tempo_rimanente);
-    // Se il tempo rimanente è minore di 0 allora vuol dire che il gioco è finito
-    if (tempo_rimanente < 0) {
-        return "Il gioco è già terminato\n";
-    } 
-
-    // Calcolo lunghezza del messaggio e alloco memoria
-    int length = 64;
-    char* messaggio = (char*)malloc(length + 1);
-
-    // Verifica se l'allocazione è riuscita
-    if (messaggio == NULL) {
-        return "Errore di allocaione della memoria \n";
-    }
-    //Scrive il messaggio formattato nella memeoria allocata
-    snprintf(messaggio, length+1, "Il tempo rimanente è: %f secondi\n", tempo_rimanente);  
-    //return il messaggio
-    return messaggio;  
-}
-
-
 int main(int argc, char* argv[]){
 
 // TEST SU MATRICE.C    
-
-    printf("Inizio test matrice \n");
      // Genera la matrice
     cella** matrice = generateMatrix();
 
@@ -101,7 +72,7 @@ int main(int argc, char* argv[]){
         free(temp->parola);
         free(temp);
     }
-    printf("Fine test matrice \n");
+
 
 //TEST SU TRIE.C
 // Inizializza il Trie
@@ -127,19 +98,7 @@ int main(int argc, char* argv[]){
     printf("Contenuto del Trie:\n");
     Print_Trie(root, buffer, 0);
 
-// TEST SU SERVER.C
-    printf("TEST SU SERVER \n");
-    time_t tempo_iniziale = time(NULL);
-    int durata_partita = 30; // durata della partita in secondi 
-    
-    // Simula un'attesa di 3 secondi
-    sleep(3);
-    
-    char* risultato = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-    printf("%s", risultato);
-    
-    // Libera la memoria allocata
-    free(risultato);
+// TEST SU LISTA.C
 
 
 
