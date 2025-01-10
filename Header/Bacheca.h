@@ -3,9 +3,9 @@
 
 //Struttura messaggio
 typedef struct {
-    char username [32];
-    char text[MAX_LENGTH_MESSAGE];
-} Message;
+    char* username [32];
+    char* text[MAX_LENGTH_MESSAGE];
+} Message; 
 
 //Funzione per aggiungere messaggi in bacheca
 void add_message(char* text, char* username);

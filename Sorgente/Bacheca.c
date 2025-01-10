@@ -20,7 +20,7 @@ void add_message(char* text, char* username){
 
     //Controllo posso inserire il messaggio in quanto < 8 
     if (message_count < MAX_MESSAGES){
-        //Aggiungo il messaggio
+        //Aggiungo il messaggio copiandolo
         strcpy(messages[message_count].text, text);
         strcpy(messages[message_count].username, username);
         message_count++;
@@ -39,13 +39,15 @@ void add_message(char* text, char* username){
         }
     pthread_mutex_unlock(&mess);    
 }
+//TESTATA: FUNZIONA
 
-//
+
 Message *post_messaggi(int message_count) {
     pthread_mutex_lock(&mess);
 
     // Alloco memoria per l'array di messaggi da restituire
-    Message* read_message = (Message*)malloc(message_count * sizeof(Message));
+    // Message* read_message = (Message*)malloc(message_count * sizeof(Message));
+    Message *read_message = malloc(message_count * sizeof(Message));
 
     // Controllo se già letti
     if (read_message == NULL) {
@@ -105,4 +107,4 @@ void bacheca_csv(char *filename){
     // Chiusura file
     fclose(file); 
 }
-
+// TESTATA: NI FUNZIONA
