@@ -84,7 +84,8 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita)
 // TESTATA: FUNZIONA
 
 // Funzione di invio classifica ai giocatori
-void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica){
+void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica)
+{
     pthread_mutex_lock(&lista_mutex);
     // Inizializza un puntatore alla testa della lista
     giocatore *current = lista->head;
@@ -237,8 +238,9 @@ void *thread_func(void *args)
         switch (client_message.type)
         {
         case MSG_MATRICE:
-            if (pausa_gioco == 0){
-               
+            if (pausa_gioco == 0)
+            {
+
                 // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
                 stampaMatrice(matrice);
                 invio_matrice(client_sock, matrice);
@@ -255,18 +257,19 @@ void *thread_func(void *args)
             break;
 
         case MSG_PAROLA:
-            if (pausa_gioco == 0){
-                printf("ciao entro bene");
+            if (pausa_gioco == 0)
+            {
+                printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
                 // Controllo se la parola è già stata trovata
-                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)) 
+                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data))
                 {
                     printf("ciao entro 1");
                     fflush(0);
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                     break;
                 }
-                
+
                 // Controllo se parola è in matrice
                 else if (!trovaParola(matrice, client_message.data))
                 {
@@ -413,8 +416,9 @@ void *scorer(void *arg)
 
     // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
     // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
-    for (int i = 0; i < num_giocatori; i++){
-        sendClassifica (&lista, current -> tid, lista_mutex, classifica);
+    for (int i = 0; i < num_giocatori; i++)
+    {
+        sendClassifica(&lista, current->tid, lista_mutex, classifica);
     }
     return NULL;
 }

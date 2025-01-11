@@ -23,6 +23,27 @@
 Aggiungere Segnali, però aspettare il server per farli
 */
 
+char *ltrim(char *s)
+{
+    while (isspace(*s))
+        s++;
+    return s;
+}
+
+char *rtrim(char *s)
+{
+    char *back = s + strlen(s);
+    while (isspace(*--back))
+        ;
+    *(back + 1) = '\0';
+    return s;
+}
+
+char *trim(char *s)
+{
+    return rtrim(ltrim(s));
+}
+
 // define di progetto
 //  #define HOST "127.0.0.1"
 //  #define PORT 8080
@@ -202,7 +223,11 @@ int main(int argc, char *argv[])
         // Controllo se contiene "p"
         else if (strncmp(input, "p", 1) == 0)
         {
-            token = strtok(token, "\0");
+            // Ottenere il primo token (il comando "p")
+            token = strtok(input, " ");
+
+            // Ottenere il secondo token (la parola dopo "p")
+            token = strtok(NULL, " ");
             if (token == NULL)
             {
                 printf("Errore, manca la parola da controllare\n");
@@ -213,7 +238,8 @@ int main(int argc, char *argv[])
                 printf("Parola troppo corta\n");
                 continue;
             }
-            send_message(client_sock, MSG_PAROLA, input);
+
+            send_message(client_sock, MSG_PAROLA, trim(token));
         }
 
         // Controllo se contiene "fine"
