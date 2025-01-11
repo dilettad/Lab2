@@ -73,14 +73,14 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index){
         int x = i + cose[c]; // coordinata x aggiornata
         int y = j + cose[c+1]; // coordinata y aggiornata
        
-        //printf("%c\n",matrice[x][y].value );  
+       // printf("%c\n",matrice[x][y].value );  
         if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0){
             if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false){
                 matrice[x][y].usato = true;
                 if (trovaParolaAux(matrice, x, y, parola, index+1)){
-                    return 1;
-                matrice[x][y].usato = false;
+                    return 1;   
                 }
+                matrice[x][y].usato = false;
             }
         }
     }
@@ -90,14 +90,16 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index){
 
 //Funzione per cercare sulla matrice
 int trovaParola(cella** matrice, char* parola ){
+    printf(parola);
     for (size_t i = 0; i < MATRIX_SIZE; i++){
         for (size_t j = 0; j < MATRIX_SIZE; j++){  
            if (matrice[i][j].value == parola[0]){ //Controlla se il primo carattere corrisponde
                 matrice[i][j].usato = true;
+                //printf("forse\n");
                 if (trovaParolaAux(matrice, i, j, parola,1)) // Ricorsiva
                     return 1; //Parola trovata
-                matrice[i][j].usato = false;  //Se non trovata, ripristino la cella
             }
+                matrice[i][j].usato = false;  //Se non trovata, ripristino la cella
         }
     }
     return 0; //Parola non trovata

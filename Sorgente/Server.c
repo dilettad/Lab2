@@ -84,8 +84,7 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita)
 // TESTATA: FUNZIONA
 
 // Funzione di invio classifica ai giocatori
-void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica, time_t tempo_iniziale, int durata_pausa_)
-{
+void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica){
     pthread_mutex_lock(&lista_mutex);
     // Inizializza un puntatore alla testa della lista
     giocatore *current = lista->head;
@@ -94,9 +93,6 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_
         if (pthread_equal(current->tid, tid))
         {                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
             send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
-            char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa_);
-            send_message(current->client_fd, MSG_TEMPO_ATTESA, temp);
-            free(temp); // Libero la memoria allocata
         }
         current = current->next; // Passo al giocatore successivo
     }
@@ -202,7 +198,7 @@ void sig_classifica(int sig)
         return;
     }
     // scorer = 0;
-    sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_pausa);
+    sendClassifica(&lista, pthread_self(), lista_mutex, classifica);
     pthread_mutex_unlock(&lista_mutex);
 }
 // TESTATE: RUNTIME ERROR
@@ -241,8 +237,8 @@ void *thread_func(void *args)
         switch (client_message.type)
         {
         case MSG_MATRICE:
-            if (pausa_gioco == 0)
-            {
+            if (pausa_gioco == 0){
+               
                 // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
                 stampaMatrice(matrice);
                 invio_matrice(client_sock, matrice);
@@ -259,17 +255,23 @@ void *thread_func(void *args)
             break;
 
         case MSG_PAROLA:
-            if (pausa_gioco == 0)
-            {
+            if (pausa_gioco == 0){
+                printf("ciao entro bene");
+                fflush(0);
                 // Controllo se la parola è già stata trovata
-                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data))
+                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)) 
                 {
+                    printf("ciao entro 1");
+                    fflush(0);
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                     break;
                 }
+                
                 // Controllo se parola è in matrice
                 else if (!trovaParola(matrice, client_message.data))
                 {
+                    printf("ciao entro 2");
+                    fflush(0);
                     send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
                     break;
                 }
@@ -277,23 +279,30 @@ void *thread_func(void *args)
                 // Controllo se parola è nel dizionario
                 else if (!search_Trie(client_message.data, trie))
                 {
+                    printf("ciao entro 1");
+                    fflush(0);
                     send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
                     break;
                 }
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                 else
                 {
+                    printf("Aggiungo la parola alla lista delle parole trovate \n");
                     // Aggiungo la parola alla lista delle parole trovate
                     listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); // DA SISTEMARE LA LISTA
                     int puntiparola = strlen(client_message.data);
+                    printf("Punti parola \n");
                     // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
                     if (strstr(client_message.data, "Qu"))
                     {
                         puntiparola--;
+                        printf("Sottrai \n");
                     }
                     // Invio i punti della parola
-                    char *messaggiopuntiparola = "diletta crea il messaggio";
+                    char *messaggiopuntiparola[50];
+                    sprintf(messaggiopuntiparola, "%d", puntiparola);
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
+                    sprintf("Punteggio inviato \n", messaggiopuntiparola);
                     punteggio += puntiparola;
                 }
             }
@@ -329,14 +338,14 @@ void *thread_func(void *args)
             pthread_exit(NULL);
             break;
 
-        case MSG_CANCELLA_UTENTE:
-            // Controllo se l'utente è loggato
-            if (giocatore->username == NULL)
-            {
-                send_message(client_sock, MSG_ERR, "Utente non loggato");
-                break;
-            }
-            break;
+        // case MSG_CANCELLA_UTENTE:
+        //     // Controllo se l'utente è loggato
+        //     if (giocatore->username == NULL)
+        //     {
+        //         send_message(client_sock, MSG_ERR, "Utente non loggato");
+        //         break;
+        //     }
+        //     break;
 
         // case MSG_LOGIN_UTENTE:
         //     // Controllo se l'utente è loggato
@@ -402,7 +411,11 @@ void *scorer(void *arg)
     // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
     invia_SIG(&lista, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
 
-    // fai un for e invia ad ogni giocatore la classifica usando MSG_OK scorri lista giocatori
+    // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
+    // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
+    for (int i = 0; i < num_giocatori; i++){
+        sendClassifica (&lista, current -> tid, lista_mutex, classifica);
+    }
     return NULL;
 }
 
