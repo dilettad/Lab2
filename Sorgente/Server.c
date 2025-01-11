@@ -15,6 +15,7 @@
 #include "../Header/Lista.h"
 #include "../Header/Matrice.h"
 #include "../Header/FunzioniServer.h"
+#include "../Header/Giocatore.h"
 
 #define MAX_CLIENTS 32 
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
@@ -199,7 +200,7 @@ void sig_classifica(int sig){
 void* thread_func(void* args) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)args;
-    
+    giocatore*  giocatore = NULL;
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
 // MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
@@ -281,6 +282,17 @@ void* thread_func(void* args) {
                     send_message(client_sock, MSG_ERR, "Classifica non disponibile");
                 }
                 break;
+
+            case MSG_CANCELLA_UTENTE:
+            // Controllo se l'utente è loggato
+                if (giocatore->username == NULL) {
+                    send_message(client_sock, MSG_ERR, "Utente non loggato");
+                    break;
+                } 
+                break;
+
+            case MSG_LOGIN_UTENTE:
+                
             }
         //send_message(client_sock,MSG_OK,"ciao diletta");
     }

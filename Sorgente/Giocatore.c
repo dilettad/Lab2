@@ -84,4 +84,39 @@ void stampa_lista_clienti(Fifo* lista){
 }
 //TESTATA: FUNZIONA
 
-// Serve un libera lista? Non posso fare un free(lista)
+// Funzione per eliminare il giocatore dalla lista
+void elimina_giocatore(Fifo* lista, int client_fd){
+    if (lista == NULL || lista->head == NULL) {
+        send_message(client_fd, MSG_ERR, "Lista vuota");
+        return;
+    }
+
+    Client* current = lista->head;
+    Client* previous = NULL;
+
+    // Cerca il client da eliminare
+    while (current != NULL) {
+        if (current->fd == client_fd) {
+            // Se il client da eliminare è il primo della lista
+            if (previous == NULL) {
+                lista->head = current->next;
+            } else {
+                previous->next = current->next;
+            }
+
+            // Se il client da eliminare è l'ultimo della lista
+            if (current->next == NULL) {
+                lista->tail = previous;
+            }
+
+            free(current);
+            printf("Client con username %d eliminato.\n", client_fd);
+            return;
+        }
+
+        previous = current;
+        current = current->next;
+    }
+
+    printf("Client con username %d non trovato.\n", client_fd);
+}
