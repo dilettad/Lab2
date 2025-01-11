@@ -53,7 +53,7 @@ SRCG = $(SORGENTE)$(GIOCATORE).c
 
 # Input
 PORT = 20000
-PORT2 = 30000
+PORT2 = 30003
 HOST = 127.0.0.1
 
 # Comandi di esecuzione
@@ -128,11 +128,11 @@ run-client:
 	@$(CLIENT_RUN)
 
 run-server2:
-	@echo Esecuzione server sulla porta $(3000)
+	@echo Esecuzione server sulla porta $(3003)
 	@$(SERVER_RUN2)
 
 run-client2:
-	@echo Esecuzione client sulla porta $(3000)
+	@echo Esecuzione client sulla porta $(3003)
 	@$(CLIENT_RUN2)
 
 run-test:
