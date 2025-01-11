@@ -84,7 +84,7 @@ void stampa_lista_clienti(Fifo* lista){
 }
 //TESTATA: FUNZIONA
 
-// Funzione per eliminare il giocatore dalla lista
+/* Funzione per eliminare il giocatore dalla lista
 void elimina_giocatore(Fifo* lista, int client_fd){
     if (lista == NULL || lista->head == NULL) {
         send_message(client_fd, MSG_ERR, "Lista vuota");
@@ -119,4 +119,28 @@ void elimina_giocatore(Fifo* lista, int client_fd){
     }
 
     printf("Client con username %d non trovato.\n", client_fd);
+}*/
+
+void elimina_giocatore(listaGiocatori* lista, char* username, pthread_mutex_t lista_mutex){
+    pthread_mutex_lock(&lista_mutex);
+    giocatore *corrente = lista->head;
+    giocatore *precedente = NULL;
+
+    while(corrente != NULL){
+        if(strcmp(corrente->username, username) == 0){
+            if(precedente == NULL){
+                lista->head = corrente->next;
+            }
+            else{
+                precedente->next = corrente->next;
+            }
+            lista->count--;
+            pthread_mutex_unlock(&lista_mutex);
+            return;
+        }
+        precedente = corrente;
+        corrente = corrente->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+    //se il giocatore non è stato trovato, non fa nulla
 }

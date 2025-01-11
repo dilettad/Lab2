@@ -201,6 +201,9 @@ void* thread_func(void* args) {
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)args;
     giocatore*  giocatore = NULL;
+
+    // MANCA UN PEZZO ?
+
 // Gestione dei comandi ricevuti dal client
 // MSG_MATRICE: invia la matrice e il tempo rimanente o il tempo di pausa 
 // MSG_PAROLA: controllo punti della parola in base ai caratteri, se presente nella matrice, nel dizionario e accredita punti, se già trovata 0
