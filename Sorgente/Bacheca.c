@@ -108,3 +108,12 @@ void bacheca_csv(char *filename){
     fclose(file); 
 }
 // TESTATA: NI FUNZIONA
+
+//Funzione per liberare i messaggi dalla memoria
+void libera_messaggi(Message * messaggi, int num_messaggi) {
+    for (int i = 0; i < num_messaggi; i++) {
+        free(messaggi[i].text);
+        free(messaggi[i].username);
+    }
+    free(messaggi);
+}

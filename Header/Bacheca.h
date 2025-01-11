@@ -12,3 +12,7 @@ void add_message(char* text, char* username);
 
 //Funzione per post messaggi sulla bacheca
 Message *post_messaggi(int message_count);
+
+void bacheca_csv(char *filename);
+
+void libera_messaggi(Message * messaggi, int num_messaggi);
