@@ -127,8 +127,8 @@ void alarm_handler(int sig){
         printf("Il gioco è in corso.\n");
         pthread_mutex_unlock(&pausa_gioco_mutex);
     }
-    else{ // Gestione scandeza tempo
-        int retvalue;
+    else{ // Gestione scandenza tempo
+
         pthread_mutex_lock(&pausa_gioco_mutex);
         pausa_gioco = 1; // cambia lo stato del gioco 
         printf("Il gioco è in pausa. \n");
@@ -197,7 +197,7 @@ void sig_classifica(int sig){
 
 //SOCKET
 // Funzione del thread
-void* thread_func(void* args) {
+void* thread_func(void* args){
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int*)args;
     giocatore*  giocatore = NULL;
@@ -272,7 +272,10 @@ void* thread_func(void* args) {
             case MSG_REGISTRA_UTENTE:
                 //controllare nome utente
                 //send_message(client_sock, MSG_ERR, "Utente già registrato");
-                send_message(client_sock,MSG_OK,"Utente correttamente registrato");
+                //send_message(client_sock,MSG_OK,"Utente correttamente registrato");
+                pthread_mutex_lock(&lista_mutex);
+                registrazione_client(client_sock, client_message.data, &lista);
+                pthread_mutex_unlock(&lista_mutex);
                 break;
 
             case MSG_PUNTI_FINALI:
@@ -286,6 +289,12 @@ void* thread_func(void* args) {
                 }
                 break;
 
+
+            case MSG_FINE:
+                close(client_sock);
+                pthread_exit(NULL);
+                break;
+
             case MSG_CANCELLA_UTENTE:
             // Controllo se l'utente è loggato
                 if (giocatore->username == NULL) {
@@ -295,6 +304,14 @@ void* thread_func(void* args) {
                 break;
 
             case MSG_LOGIN_UTENTE:
+              // Controllo se l'utente è loggato
+                if (giocatore->username != NULL) {
+                    send_message(client_sock, MSG_ERR, "Utente già loggato");
+                    break;
+                } else {
+                    if (strlen(client_message.data) > 0) {
+                }
+
                 
             }
         //send_message(client_sock,MSG_OK,"ciao diletta");
@@ -302,17 +319,17 @@ void* thread_func(void* args) {
     // Terminazione del thread con valore di ritorno
     pthread_exit(NULL);
 }
+}
 
-
-void *scorer(void *arg) {
+void *scorer(void *arg){
     printf("Scorer in esecuzione\n");
-
+    
     // Prendo il numero di giocatori registrati
     pthread_mutex_lock(&lista_mutex);
     int num_giocatori = lista.count; 
     pthread_mutex_unlock(&lista_mutex);
 
-    giocatore  scorerVector[MAX_CLIENTS];
+    giocatore scorerVector[MAX_CLIENTS];
     giocatore *current = lista.head;
     
     pthread_mutex_lock(&lista_mutex); 
@@ -413,7 +430,7 @@ void *game(void *arg){
 
 
 int main(int argc, char* argv[]) {
-    
+
     int server_sock;
     struct sockaddr_in server_addr;
     //char message [128];
@@ -457,7 +474,7 @@ int main(int argc, char* argv[]) {
     }
 
     printf("In attesa di connessioni...\n");
-
+    signal(SIGINT,sigint_handler);
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
     pthread_t gamer;
@@ -486,6 +503,6 @@ int main(int argc, char* argv[]) {
             //free(ret); // Libera la memoria allocata
             printf("thread ucciso\n");
         }
-        //return 0;
+        return 0;
     }
 }

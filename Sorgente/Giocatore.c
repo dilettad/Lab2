@@ -16,14 +16,14 @@
 
 //GIOCATORE : deve essere messo su client o su lista?
 
-//Funzione per aggiungere client alla lista
+/*Funzione per aggiungere client alla lista
 void add_client(Fifo* lista, int client_fd, char* username){
      Client* new_client = (Client*) malloc(sizeof(Client));
      new_client -> fd = client_fd;
      strcpy(new_client->username, username);
      new_client->next = NULL;   
 } 
-// TESTATA: FUNZIONA
+*/
 
 // Controllo caratteri dell'username: non deve contenere caratteri ASCII
 int controlla_caratteri(const char* username){
@@ -38,7 +38,7 @@ int controlla_caratteri(const char* username){
 // TESTATA: FUNZIONA
 
 //Funzione per registrazione del cliente
-void registrazione_client(int client_fd, char* username, Fifo* lista){
+void registrazione_client(int client_fd, char* username, listaGiocatori* lista){
      // Controllo se l'username contiene solo caratteri validi
         if (!controlla_caratteri(username)) {
             send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
@@ -49,14 +49,16 @@ void registrazione_client(int client_fd, char* username, Fifo* lista){
             return;
         }
     Client* current = lista -> head;
+    
     // Controllo se l'username è già presente
     while(current != NULL) {
          // Se l'username è già presente, manda un messaggio di errore
          if (strcmp(current->username, username) == 0) {
-             send_message(client_fd,MSG_ERR,"Username già esistente, scegline un altro");
+             send_message(client_fd,MSG_ERR,"Username già esistente, sceglierne un altro");
              return;
          }
-         current = current -> next;
+       
+        current = current -> next;
     }
         
      // Se l'username è valido, invio un messaggio di conferma 
@@ -66,7 +68,7 @@ void registrazione_client(int client_fd, char* username, Fifo* lista){
     //add_client(&clients_head, client_fd,username );
     // Inserisco il client nella lista
     push(lista -> head, username);
-    // listaGiocatori.count ++;
+    lista->count++;
     return ;
 }
 

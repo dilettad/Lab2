@@ -2,7 +2,7 @@
 void add_client(Fifo* lista, int client_fd, char* username);
 
 // Funzione registrazione cliente
-void registrazione_client(int client_fd, char* username, Fifo* lista);
+void registrazione_client(int client_fd, char* username, listaGiocatori* lista);
 
 // Funzione controlla_caratteri
 int controlla_caratteri(const char* username);
