@@ -181,3 +181,27 @@ void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t li
     pthread_mutex_unlock(&lista_mutex);
     // se il giocatore non è stato trovato, non fa nulla
 }
+
+// DUBBIO: CLIENTS O FIFO??
+/*void elimina_thread(Fifo * lista, pthread_t thread, pthread_mutex_t clients_mutex){
+    pthread_mutex_lock(&clients_mutex);
+    Fifo *current = lista->head;
+    Fifo *precedente = NULL;
+
+    while(current != NULL){
+        if(pthread_equal(current->fd, thread) != 0){
+            if(precedente == NULL){
+                lista->head = current->next;
+            }
+            else{
+                precedente->next = current->next;
+            }
+            lista->count--;
+            pthread_mutex_unlock(&clients_mutex);
+            return;
+        }
+        precedente = current;
+        current = current->next;
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}*/

@@ -24,6 +24,13 @@
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
 
+typedef struct {
+    char* matrix_file;
+    float durata_partita;
+    long seed;
+    char* file_dizionario;
+}Parametri;
+
 void *scorer(void *arg);
 
 // char* calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
@@ -37,6 +44,8 @@ int server_fd;
 cella **matrice;
 paroleTrovate *listaParoleTrovate = NULL;
 Trie *trie = NULL;
+Trie* Dizionario;
+Parametri parametri;
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -202,13 +211,29 @@ void sig_classifica(int sig)
     sendClassifica(&lista, pthread_self(), lista_mutex, classifica);
     pthread_mutex_unlock(&lista_mutex);
 }
-// TESTATE: RUNTIME ERROR
+
+//CARICO IL DIZIONARIO IN MEMORIA
+void Load_Dictionary(Trie* Dictionary, char* path_to_dict){
+    //APRO IL FILE TRAMITE IL PATH
+    FILE* dict = fopen(path_to_dict,"r");
+    //CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
+    char word[256];
+    //LEGGO TUTTO IL FILE
+    while(fscanf(dict,"%s",word)!=EOF){
+        //STANDARDIZZO LE PAROLE DEL DIZIONARIO METTENDOLE IN UPPERCASE
+        Caps_Lock(word);
+        //INSERISCO LA PAROLA NEL TRIE
+        insert_Trie(Dizionario,word);
+    }
+    return;
+}
+
 
 // SOCKET
 //  Funzione del thread
 void *thread_func(void *args)
 {
-
+     
     // Francesco: Aggiungere ad una lista il client con il suo fd
 
     // Dichiara un puntatore per il valore di ritorno
@@ -341,14 +366,22 @@ void *thread_func(void *args)
             pthread_exit(NULL);
             break;
 
-        // case MSG_CANCELLA_UTENTE:
-        //     // Controllo se l'utente è loggato
-        //     if (giocatore->username == NULL)
-        //     {
-        //         send_message(client_sock, MSG_ERR, "Utente non loggato");
-        //         break;
-        //     }
-        //     break;
+        case MSG_CANCELLA_UTENTE:
+            // Controllo se l'utente è loggato
+            if (giocatore->username == NULL)
+             {
+                send_message(client_sock, MSG_ERR, "Utente non loggato");
+                break;
+            }
+            printf("client_sock = %d, chiusura del client \n", client_sock);
+            // Mi serve un elimina thread
+            elimina_thread(&clients, pthread_self(), clients_mutex );
+            elimina_giocatore(&lista, giocatore -> username, lista_mutex);
+            printf("giocatore [%s] disconesso \n", giocatore -> username);
+            close(client_sock);
+
+
+        break;
 
         // case MSG_LOGIN_UTENTE:
         //     // Controllo se l'utente è loggato
@@ -487,7 +520,7 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-
+    Load_Dictionary(Dizionario, parametri.file_dizionario); 
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];

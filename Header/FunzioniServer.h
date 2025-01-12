@@ -8,6 +8,10 @@
 #include <errno.h>
 #include <signal.h>
 
+//#include "../Header/Comunicazione.h"
+
+//typedef struct Fifo Fifo;
+
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
 
 void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica);
