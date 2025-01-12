@@ -48,18 +48,26 @@ int insert_Trie(Trie *root, char *word)
     if (root == NULL)
     {
         root = create_node();
+        //printf("QUA? porco cane \n");
+        //fflush(0);
     }
     // caso base
     if (*word == '\0')
     {
         root->is_word = 0;
+        //printf("QUA? porco cane 1 \n");
+        //fflush(0);
         return 0;
     }
     // cerco il prossimo figlio
     int target_child = *word - 'A';
+    // printf("parola:%s", word);
+    //fflush(0);
     if (root->figli[target_child] == NULL)
     {
         root->figli[target_child] = create_node();
+        //printf("QUA? porco cane 3 \n");
+        //fflush(0);
     }
     // chiamata ricorsiva
     return insert_Trie(root->figli[target_child], word + 1);

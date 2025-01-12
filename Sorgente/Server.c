@@ -267,15 +267,25 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict)
     // APRO IL FILE TRAMITE IL PATH
     FILE *dict = fopen(path_to_dict, "r");
     // CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
+    if (dict == NULL){
+        fprintf(stderr, "Error: Could not open file %s/n", path_to_dict);
+        return;
+    }
     char word[256];
     // LEGGO TUTTO IL FILE
     while (fscanf(dict, "%s", word) != EOF)
     {
-
+        // line[strlen(line)] = '\0';
+       // printf("QUA? 2\n");
+        //fflush(0);
         // STANDARDIZZO LE PAROLE DEL DIZIONARIO METTENDOLE IN UPPERCASE
         Caps_Lock(word);
-        // INSERISCO LA PAROLA NEL TRIE
+        // printf("QUA? 3\n");
+        // fflush(0);
+        // // INSERISCO LA PAROLA NEL TRIE
         insert_Trie(Dizionario, word);
+        // printf("QUA? 4\n");
+        // fflush(0);
     }
     return;
 }
@@ -589,9 +599,10 @@ void *game(void *arg)
 int main(int argc, char *argv[])
 {
     Dizionario = create_node();
-    // Load_Dictionary(Dizionario, DIZIONARIO);
+    Load_Dictionary(Dizionario, DIZIONARIO);
     insert_Trie(Dizionario, "ciao");
     printf("ciao %d\n", search_Trie("ciao", Dizionario));
+    //Print_Trie();
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];
