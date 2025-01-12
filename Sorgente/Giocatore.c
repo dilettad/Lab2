@@ -212,3 +212,24 @@ void elimina_thread(Fifo * lista, int fd, pthread_mutex_t *clients_mutex){
     }
     pthread_mutex_unlock(&clients_mutex);
 }
+
+
+/*Funzione che recupera il nome utente di un giocatore -> NON MI PRENDE LISTA
+listaGiocatori RecuperaUtente(listaGiocatori* newLista, char* username) {
+    pthread_mutex_lock(&newLista->lock);
+    // listaGiocatori head = newLista->lista;
+    giocatore* lista = newLista->head;
+    //Fino a che la lista non è vuota, controllo se il nome utente coincide con quello nella lista
+    while (lista != NULL) {
+        if (strcmp(lista->username, username) == 0) {
+            pthread_mutex_unlock(&newLista->lock);
+            return lista; //?
+        }
+        lista = lista->next;
+    }
+   // newLista->lista = head;
+    //Non ho trovato il nome utente dentro la lista
+    pthread_mutex_unlock(&newLista->lock);
+    return NULL;
+}
+*

@@ -383,19 +383,29 @@ void *thread_func(void *args)
 
         break;
 
-        // case MSG_LOGIN_UTENTE:
-        //     // Controllo se l'utente è loggato
-        //     if (giocatore->username != NULL)
-        //     {
-        //         send_message(client_sock, MSG_ERR, "Utente già loggato");
-        //         break;
-        //     }
-        //     else
-        //     {
-        //         if (strlen(client_message.data) > 0)
-        //         {
-        //         }
-        //     }
+       /* case MSG_LOGIN_UTENTE:
+            // Controllo se l'utente è loggato
+            if (giocatore->username != NULL)
+            {
+                send_message(client_sock, MSG_ERR, "Utente già loggato");
+                break;
+            }
+
+            listaGiocatori listatemp = RecuperaUtente (lista, message -> text);
+            if (listatemp == NULL) {
+                    send_message(client_sock,MSG_ERR, "Errore, il giocatore non si è mai registrato. Registrazione utente");
+                    break;
+                }
+                //Controllo se il giocatore è loggato in questo momento o meno
+                if (listatemp->loggato) {
+                    send_message(client_sock, MSG_ERR, "Errore, un giocatore è già loggato con questo nome utente. Fare una nuova registrazione utente",);
+                    break;
+                }
+            giocatore = listatemp;
+            giocatore -> username = client_sock;
+            send_message(client_sock, MSG_OK, "Utente loggato");
+            break;    
+       */
         default:
             send_message(client_sock, MSG_ERR, "Comando non valido");
             break;

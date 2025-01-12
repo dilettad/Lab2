@@ -39,6 +39,7 @@ typedef struct
     int count;
     pthread_mutex_t lista_mutex;
     pthread_cond_t lista_cond;
+    pthread_mutex_t lock;
 } listaGiocatori;
 
 void push(Fifo *lista, Client *new_client);
