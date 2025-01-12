@@ -24,12 +24,13 @@
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
 
-typedef struct {
-    char* matrix_file;
+typedef struct
+{
+    char *matrix_file;
     float durata_partita;
     long seed;
-    char* file_dizionario;
-}Parametri;
+    char *file_dizionario;
+} Parametri;
 
 void *scorer(void *arg);
 
@@ -44,7 +45,7 @@ int server_fd;
 cella **matrice;
 paroleTrovate *listaParoleTrovate = NULL;
 Trie *trie = NULL;
-Trie* Dizionario;
+Trie *Dizionario = NULL;
 Parametri parametri;
 
 // MUTEX
@@ -212,28 +213,42 @@ void sig_classifica(int sig)
     pthread_mutex_unlock(&lista_mutex);
 }
 
-//CARICO IL DIZIONARIO IN MEMORIA
-void Load_Dictionary(Trie* Dictionary, char* path_to_dict){
-    //APRO IL FILE TRAMITE IL PATH
-    FILE* dict = fopen(path_to_dict,"r");
-    //CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
-    char word[256];
-    //LEGGO TUTTO IL FILE
-    while(fscanf(dict,"%s",word)!=EOF){
-        //STANDARDIZZO LE PAROLE DEL DIZIONARIO METTENDOLE IN UPPERCASE
-        Caps_Lock(word);
-        //INSERISCO LA PAROLA NEL TRIE
-        insert_Trie(Dizionario,word);
+void Load_Dictionary(Trie *Dictionary, char *path_to_dict)
+{
+    // Open the file specified by the path
+    FILE *dict = fopen(path_to_dict, "r");
+    if (dict == NULL)
+    {
+        fprintf(stderr, "Error: Could not open file %s\n", path_to_dict);
+        return;
     }
+
+    // Create a buffer to store each line
+    char line[256];
+
+    // Read one line at a time
+    while (fgets(line, sizeof(line), dict) != NULL) // questa legge riga per riga
+    {
+        // Remove the newline character, if present
+        line[strcspn(line, "\n")] = '\0';
+
+        // Standardize the word to uppercase
+        Caps_Lock(line);
+
+        // Insert the word into the Trie
+        insert_Trie(Dictionary, line);
+    }
+
+    // Close the file
+    fclose(dict);
+
     return;
 }
-
-
 // SOCKET
 //  Funzione del thread
 void *thread_func(void *args)
 {
-     
+
     // Francesco: Aggiungere ad una lista il client con il suo fd
 
     // Dichiara un puntatore per il valore di ritorno
@@ -369,19 +384,18 @@ void *thread_func(void *args)
         case MSG_CANCELLA_UTENTE:
             // Controllo se l'utente è loggato
             if (giocatore->username == NULL)
-             {
+            {
                 send_message(client_sock, MSG_ERR, "Utente non loggato");
                 break;
             }
             printf("client_sock = %d, chiusura del client \n", client_sock);
             // Mi serve un elimina thread
-            elimina_thread(&clients, pthread_self(), clients_mutex );
-            elimina_giocatore(&lista, giocatore -> username, lista_mutex);
-            printf("giocatore [%s] disconesso \n", giocatore -> username);
+            elimina_thread(&clients, pthread_self(), clients_mutex);
+            elimina_giocatore(&lista, giocatore->username, lista_mutex);
+            printf("giocatore [%s] disconesso \n", giocatore->username);
             close(client_sock);
 
-
-        break;
+            break;
 
         // case MSG_LOGIN_UTENTE:
         //     // Controllo se l'utente è loggato
@@ -520,7 +534,7 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-    Load_Dictionary(Dizionario, parametri.file_dizionario); 
+    Load_Dictionary(Dizionario, parametri.file_dizionario);
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];
