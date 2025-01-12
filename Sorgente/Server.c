@@ -55,7 +55,6 @@ pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t scorer_cond, game_cond, lista_cond;
-
 pthread_mutex_t classifica_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t game_mutex;
 pthread_t scorer_tid;
@@ -64,6 +63,48 @@ Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
 Client *clients1;
+
+#define TIMEOUT_MINUTES 2 // 2 minuti di inattività 
+
+// FUNZIONI PER IL 4 ADDENDUM
+void *client_handler(void *arg) {
+    int client_index = *(int *)arg;
+    free(arg);
+
+    while (1) {
+        pthread_mutex_lock(&clients_mutex);
+        if (!clients1[client_index].active) {
+            pthread_mutex_unlock(&clients_mutex);
+            break;
+        }
+
+        time_t now = time(NULL);
+        if (difftime(now, clients1[client_index].last_activity) > TIMEOUT_MINUTES * 60) {
+            printf("Client %s inattivo, espulsione in corso...\n", clients1[client_index].username);
+            clients1[client_index].active = 0; // Segna come non attivo
+            close(clients1[client_index].fd); // Chiudi il socket ??
+            pthread_mutex_unlock(&clients_mutex);
+            break;
+        }
+        pthread_mutex_unlock(&clients_mutex);
+        sleep(1); // Controlla periodicamente
+    }
+
+    pthread_exit(NULL);
+}
+
+void update_client_activity(int client_socket) {
+    pthread_mutex_lock(&clients_mutex);
+    for (int i = 0; i < MAX_CLIENTS; ++i) {
+        if (clients1[i].fd== client_socket && clients1[i].active) {
+            clients1[i].last_activity = time(NULL);
+            printf("Aggiornata attività per %s.\n", clients1[i].username);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+
 
 // FUNZIONI
 // Calcola tempo rimanente
