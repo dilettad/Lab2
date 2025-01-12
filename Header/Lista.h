@@ -12,6 +12,8 @@ typedef struct Client
     int fd;              // File descriptor del client
     int score;           // Punteggio utente
     struct Client *next; // Puntatore al prossimo utente (per la lista)
+    int active;          // Se attivo(1) o no (0)
+    time_t last_activity; // Ultima attività dell'utente
 } Client;
 
 typedef struct Fifo

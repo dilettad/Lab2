@@ -48,6 +48,7 @@ Trie *trie = NULL;
 Trie *Dizionario = NULL;
 Parametri parametri;
 
+
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -62,6 +63,7 @@ listaGiocatori lista; // Lista giocatori
 Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
+Client *clients1;
 
 // FUNZIONI
 // Calcola tempo rimanente
@@ -244,6 +246,7 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict)
 
     return;
 }
+
 // SOCKET
 //  Funzione del thread
 void *thread_func(void *args)
