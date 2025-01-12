@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <stdbool.h> 
+#include <stdbool.h>
 #include <arpa/inet.h>
 #include <pthread.h>
 #include "../Header/macro.h"
@@ -11,51 +11,62 @@
 #include "../Header/Lista.h"
 #include "../Header/Comunicazione.h"
 
-
-//Funzione per inviare un messaggio
-void send_message(int client_socket, char type, char* data) {
+// Funzione per inviare un messaggio
+void send_message(int client_socket, char type, char *data)
+{
     int retvalue;
     int len = strlen(data);
-    //printf("invio messaggio\n");
-    //invio lunghezza messaggio
-    SYSC(retvalue,write(client_socket,&len,sizeof(int)),"errore lettura lunghezza messaggio\n");
-    //printf("invio messaggio\n");
-    //invio tipo messaggio
-    SYSC(retvalue,write(client_socket,&type,sizeof(char)),"errore lettur atipo messaggio\n")
-    //printf("invio messaggio\n");
-    //invio del campo data
-    SYSC(retvalue,write(client_socket,data,len),"nell'invio del payload")
-    //printf("invio messaggio\n");
+    // printf("invio messaggio\n");
+    // invio lunghezza messaggio
+    SYSC(retvalue, write(client_socket, &len, sizeof(int)), "errore lettura lunghezza messaggio\n");
+    // printf("invio messaggio\n");
+    // invio tipo messaggio
+    SYSC(retvalue, write(client_socket, &type, sizeof(char)), "errore lettur atipo messaggio\n")
+    // printf("invio messaggio\n");
+    // invio del campo data
+    SYSC(retvalue, write(client_socket, data, len), "nell'invio del payload")
+    // printf("invio messaggio\n");
 }
 
-//Funzione per ricevere un messaggio
-message receive_message(int client_socket){
-    message msg;int retvalue;
-    //ricevo lunghezza messaggio
-    //printf("attendo messaggio\n");
-    SYSC(retvalue,read(client_socket,&msg.length,sizeof(int)),"errore lettura lunghezza messaggio\n");
-    //ricevo tipo messaggio
-    SYSC(retvalue,read(client_socket,&msg.type,sizeof(char)),"errore lettur atipo messaggio\n")
-    //alloco campo data del messaggio
-    msg.data = (char*)malloc(msg.length+1); //Alloca in memoria lo spazio necessario per il data
-    //ricevo messagio 
-    SYSC(retvalue,read(client_socket,msg.data,msg.length),"nella ricezione del payload");
-    msg.data[msg.length+1] = '\0';
-    //printf("messaggio arrivato:\ntipo:%c\nlunghezza:%d\npayload:%s\n",msg.type,msg.length,msg.data);
+// Funzione per ricevere un messaggio
+message receive_message(int client_socket)
+{
+    message msg;
+    int retvalue;
+    // ricevo lunghezza messaggio
+    // printf("attendo messaggio\n");
+    SYSC(retvalue, read(client_socket, &msg.length, sizeof(int)), "errore lettura lunghezza messaggio\n");
+    // ricevo tipo messaggio
+    SYSC(retvalue, read(client_socket, &msg.type, sizeof(char)), "errore lettur atipo messaggio\n")
+    // alloco campo data del messaggio
+    msg.data = (char *)malloc(msg.length + 1); // Alloca in memoria lo spazio necessario per il data
+    // ricevo messagio
+    SYSC(retvalue, read(client_socket, msg.data, msg.length), "nella ricezione del payload");
+    msg.data[msg.length + 1] = '\0';
+    // printf("messaggio arrivato:\ntipo:%c\nlunghezza:%d\npayload:%s\n",msg.type,msg.length,msg.data);
 
     return msg;
 }
 
-void Caps_Lock(char* string){
-    //recupero la lunghezza della stringa
+void Caps_Lock(char *string)
+{
+    // Ensure the string is not NULL
+    if (string == NULL)
+    {
+        return;
+    }
+
+    // Recupero la lunghezza della stringa
     int len = strlen(string);
-    //ciclo sulla stringa
-    for(int i =0;i<len;i++){
-        //controllo se il carattere è in lower case
-        if (string[i]>= 'a' && string[i]<= 'z'){
-            //lo porto in uppercase
-            string[i]-= 32;
+
+    // Ciclo sulla stringa
+    for (int i = 0; i < len; i++)
+    {
+        // Controllo se il carattere è in lower case
+        if (string[i] >= 'a' && string[i] <= 'z')
+        {
+            // Lo porto in uppercase
+            string[i] -= 32;
         }
     }
-    return;
 }

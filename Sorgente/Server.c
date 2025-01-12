@@ -44,10 +44,9 @@ char *classifica; // Classifica non disponibile
 int server_fd;
 cella **matrice;
 paroleTrovate *listaParoleTrovate = NULL;
-Trie *trie = NULL;
-Trie *Dizionario = NULL;
-Parametri parametri;
 
+Trie *Dizionario;
+Parametri parametri;
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -64,25 +63,29 @@ pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
 Client *clients1;
 
-#define TIMEOUT_MINUTES 2 // 2 minuti di inattività 
+#define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
 // FUNZIONI PER IL 4 ADDENDUM
-void *client_handler(void *arg) {
+void *client_handler(void *arg)
+{
     int client_index = *(int *)arg;
     free(arg);
 
-    while (1) {
+    while (1)
+    {
         pthread_mutex_lock(&clients_mutex);
-        if (!clients1[client_index].active) {
+        if (!clients1[client_index].active)
+        {
             pthread_mutex_unlock(&clients_mutex);
             break;
         }
 
         time_t now = time(NULL);
-        if (difftime(now, clients1[client_index].last_activity) > TIMEOUT_MINUTES * 60) {
+        if (difftime(now, clients1[client_index].last_activity) > TIMEOUT_MINUTES * 60)
+        {
             printf("Client %s inattivo, espulsione in corso...\n", clients1[client_index].username);
             clients1[client_index].active = 0; // Segna come non attivo
-            close(clients1[client_index].fd); // Chiudi il socket ??
+            close(clients1[client_index].fd);  // Chiudi il socket ??
             pthread_mutex_unlock(&clients_mutex);
             break;
         }
@@ -93,10 +96,13 @@ void *client_handler(void *arg) {
     pthread_exit(NULL);
 }
 
-void update_client_activity(int client_socket) {
+void update_client_activity(int client_socket)
+{
     pthread_mutex_lock(&clients_mutex);
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
-        if (clients1[i].fd== client_socket && clients1[i].active) {
+    for (int i = 0; i < MAX_CLIENTS; ++i)
+    {
+        if (clients1[i].fd == client_socket && clients1[i].active)
+        {
             clients1[i].last_activity = time(NULL);
             printf("Aggiornata attività per %s.\n", clients1[i].username);
             break;
@@ -104,7 +110,6 @@ void update_client_activity(int client_socket) {
     }
     pthread_mutex_unlock(&clients_mutex);
 }
-
 
 // FUNZIONI
 // Calcola tempo rimanente
@@ -256,35 +261,22 @@ void sig_classifica(int sig)
     pthread_mutex_unlock(&lista_mutex);
 }
 
+// CARICO IL DIZIONARIO IN MEMORIA
 void Load_Dictionary(Trie *Dictionary, char *path_to_dict)
 {
-    // Open the file specified by the path
+    // APRO IL FILE TRAMITE IL PATH
     FILE *dict = fopen(path_to_dict, "r");
-    if (dict == NULL)
+    // CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
+    char word[256];
+    // LEGGO TUTTO IL FILE
+    while (fscanf(dict, "%s", word) != EOF)
     {
-        fprintf(stderr, "Error: Could not open file %s\n", path_to_dict);
-        return;
+
+        // STANDARDIZZO LE PAROLE DEL DIZIONARIO METTENDOLE IN UPPERCASE
+        Caps_Lock(word);
+        // INSERISCO LA PAROLA NEL TRIE
+        insert_Trie(Dizionario, word);
     }
-
-    // Create a buffer to store each line
-    char line[256];
-
-    // Read one line at a time
-    while (fgets(line, sizeof(line), dict) != NULL) // questa legge riga per riga
-    {
-        // Remove the newline character, if present
-        line[strcspn(line, "\n")] = '\0';
-
-        // Standardize the word to uppercase
-        Caps_Lock(line);
-
-        // Insert the word into the Trie
-        insert_Trie(Dictionary, line);
-    }
-
-    // Close the file
-    fclose(dict);
-
     return;
 }
 
@@ -343,6 +335,7 @@ void *thread_func(void *args)
         case MSG_PAROLA:
             if (pausa_gioco == 0)
             {
+                Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
                 // Controllo se la parola è già stata trovata
@@ -364,7 +357,7 @@ void *thread_func(void *args)
                 }
 
                 // Controllo se parola è nel dizionario
-                else if (!search_Trie(client_message.data, trie))
+                else if (!search_Trie(client_message.data, Dizionario))
                 {
                     printf("ciao entro 1");
                     fflush(0);
@@ -434,36 +427,36 @@ void *thread_func(void *args)
             }
             printf("client_sock = %d, chiusura del client \n", client_sock);
             // Mi serve un elimina thread
-            elimina_thread(&clients, pthread_self(), clients_mutex);
+            elimina_thread(&clients, pthread_self(), &clients_mutex);
             elimina_giocatore(&lista, giocatore->username, lista_mutex);
             printf("giocatore [%s] disconesso \n", giocatore->username);
             close(client_sock);
 
             break;
 
-       /* case MSG_LOGIN_UTENTE:
-            // Controllo se l'utente è loggato
-            if (giocatore->username != NULL)
-            {
-                send_message(client_sock, MSG_ERR, "Utente già loggato");
-                break;
-            }
+            /* case MSG_LOGIN_UTENTE:
+                 // Controllo se l'utente è loggato
+                 if (giocatore->username != NULL)
+                 {
+                     send_message(client_sock, MSG_ERR, "Utente già loggato");
+                     break;
+                 }
 
-            listaGiocatori listatemp = RecuperaUtente (lista, message -> text);
-            if (listatemp == NULL) {
-                    send_message(client_sock,MSG_ERR, "Errore, il giocatore non si è mai registrato. Registrazione utente");
-                    break;
-                }
-                //Controllo se il giocatore è loggato in questo momento o meno
-                if (listatemp->loggato) {
-                    send_message(client_sock, MSG_ERR, "Errore, un giocatore è già loggato con questo nome utente. Fare una nuova registrazione utente",);
-                    break;
-                }
-            giocatore = listatemp;
-            giocatore -> username = client_sock;
-            send_message(client_sock, MSG_OK, "Utente loggato");
-            break;    
-       */
+                 listaGiocatori listatemp = RecuperaUtente (lista, message -> text);
+                 if (listatemp == NULL) {
+                         send_message(client_sock,MSG_ERR, "Errore, il giocatore non si è mai registrato. Registrazione utente");
+                         break;
+                     }
+                     //Controllo se il giocatore è loggato in questo momento o meno
+                     if (listatemp->loggato) {
+                         send_message(client_sock, MSG_ERR, "Errore, un giocatore è già loggato con questo nome utente. Fare una nuova registrazione utente",);
+                         break;
+                     }
+                 giocatore = listatemp;
+                 giocatore -> username = client_sock;
+                 send_message(client_sock, MSG_OK, "Utente loggato");
+                 break;
+            */
         default:
             send_message(client_sock, MSG_ERR, "Comando non valido");
             break;
@@ -505,11 +498,12 @@ void *scorer(void *arg)
         sprintf(msg, "%s %d\n", scorerVector[i].username, scorerVector[i].punteggio);
         // strcat(classifica, msg, strlen(classifica) - 1 );
         strcat(classifica, msg);
-        if (i< num_giocatori - 1 ){
+        if (i < num_giocatori - 1)
+        {
             strcat(classifica, ",");
         }
     }
-    strcat(classifica,"\0");
+    strcat(classifica, "\0");
     printf("Vincitore: %s con %d punti\n", scorerVector[0].username, scorerVector[0].punteggio);
     pthread_mutex_unlock(&classifica_mutex);
 
@@ -594,7 +588,10 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-    Load_Dictionary(Dizionario, parametri.file_dizionario);
+    Dizionario = create_node();
+    // Load_Dictionary(Dizionario, DIZIONARIO);
+    insert_Trie(Dizionario, "ciao");
+    printf("ciao %d\n", search_Trie("ciao", Dizionario));
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];
