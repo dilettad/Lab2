@@ -464,8 +464,14 @@ void *scorer(void *arg)
         sprintf(msg, "%s %d\n", scorerVector[i].username, scorerVector[i].punteggio);
         // strcat(classifica, msg, strlen(classifica) - 1 );
         strcat(classifica, msg);
+        if (i< num_giocatori - 1 ){
+            strcat(classifica, ",");
+        }
     }
+    strcat(classifica,"\0");
+    printf("Vincitore: %s con %d punti\n", scorerVector[0].username, scorerVector[0].punteggio);
     pthread_mutex_unlock(&classifica_mutex);
+
     for (int i = 0; i < num_giocatori; i++)
     {
         free(scorerVector[i].username);
