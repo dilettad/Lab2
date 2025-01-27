@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <signal.h>
+#include <time.h>
 #include <stddef.h>
 
 #include "../Header/macro.h"
@@ -23,9 +24,9 @@
 #define BUFFER_SIZE 1024       // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
+#define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
-typedef struct
-{
+typedef struct{
     char *matrix_file;
     float durata_partita;
     long seed;
@@ -64,7 +65,7 @@ time_t tempo_iniziale;
 Client *clients1;
 
 
-#define TIMEOUT_MINUTES 2 // 2 minuti di inattività
+
 
 // FUNZIONI PER IL 4 ADDENDUM
 void *client_handler(void *arg)
@@ -114,11 +115,10 @@ void update_client_activity(int client_socket)
 
 // FUNZIONI
 // Calcola tempo rimanente
-char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita)
-{
+char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
     time_t tempo_attuale = time(NULL);
     double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    double tempo_rimanente = durata_partita - tempo_trascorso;
+    double tempo_rimanente = durata_partita - (int)tempo_trascorso;
 
     // Se il tempo rimanente è minore di 0 allora vuol dire che il gioco è finito
     if (tempo_rimanente < 0)
@@ -136,11 +136,11 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita)
         return "Errore di allocaione della memoria \n";
     }
     // Scrive il messaggio formattato nella memeoria allocata
-    snprintf(messaggio, length + 1, "Il tempo rimanente è: %f secondi\n", tempo_rimanente);
+    snprintf(messaggio, length + 1, "Il tempo rimanente è: %d secondi\n", (int)tempo_rimanente);
     // return il messaggio
     return messaggio;
 }
-// TESTATA: FUNZIONA
+
 
 // Funzione di invio classifica ai giocatori
 void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica)
@@ -263,9 +263,7 @@ void sig_classifica(int sig)
 }
 
 // CARICO IL DIZIONARIO IN MEMORIA
-void Load_Dictionary(Trie *Dictionary, char *path_to_dict)
-{
-    // APRO IL FILE TRAMITE IL PATH
+void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE TRAMITE IL PATH
     FILE *dict = fopen(path_to_dict, "r");
     // CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
     if (dict == NULL){
@@ -352,8 +350,6 @@ void *thread_func(void *args)
                 // Controllo se la parola è già stata trovata
                 if (esiste_paroleTrovate(listaParoleTrovate, client_message.data))
                 {
-                    printf("ciao entro 1");
-                    fflush(0);
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                     break;
                 }
@@ -361,17 +357,13 @@ void *thread_func(void *args)
                 // Controllo se parola è in matrice
                 else if (!trovaParola(matrice, client_message.data))
                 {
-                    printf("ciao entro 2");
-                    fflush(0);
                     send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
                     break;
                 }
 
                 // Controllo se parola è nel dizionario
-                else if (!search_Trie(client_message.data, Dizionario))
+                else if (search_Trie(client_message.data, Dizionario) == -1)
                 {
-                    printf("ciao entro 1");
-                    fflush(0);
                     send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
                     break;
                 }
@@ -381,21 +373,22 @@ void *thread_func(void *args)
                     printf("Aggiungo la parola alla lista delle parole trovate \n");
                     // Aggiungo la parola alla lista delle parole trovate
                     listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); // DA SISTEMARE LA LISTA
-                    int puntiparola = strlen(client_message.data);
+                    //int puntiparola = strlen(client_message.data);
                     printf("Punti parola \n");
                     // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
                     if (strstr(client_message.data, "Qu"))
                     {
-                        puntiparola--;
+                        //puntiparola--;
                         printf("Sottrai \n");
                     }
                     // Invio i punti della parola
                     char messaggiopuntiparola[50];
-                    sprintf(messaggiopuntiparola, "%d", puntiparola);
+                    printf("Punti inviati %d\n",strlen(client_message.data));
+                    sprintf(messaggiopuntiparola, "hai ottenuto %ld punti", strlen(client_message.data));
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
                     //sprintf("Punteggio inviato \n", messaggiopuntiparola);
                     printf("Punteggio inviato \n");
-                    punteggio += puntiparola;
+                    punteggio += strlen(client_message.data);
                 }
             }
             else
@@ -570,9 +563,22 @@ void *game(void *arg)
 
         // INIZIA IL GIOCO
         time(&tempo_iniziale);
+        struct tm* timeinfo = localtime(&tempo_iniziale);
+      
+        char* orario_completo = asctime(timeinfo);
+          char orario[9];
+        /* for (int i = 0; i < 8; i++) {
+         orario[i] = orario_completo[11 + i];
+        }
+        orario[8] = '\0';
+        */
+        snprintf(orario, sizeof(orario), "%.8s", orario_completo + 11);
+
         // sleep(durata_partita);
         printf("-----------------------------------------------------------------------\n");
-        printf("la partita è iniziata alle %ld con %d giocatori\n", tempo_iniziale, lista.count);
+        //printf("La partita è iniziata alle %ld:%d:%ld con %d giocatori\n", tempo_iniziale,  lista.count);
+        printf("La partita è iniziata alle %s con %d giocatori\n",orario_completo, lista.count);
+        
 
         // INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
         pthread_mutex_lock(&lista_mutex);
@@ -582,11 +588,15 @@ void *game(void *arg)
             invio_matrice(current->client_fd, matrice);
             char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
             send_message(current->client_fd, MSG_TEMPO_PARTITA, temp);
-            printf("Qua ci arrivo \n");
+            printf("Inviato a giocatore %d\n", current->client_fd);
+            fflush(0);
+
+            printf("%s\n", temp);
             current = current->next;
+        
         }
         pthread_mutex_unlock(&lista_mutex);
-
+       
         sleep(durata_partita);
 
         // partita terminata e quindi inviare punteggi classifiche ecc ecc ecec ec ec e c ec e c ece c ne ce c e ce
@@ -600,8 +610,6 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-    //Trie *trie = create_node();
-    //insert_Trie(trie, "CIAO");
     Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);
     insert_Trie(Dizionario, "CIAO");

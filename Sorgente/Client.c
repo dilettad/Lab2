@@ -122,7 +122,7 @@ void *receiver(void *args)
             break;
 
         case MSG_PUNTI_PAROLA:
-            printf("\nTotalizzato Punti parola: %d\n", *((int *)received_msg.data));
+            printf("\n%s\n", received_msg.data);//messaggio punti
             break;
 
         case MSG_TEMPO_PARTITA:
@@ -173,7 +173,11 @@ int main(int argc, char *argv[])
     }
     // CICLO DI GIOCO
     pthread_t receiver_thread;
-    char *aiuto = "Aiuto -> mostra i comandi disponibili\n registra_utente nome_utente --> per registrarsi\n matrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \n p parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\n fine --> uscire dal gioco \n";
+    char *aiuto = "Aiuto -> mostra i comandi disponibili\n 
+    registra_utente nome_utente --> per registrarsi\n
+    matrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \n 
+    p parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\n 
+    fine --> uscire dal gioco \n";
     // char* fine =  "Hai deciso di uscire dal gioco!\n";
     // writef(retvalue,"prima del thread\n");
     // pthread_create()
