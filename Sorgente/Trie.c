@@ -29,45 +29,46 @@ Trie *create_node()
 }
 
 // Inserisci una parola nel Trie
-int insert_Trie(Trie *trie, const char *word)
-{
-    if (trie == NULL)
-    {
-        fprintf(stderr, "Errore: il nodo radice è nullo\n");
-        return -1;
+int insert_Trie( Trie* trie,  char* word){
+    //caso base
+    if (trie == NULL){
+        trie = create_node();
     }
-
-    Trie *current = trie;
-    while (*word)
-    {
-        int target_child = *word - 'A';
-        if (current->figli[target_child] == NULL)
-        {
-            current->figli[target_child] = create_node();
-        }
-        current = current->figli[target_child];
-        word++;
+    //caso base
+    if (*word == '\0'){
+        trie->is_word = 0;
+        return 0;
+        
     }
-    current->is_word = 0;
-    return 0;
+    //cerco il prossimo figlio
+    int target_child = *word - 'A';
+    if (trie->figli[target_child] == NULL){
+        trie->figli[target_child] = create_node();
+    }
+    //chiamata ricorsiva
+    return insert_Trie(trie->figli[target_child],word+1);
 }
 
-// Cerca una parola nel Trie
-int search_Trie(const char *word, Trie *trie)
-{
-    if (trie == NULL)
-        return 0;
-    if (*word == '\0')
-    {
+
+int search_Trie( char* word, Trie* trie){
+    //caso base, il trie è vuoto
+    if (trie == NULL)return 0;
+    printf("word: %s\n", word);
+    //sono arrivato in fondo alla parola
+    if (*word == '\0'){
         return trie->is_word;
     }
-    int index = *word - 'A';
-    if (trie->figli[index] == NULL)
-    {
+    //calcolo la posizione del carattere da cercare
+    int index = *word -'A';
+    //printf("index: %d\n", index);
+    //se non esiste il figlio -> non è presente la parola
+    if (trie->figli[index] == NULL){
         return -1;
     }
-    return search_Trie(word + 1, trie->figli[index]);
+    //chiamata ricorsiva
+    return search_Trie(word+1,trie->figli[index]);
 }
+
 
 // Stampa il Trie
 void Print_Trie(Trie *trie, char *buffer, int depth)

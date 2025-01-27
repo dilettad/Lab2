@@ -600,13 +600,13 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-    Trie *trie = create_node();
-    insert_Trie(trie, "CIAO");
-    /*Dizionario = create_node();
+    //Trie *trie = create_node();
+    //insert_Trie(trie, "CIAO");
+    Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);
-    insert_Trie(Dizionario, "ciao");
-    */
-    printf("ciao %d\n", search_Trie("ciao", Dizionario));
+    insert_Trie(Dizionario, "CIAO");
+    
+    printf("ciao %d\n", search_Trie("CIAO", Dizionario));
     //Print_Trie();
     int server_sock;
     struct sockaddr_in server_addr;
