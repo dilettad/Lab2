@@ -33,3 +33,5 @@ void send_message(int client_socket, char type, char* data);
 //Funzione per ricevere un messaggio
 message receive_message(int client_socket);
 
+void Caps_Lock(char* string);
+

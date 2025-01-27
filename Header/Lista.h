@@ -13,6 +13,7 @@ typedef struct Client
     int score;           // Punteggio utente
     struct Client *next; // Puntatore al prossimo utente (per la lista)
     int active;          // Se attivo(1) o no (0)
+    pthread_t thread_id; // ID del thread
     time_t last_activity; // Ultima attività dell'utente
 } Client;
 

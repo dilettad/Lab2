@@ -104,7 +104,7 @@ int trovaParolaAux(cella **matrice, int i, int j, char *parola, int index)
 // Funzione per cercare sulla matrice
 int trovaParola(cella **matrice, char *parola)
 {
-    printf(parola);
+    printf("%s\n", parola);
     for (size_t i = 0; i < MATRIX_SIZE; i++)
     {
         for (size_t j = 0; j < MATRIX_SIZE; j++)

@@ -5,6 +5,8 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <errno.h>
+#include <ctype.h>
+
 
 // librerie personali
 #include "../Header/macro.h"

@@ -63,6 +63,7 @@ pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
 Client *clients1;
 
+
 #define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
 // FUNZIONI PER IL 4 ADDENDUM
@@ -221,16 +222,16 @@ void alarm_handler(int sig)
 void sigint_handler(int sig)
 {
     // Questa funzione chiude tutti quanti i client attivi (NON SOLO I GIOCATORI)
-
     pthread_mutex_lock(&clients_mutex);
     Client *current = clients->head;
 
     while (current != NULL)
     {
+        Client *next = current->next;
         send_message(current->fd, MSG_FINE, "Il server è stato chiuso");
         free(current->username);
         free(current);
-        current = current->next;
+        current = next;
     }
     pthread_mutex_unlock(&clients_mutex);
 
@@ -320,7 +321,7 @@ void *thread_func(void *args)
     while (1)
     {
         message client_message = receive_message(client_sock);
-        // writef(retvalue, client_message.data);
+        writef(retvalue, client_message.data);
         switch (client_message.type)
         {
         case MSG_MATRICE:
@@ -389,10 +390,11 @@ void *thread_func(void *args)
                         printf("Sottrai \n");
                     }
                     // Invio i punti della parola
-                    char *messaggiopuntiparola[50];
+                    char messaggiopuntiparola[50];
                     sprintf(messaggiopuntiparola, "%d", puntiparola);
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
-                    sprintf("Punteggio inviato \n", messaggiopuntiparola);
+                    //sprintf("Punteggio inviato \n", messaggiopuntiparola);
+                    printf("Punteggio inviato \n");
                     punteggio += puntiparola;
                 }
             }
@@ -437,7 +439,7 @@ void *thread_func(void *args)
             }
             printf("client_sock = %d, chiusura del client \n", client_sock);
             // Mi serve un elimina thread
-            elimina_thread(&clients, pthread_self(), &clients_mutex);
+            elimina_thread(clients, pthread_self(), &clients_mutex);
             elimina_giocatore(&lista, giocatore->username, lista_mutex);
             printf("giocatore [%s] disconesso \n", giocatore->username);
             close(client_sock);
@@ -598,9 +600,12 @@ void *game(void *arg)
 
 int main(int argc, char *argv[])
 {
-    Dizionario = create_node();
+    Trie *trie = create_node();
+    insert_Trie(trie, "CIAO");
+    /*Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);
     insert_Trie(Dizionario, "ciao");
+    */
     printf("ciao %d\n", search_Trie("ciao", Dizionario));
     //Print_Trie();
     int server_sock;
