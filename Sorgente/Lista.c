@@ -10,6 +10,7 @@
 #include "../Header/Trie.h"
 #include "../Header/Lista.h"
 #include "../Header/FunzioniServer.h"
+#include "../Header/Giocatore.h"
 
 // Creo la prima lista assegnando la testa e la coda del cliente
 Fifo *create()

@@ -558,8 +558,14 @@ void *game(void *arg)
 
             // Blocco per accedere alla matrice di gioco
             FILE *file = fopen("../Matrici.txt", "rb"); //
+             if (file == NULL)
+            {
+                perror("Errore nell'apertura del file");
+                return NULL;  
+            } 
+            //cella **matrice = generateMatrix();
             Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
-            // fclose(file);
+            fclose(file);
             round = 1;
         }
 
@@ -691,6 +697,7 @@ int main(int argc, char *argv[])
             perror("Failed to create thread");
             return 1;
         }
+
 
         // Ciclo di comunicazione: aspetta che ogni thread termini e recupera il valore di ritorno
         // for (int i = 0; i < NUM_THREADS; i++)

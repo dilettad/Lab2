@@ -10,7 +10,7 @@
 #include "../Header/Comunicazione.h"
 
 #define MATRIX_SIZE 4
-// DA AGGIUNGERE IL CONTROLLO SU QU
+// DA SISTEMARE STAMPA MATRICE 
 
 // Funzione per generare una matrice
 cella **generateMatrix(){
@@ -46,20 +46,20 @@ void InputStringa(cella **matrice, char *string){
 
 // Funzione stampa matrice
 void stampaMatrice(cella **matrice){
-    // int j = 0;
     // Scansione della matrice, per riga e colonna
     for (int i = 0; i < MATRIX_SIZE; i++)
     {
         // printf("entro ciclio i:%d j:%d\n",i,j);
         for (int j = 0; j < MATRIX_SIZE; j++){
-            if (matrice[i][j].value == 'Q'){
+            if (matrice[i][j].value == 'Q' && j + 1 < MATRIX_SIZE && matrice[i][j+1].value == 'U'){
                 printf("Qu "); // Stampa valore della cella
+                j++;
             }
             else
             printf("%c ", matrice[i][j].value); // Stampa valore della cella
             // printf("i:%d, j:%d\n",i,j);
         }
-        // j = 0;
+        
         printf("\n");
     }
     // return;
@@ -131,12 +131,10 @@ void Carica_MatricedaFile(FILE *file, cella **matrice)
         return;
     }
     // Carico dal file la matrice
-    for (size_t i = 0; i < MATRIX_SIZE; i++)
-    {
-        for (size_t j = 0; j < MATRIX_SIZE; j++)
-        {
+    for (size_t i = 0; i < MATRIX_SIZE; i++){
+        for (size_t j = 0; j < MATRIX_SIZE; j++){
             // fscanf, scansiona e legge il file e lo memorizza nella matrice come valore
-            fscanf(file, "%c", &matrice[i][j].value);
+            fscanf(file, " %c", &matrice[i][j].value);
             Caps_Lock(&matrice[i][j].value); // Trasforma in maiuscolo
             // Cella disponibile per inserimento, in quanto ancora non usata
             matrice[i][j].usato = false;
@@ -144,24 +142,18 @@ void Carica_MatricedaFile(FILE *file, cella **matrice)
     }
     // Carico la matrice dal file
     // InputStringa(matrice, file);
-}
-// TESTATE: FUNZIONA
+} 
+
+
 
 // Funzione per svuotare la matrice
-void svuotaMatrice(cella **matrice)
-{
-    for (int i = 0; i < MATRIX_SIZE; i++)
-    {
-        // for(int j = 0; j < MATRIX_SIZE; j++){
-        //  Metto nella cella un valore nullo
-        //  matrice[i][j] = '\0';
-        //  libero la matrice
+void svuotaMatrice(cella **matrice){
+    for (int i = 0; i < MATRIX_SIZE; i++){
         free(matrice[i]);
-        //}
     }
     free(matrice);
 }
-// TESTATE: FUNZIONA
+
 
 // Controlla se parola è stata già trovata dall'utente
 int esiste_paroleTrovate(paroleTrovate *head, const char *parola)
