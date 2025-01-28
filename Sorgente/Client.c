@@ -107,6 +107,7 @@ void *receiver(void *args)
             pthread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
             exit(EXIT_SUCCESS);
+            break;
 
         case MSG_MATRICE:
             if (matrice == NULL)
@@ -132,6 +133,12 @@ void *receiver(void *args)
         case MSG_PUNTI_FINALI:
             printf("\nClassifica generale:\n");
             printf("%s\n", (char *)received_msg.data);
+            break;
+
+        case MSG_SERVER_SHUTDOWN:
+            printf("\n%s\n", received_msg.data);
+            exit(EXIT_SUCCESS);
+            // exit(0);
             break;
 
         default:

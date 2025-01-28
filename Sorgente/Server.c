@@ -219,8 +219,7 @@ void alarm_handler(int sig)
 // TESTATE: RUNTIME ERROR
 
 // Funzione per la chiusura del server
-void sigint_handler(int sig)
-{
+void sigint_handler(int sig){
     // Questa funzione chiude tutti quanti i client attivi (NON SOLO I GIOCATORI)
     pthread_mutex_lock(&clients_mutex);
     Client *current = clients->head;
@@ -228,7 +227,7 @@ void sigint_handler(int sig)
     while (current != NULL)
     {
         Client *next = current->next;
-        send_message(current->fd, MSG_FINE, "Il server è stato chiuso");
+        send_message(current->fd, MSG_SERVER_SHUTDOWN, "Il server è stato chiuso");
         free(current->username);
         free(current);
         current = next;
@@ -382,13 +381,15 @@ void *thread_func(void *args)
                         printf("Sottrai \n");
                     }
                     // Invio i punti della parola
-                    char messaggiopuntiparola[50];
+                    char messaggiopuntiparola[90];
                     printf("Punti inviati %ld \n",strlen(client_message.data));
-                    sprintf(messaggiopuntiparola, "hai ottenuto %ld punti", strlen(client_message.data));
+                    sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %ld punti", strlen(client_message.data));
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
                     //sprintf("Punteggio inviato \n", messaggiopuntiparola);
                     printf("Punteggio inviato \n");
-                    punteggio += strlen(client_message.data);
+                    punteggio += strlen(client_message.data); 
+                    printf("Il punteggio attuale è %d \n", punteggio); // Nel server visualizzo i punti totali
+                    fflush(0);
                 }
             }
             else
@@ -621,6 +622,8 @@ int main(int argc, char *argv[])
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];
+    // Prova SERVER_SHUTDOWN
+     signal(SIGINT, sigint_handler);
 
     // Definizione dei segnali
     // signal(SIGUSR1, alarm_handler);
@@ -647,8 +650,6 @@ int main(int argc, char *argv[])
     server_addr.sin_port = htons(atoi(argv[2]));      // Porta del server
     // creo ed inizializzo la lista utenti
     clients = create();
-
-    signal(SIGINT, sigint_handler);
     // BIND() assegna l'indirizzo specificato nella struttura server_addr al socket server_sock
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {

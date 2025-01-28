@@ -3,30 +3,31 @@
 
 // Definizione del tipo di dati per struttura utente
 #include <pthread.h>
-
+#include <netinet/in.h>
+#define MSG_SERVER_SHUTDOWN 'B'
 struct Client;
 
-typedef struct Client
-{
+typedef struct Client{
     char *username;      // Nome utente
     int fd;              // File descriptor del client
     int score;           // Punteggio utente
-    struct Client *next; // Puntatore al prossimo utente (per la lista)
+    int socket;          // Socket del client
     int active;          // Se attivo(1) o no (0)
+    struct Client *next; // Puntatore al prossimo utente (per la lista)
+    struct sockaddr_in address; // Indirizzo del client 
     pthread_t thread_id; // ID del thread
-    time_t last_activity; // Ultima attività dell'utente
+    time_t last_activity; // Ultima attività dell'utente 
 } Client;
 
-typedef struct Fifo
-{
+
+typedef struct Fifo{
     Client *head;
     Client *tail;
     int size;
 } Fifo;
 
 // Struttura del giocatore registrato
-typedef struct giocatore
-{
+typedef struct giocatore{
     char *username;
     pthread_t tid;
     int client_fd;
@@ -35,8 +36,7 @@ typedef struct giocatore
 } giocatore;
 
 // Lista giocatori registrati
-typedef struct
-{
+typedef struct{
     giocatore *head;
     giocatore *tail;
     int count;

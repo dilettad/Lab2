@@ -8,7 +8,7 @@
 #define MSG_PAROLA 'W'
 #define MSG_PUNTI_FINALI 'F'
 #define MSG_PUNTI_PAROLA 'P'
-#define MSG_SERVER_SHUTDONW 'B'
+#define MSG_SERVER_SHUTDOWN 'B' 
 #define MSG_POST_BACHECA 'H'
 #define MSG_SHOW_BACHECA 'S'
 #define MSG_FINE 'Q'
