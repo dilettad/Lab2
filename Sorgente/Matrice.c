@@ -13,8 +13,7 @@
 // DA AGGIUNGERE IL CONTROLLO SU QU
 
 // Funzione per generare una matrice
-cella **generateMatrix()
-{
+cella **generateMatrix(){
     // Allocazione memoria le celle della matrice
     cella **matrice = (cella **)malloc(MATRIX_SIZE * sizeof(cella *));
     for (int i = 0; i < MATRIX_SIZE; i++)
@@ -24,11 +23,9 @@ cella **generateMatrix()
     }
     return matrice;
 }
-// TESTATE: FUNZIONA
 
 // Funzione crea una matrice dalla stringa passata
-void InputStringa(cella **matrice, char *string)
-{
+void InputStringa(cella **matrice, char *string){
     // Scansione della stringa
     int k = 0; // Indice
     // Scansione della matrice, per riga e colonna
@@ -45,18 +42,20 @@ void InputStringa(cella **matrice, char *string)
         // printf("\n");
     }
 }
-// TESTATE: FUNZIONA
+
 
 // Funzione stampa matrice
-void stampaMatrice(cella **matrice)
-{
+void stampaMatrice(cella **matrice){
     // int j = 0;
     // Scansione della matrice, per riga e colonna
     for (int i = 0; i < MATRIX_SIZE; i++)
     {
         // printf("entro ciclio i:%d j:%d\n",i,j);
-        for (int j = 0; j < MATRIX_SIZE; j++)
-        {
+        for (int j = 0; j < MATRIX_SIZE; j++){
+            if (matrice[i][j].value == 'Q'){
+                printf("Qu "); // Stampa valore della cella
+            }
+            else
             printf("%c ", matrice[i][j].value); // Stampa valore della cella
             // printf("i:%d, j:%d\n",i,j);
         }
@@ -65,7 +64,6 @@ void stampaMatrice(cella **matrice)
     }
     // return;
 }
-// TESTATE: FUNZIONA
 
 // Funzione ricorsiva per cercare una parola
 int trovaParolaAux(cella **matrice, int i, int j, char *parola, int index)

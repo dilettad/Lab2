@@ -383,7 +383,7 @@ void *thread_func(void *args)
                     }
                     // Invio i punti della parola
                     char messaggiopuntiparola[50];
-                    printf("Punti inviati %d\n",strlen(client_message.data));
+                    printf("Punti inviati %ld \n",strlen(client_message.data));
                     sprintf(messaggiopuntiparola, "hai ottenuto %ld punti", strlen(client_message.data));
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
                     //sprintf("Punteggio inviato \n", messaggiopuntiparola);
@@ -542,7 +542,7 @@ void *game(void *arg)
 
             while (lista.count == 0)
             {
-                ;
+                //sleep(1);
             }
         }
 
@@ -558,6 +558,7 @@ void *game(void *arg)
             // Blocco per accedere alla matrice di gioco
             FILE *file = fopen("../Matrici.txt", "rb"); //
             Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
+            // fclose(file);
             round = 1;
         }
 
@@ -592,6 +593,7 @@ void *game(void *arg)
             fflush(0);
 
             printf("%s\n", temp);
+            free(temp);
             current = current->next;
         
         }
