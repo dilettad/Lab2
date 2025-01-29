@@ -14,6 +14,7 @@
 // in lista struttura client
 #include "../Header/Giocatore.h"
 
+int registra_bool = 0; // Per vedere se è loggato o no
 
 //Funzione per aggiungere client alla lista
 void add_client(listaGiocatori* lista, int client_fd, char* username){
@@ -67,7 +68,10 @@ int username_esiste(listaGiocatori* lista, char *username){
 
 // Funzione per registrazione del cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
-    // Client *current = lista->head;
+    if (registra_bool == 1) {
+        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi di nuovo");
+        return;
+    }
     // Controllo se l'username contiene solo caratteri validi
     if (!controlla_caratteri(username))
     {
@@ -86,6 +90,7 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
     add_client(lista, client_fd, username);
     // Se l'username è valido, invio un messaggio di conferma
     send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
+    registra_bool = 1;
 }
 
 // //Funzione per stampare la lista dei client

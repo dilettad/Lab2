@@ -217,8 +217,24 @@ void alarm_handler(int sig)
     }
 }
 // TESTATE: RUNTIME ERROR
+// Funzione per invio della classifica
+void sig_classifica(int sig)
+{
+    pthread_mutex_lock(&lista_mutex);
+    // Controllo se ci sono giocatori registrati
+    if (lista.head == NULL)
+    { // Se la testa è vuoto
+        printf("Nessun giocatore registrato, classifica non disponibile \n");
+        pthread_mutex_unlock(&lista_mutex);
+        return;
+    }
+    // scorer = 0;
+    sendClassifica(&lista, pthread_self(), lista_mutex, classifica);
+    pthread_mutex_unlock(&lista_mutex);
+}
 
-// Funzione per la chiusura del server
+
+// Funzione per la chiusura del server -> FUNZIONA
 void sigint_handler(int sig){
     // Questa funzione chiude tutti quanti i client attivi (NON SOLO I GIOCATORI)
     pthread_mutex_lock(&clients_mutex);
@@ -243,30 +259,13 @@ void sigint_handler(int sig){
     printf("Chiusura del server \n");
     exit(EXIT_SUCCESS);
 }
-// TESTATE: RUNTIME ERROR
-
-// Funzione per invio della classifica
-void sig_classifica(int sig)
-{
-    pthread_mutex_lock(&lista_mutex);
-    // Controllo se ci sono giocatori registrati
-    if (lista.head == NULL)
-    { // Se la testa è vuoto
-        printf("Nessun giocatore registrato, classifica non disponibile \n");
-        pthread_mutex_unlock(&lista_mutex);
-        return;
-    }
-    // scorer = 0;
-    sendClassifica(&lista, pthread_self(), lista_mutex, classifica);
-    pthread_mutex_unlock(&lista_mutex);
-}
 
 // CARICO IL DIZIONARIO IN MEMORIA
 void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE TRAMITE IL PATH
     FILE *dict = fopen(path_to_dict, "r");
     // CREO UNA VARIABILE PER MEMORIZZARE LE PAROLE
     if (dict == NULL){
-        fprintf(stderr, "Error: Could not open file %s/n", path_to_dict);
+        fprintf(stderr, "Errore: impossibile aprire il file %s/n", path_to_dict);
         return;
     }
     char word[256];
@@ -282,8 +281,7 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE T
 
 // SOCKET
 //  Funzione del thread
-void *thread_func(void *args)
-{
+void *thread_func(void *args){
 
     // Francesco: Aggiungere ad una lista il client con il suo fd
 
@@ -296,8 +294,8 @@ void *thread_func(void *args)
     utente->score = 0;
     utente->next = NULL;
     push(clients, utente);
-    giocatore *giocatore = NULL;
-
+    //giocatore *giocatore = NULL;
+    
     // MANCA UN PEZZO ?
 
     // Gestione dei comandi ricevuti dal client
@@ -416,7 +414,7 @@ void *thread_func(void *args)
             pthread_exit(NULL);
             break;
 
-        case MSG_CANCELLA_UTENTE:
+       /* case MSG_CANCELLA_UTENTE:
             // Controllo se l'utente è loggato
             if (giocatore->username == NULL)
             {
@@ -431,7 +429,7 @@ void *thread_func(void *args)
             close(client_sock);
 
             break;
-
+        */
             /* case MSG_LOGIN_UTENTE:
                  // Controllo se l'utente è loggato
                  if (giocatore->username != NULL)

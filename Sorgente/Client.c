@@ -180,7 +180,14 @@ int main(int argc, char *argv[])
     }
     // CICLO DI GIOCO
     pthread_t receiver_thread;
-    char *aiuto = "Aiuto -> mostra i comandi disponibili\n registra_utente nome_utente --> per registrarsi\n  matrice --> richiede al processo server la matrice corrente relativa alla fase in cui si è \n p parola_indicata --> sottopone al server una parola, per capirne la correttezza e assegnare il punteggio\n fine --> uscire dal gioco \n";
+    char *aiuto = 
+    " \n"
+    "Aiuto: mostra i comandi disponibili\n\n"
+    "registra_utente <nome_utente>: per registrarsi\n\n"
+    "matrice: richiede al processo server la matrice corrente\n\n"
+    "p <parola_indicata>: sottopone al server una parola per verificarne la correttezza e assegnare il punteggio\n\n"
+    "fine: per uscire dal gioco\n";
+
     // char* fine =  "Hai deciso di uscire dal gioco!\n";
     // writef(retvalue,"prima del thread\n");
     // pthread_create()
