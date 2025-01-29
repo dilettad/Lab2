@@ -158,7 +158,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_
     }
     pthread_mutex_unlock(&lista_mutex);
 }
-// TESTATA : FUNZIONA
+
 
 // Funzione per confrontare i punteggi dei giocatori -> qsort
 int compare_score(const void *a, const void *b)
@@ -167,7 +167,7 @@ int compare_score(const void *a, const void *b)
     giocatore *playerB = (giocatore *)b;              // Puntatore b convertito in un puntatore della struttura giocatore
     return (playerB->punteggio - playerA->punteggio); // Confronto punteggi in ordine decrescente
 }
-// TESTATA: FUNZIONA
+
 
 // HANDLER DEI SEGNALI
 // Funzione di invio segnali a tutti i giocatori della lista
@@ -273,17 +273,9 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE T
     // LEGGO TUTTO IL FILE
     while (fscanf(dict, "%s", word) != EOF)
     {
-        // line[strlen(line)] = '\0';
-       // printf("QUA? 2\n");
-        //fflush(0);
-        // STANDARDIZZO LE PAROLE DEL DIZIONARIO METTENDOLE IN UPPERCASE
-        Caps_Lock(word);
-        // printf("QUA? 3\n");
-        // fflush(0);
-        // // INSERISCO LA PAROLA NEL TRIE
+        Caps_Lock(word); 
         insert_Trie(Dizionario, word);
-        // printf("QUA? 4\n");
-        // fflush(0);
+      
     }
     return;
 }
@@ -403,7 +395,6 @@ void *thread_func(void *args)
             pthread_mutex_lock(&lista_mutex);
             registrazione_client(client_sock, client_message.data, &lista);
             pthread_mutex_unlock(&lista_mutex);
-
             break;
 
         case MSG_PUNTI_FINALI:
@@ -470,8 +461,7 @@ void *thread_func(void *args)
     }
 }
 
-void *scorer(void *arg)
-{
+void *scorer(void *arg){
     printf("Scorer in esecuzione\n");
 
     // Prendo il numero di giocatori registrati
@@ -531,8 +521,7 @@ void *scorer(void *arg)
 }
 
 // GESTISCE DEL GIOCO: perchè non funzionaa
-void *game(void *arg)
-{
+void *game(void *arg){
     int round = 0;
     while (1)
     {

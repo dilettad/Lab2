@@ -53,7 +53,6 @@ void stampaMatrice(cella **matrice){
         for (int j = 0; j < MATRIX_SIZE; j++){
             if (matrice[i][j].value == 'Q' && j + 1 < MATRIX_SIZE ){
                 printf("Qu "); // Stampa valore della cella
-                
             }
             else
             printf("%c ", matrice[i][j].value); // Stampa valore della cella

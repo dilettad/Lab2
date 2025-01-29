@@ -32,6 +32,7 @@ typedef struct giocatore{
     pthread_t tid;
     int client_fd;
     int punteggio;
+    int count;
     struct giocatore *next;
 } giocatore;
 

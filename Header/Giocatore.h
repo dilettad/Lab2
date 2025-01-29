@@ -1,11 +1,13 @@
 // #include "../Header/Lista.h"
-void add_client(Fifo *lista, int client_fd, char *username);
+void add_client(listaGiocatori *lista, int client_fd, char *username);
 
 // Funzione registrazione cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista);
 
 // Funzione controlla_caratteri
 int controlla_caratteri(const char *username);
+
+int username_esiste(listaGiocatori* lista, char *username);
 
 // Funzione stampa lista clienti
 void stampa_lista_clienti(Fifo *lista);

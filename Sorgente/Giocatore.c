@@ -15,16 +15,26 @@
 #include "../Header/Giocatore.h"
 
 
-// GIOCATORE : deve essere messo su client o su lista?
+//Funzione per aggiungere client alla lista
+void add_client(listaGiocatori* lista, int client_fd, char* username){
+    giocatore *new_giocatore = (giocatore *)malloc(sizeof(giocatore));
+    new_giocatore->username = strdup(username);
+    new_giocatore->client_fd = client_fd;
+    // strcpy(new_giocatore->username, username);
+    
+    new_giocatore->next = NULL;
 
-/*Funzione per aggiungere client alla lista
-void add_client(Fifo* lista, int client_fd, char* username){
-     Client* new_client = (Client*) malloc(sizeof(Client));
-     new_client -> fd = client_fd;
-     strcpy(new_client->username, username);
-     new_client->next = NULL;
+    if (lista->count == 0)
+    {
+        // Testa e coda sono NULL, assegno il nuovo cliente come  coda
+        lista->tail = new_giocatore;
+    }
+    new_giocatore->next = lista->head; // Collega il nuovo cliente alla testa
+    lista->head = new_giocatore;       // Aggiorno la testa della lista
+
+    lista->count++;
+    return;
 }
-*/
 
 // Controllo caratteri dell'username: non deve contenere caratteri ASCII
 int controlla_caratteri(const char *username)
@@ -39,63 +49,41 @@ int controlla_caratteri(const char *username)
     }
     return 1; // Se tutti i caratteri sono validi (non ASCII), restituisci 1
 }
-// TESTATA: FUNZIONA
+
+//Funzione per controllare se username è già esistente
+int username_esiste(listaGiocatori* lista, char *username){
+    if (lista == NULL || lista->head == NULL){
+        return 0;
+    }
+    giocatore *current = lista->head;
+    while (current != NULL){
+        if (strcmp(current->username, username) == 0){
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0;
+}
 
 // Funzione per registrazione del cliente
-void registrazione_client(int client_fd, char *username, listaGiocatori *lista)
-{
-    // // Controllo se l'username contiene solo caratteri validi
-    // if (!controlla_caratteri(username))
-    // {
-    //     send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
-    //     return; // Esci dalla funzione se l'username non è valido
-    // }
-    // if (lista == NULL || lista->head == NULL)
-    // {
-    //     send_message(client_fd, MSG_ERR, "Lista vuota");
-    //     return;
-    // }
+void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
     // Client *current = lista->head;
-
-    // // Controllo se l'username è già presente
-    // while (current != NULL)
-    // {
-    //     // Se l'username è già presente, manda un messaggio di errore
-    //     if (strcmp(current->username, username) == 0)
-    //     {
-    //         send_message(client_fd, MSG_ERR, "Username già esistente, sceglierne un altro");
-    //         return;
-    //     }
-
-    //     current = current->next;
-    // }
-
-    // Se l'username è valido, invio un messaggio di conferma
-    // send_message(client_fd, MSG_OK, "Username valido");
-
-    // Inserisco il client nella lista e ne incremento il numero
-    // add_client(&clients_head, client_fd,username );
-    //  Inserisco il client nella lista
-
-    // push(lista->head, username);
-    //  Controllo se la lista è vuota
-    // creo il giocatore
-    giocatore *new_giocatore = (giocatore *)malloc(sizeof(giocatore));
-    new_giocatore->username = strdup(username);
-    new_giocatore->client_fd = client_fd;
-    new_giocatore->punteggio = 0;
-    new_giocatore->next = NULL;
-
-    if (lista->count == 0)
+    // Controllo se l'username contiene solo caratteri validi
+    if (!controlla_caratteri(username))
     {
-        // Testa e coda sono NULL, assegno il nuovo cliente come  coda
-        lista->tail = new_giocatore;
+        send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
+        return; 
     }
-    new_giocatore->next = lista->head; // Collega il nuovo cliente alla testa
-    lista->head = new_giocatore;       // Aggiorno la testa della lista
 
-    lista->count++;
-    return;
+    // Controllo se l'username esiste già
+    if (username_esiste(lista, username)) {
+        send_message(client_fd, MSG_ERR, "Username già in uso, per favore scegli un altro nome");
+        return; 
+    }
+
+    add_client(lista, client_fd, username);
+    // Se l'username è valido, invio un messaggio di conferma
+    send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
 }
 
 // //Funzione per stampare la lista dei client
@@ -116,8 +104,6 @@ void stampa_lista_clienti(Fifo *lista)
     }
 }
 
-
-// TESTATA: FUNZIONA
 
 /* Funzione per eliminare il giocatore dalla lista
 void elimina_giocatore(Fifo* lista, int client_fd){
