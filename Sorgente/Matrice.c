@@ -51,9 +51,9 @@ void stampaMatrice(cella **matrice){
     {
         // printf("entro ciclio i:%d j:%d\n",i,j);
         for (int j = 0; j < MATRIX_SIZE; j++){
-            if (matrice[i][j].value == 'Q' && j + 1 < MATRIX_SIZE && matrice[i][j+1].value == 'U'){
+            if (matrice[i][j].value == 'Q' && j + 1 < MATRIX_SIZE ){
                 printf("Qu "); // Stampa valore della cella
-                j++;
+                
             }
             else
             printf("%c ", matrice[i][j].value); // Stampa valore della cella
@@ -97,7 +97,7 @@ int trovaParolaAux(cella **matrice, int i, int j, char *parola, int index)
     }
     return 0; // Parola non trovata
 }
-// TESTATE: FUNZIONA
+
 
 // Funzione per cercare sulla matrice
 int trovaParola(cella **matrice, char *parola)
@@ -119,7 +119,7 @@ int trovaParola(cella **matrice, char *parola)
     }
     return 0; // Parola non trovata
 }
-// TESTATE: FUNZIONA
+
 
 // Funzione per creare la matrice da un file
 void Carica_MatricedaFile(FILE *file, cella **matrice)
@@ -134,10 +134,17 @@ void Carica_MatricedaFile(FILE *file, cella **matrice)
     for (size_t i = 0; i < MATRIX_SIZE; i++){
         for (size_t j = 0; j < MATRIX_SIZE; j++){
             // fscanf, scansiona e legge il file e lo memorizza nella matrice come valore
+            
             fscanf(file, " %c", &matrice[i][j].value);
+
             Caps_Lock(&matrice[i][j].value); // Trasforma in maiuscolo
+
             // Cella disponibile per inserimento, in quanto ancora non usata
             matrice[i][j].usato = false;
+            if (matrice[i][j].value == 'Q' ){
+                fscanf(file, " %*c" );
+                
+            }
         }
     }
     // Carico la matrice dal file
@@ -173,11 +180,9 @@ int esiste_paroleTrovate(paroleTrovate *head, const char *parola)
     }
     return 0; // parola non trovata, quindi valida
 }
-// TESTATE: FUNZIONA
 
 // AGGIUNGE UNA PAROLA TROVATA ALLA LISTA DI PAROLE TROVATE DA QUEL GIOCATORE DURANTE QUELLA PARTITA
-paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola)
-{
+paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola){
     paroleTrovate *new_node = (paroleTrovate *)malloc(sizeof(paroleTrovate)); // Alloca memoria per un nuovo nodo
     if (!new_node)
     {
@@ -193,20 +198,18 @@ paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola)
     new_node->next = head; // Collega il nuovo nodo alla testa della lista
     return new_node;       // Restituisce il nuovo nodo
 }
-// TESTATE: FUNZIONA
+
 
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket
-void invio_matrice(int client_fd, cella **matrix)
-{
+void invio_matrice(int client_fd, cella **matrix){
     char *data = matrice_to_string(matrix, 4); // Conversione matrice in stringa
     // printf("%s\n", data);
     printf("Invio matrice al client %d\n", client_fd); // Stampa messaggio
     send_message(client_fd, MSG_MATRICE, data);        // Invia la matrice al client
 }
 
-char *matrice_to_string(cella **matrix, int size)
-{
+char *matrice_to_string(cella **matrix, int size){
     // Calcoliamo la lunghezza totale della stringa (con '\0' finale)
     int length = size * size + 1;
     char *result = (char *)malloc(length * sizeof(char)); // Alloca memoria per la stringa

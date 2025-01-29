@@ -39,7 +39,7 @@ void add_message(char* text, char* username){
         }
     pthread_mutex_unlock(&mess);    
 }
-//TESTATA: FUNZIONA
+
 
 
 Message *post_messaggi(int message_count) {
@@ -107,7 +107,7 @@ void bacheca_csv(char *filename){
     // Chiusura file
     fclose(file); 
 }
-// TESTATA: NI FUNZIONA
+
 
 //Funzione per liberare i messaggi dalla memoria
 void libera_messaggi(Message * messaggi, int num_messaggi) {

@@ -12,8 +12,7 @@
 #include "../Header/Comunicazione.h"
 
 // Funzione per inviare un messaggio
-void send_message(int client_socket, char type, char *data)
-{
+void send_message(int client_socket, char type, char *data){
     int retvalue;
     int len = strlen(data);
     // printf("invio messaggio\n");
@@ -29,8 +28,7 @@ void send_message(int client_socket, char type, char *data)
 }
 
 // Funzione per ricevere un messaggio
-message receive_message(int client_socket)
-{
+message receive_message(int client_socket){
     message msg;
     int retvalue;
     // ricevo lunghezza messaggio
@@ -47,30 +45,6 @@ message receive_message(int client_socket)
 
     return msg;
 }
-
-/*
-void Caps_Lock(char *string)
-{
-    // Ensure the string is not NULL
-    if (string == NULL)
-    {
-        return;
-    }
-
-    // Recupero la lunghezza della stringa
-    int len = strlen(string);
-
-    // Ciclo sulla stringa
-    for (int i = 0; i < len; i++)
-    {
-        // Controllo se il carattere è in lower case
-        if (string[i] >= 'a' && string[i] <= 'z')
-        {
-            // Lo porto in uppercase
-            string[i] -= 32;
-        }
-    }
-} */
 
 void Caps_Lock(char* string){
     //recupero la lunghezza della stringa
