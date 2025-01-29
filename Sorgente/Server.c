@@ -391,6 +391,7 @@ void *thread_func(void *args)
             }
             break;
 
+        // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             registrazione_client(client_sock, client_message.data, &lista);

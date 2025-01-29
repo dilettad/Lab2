@@ -77,6 +77,8 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
 
     // Controllo se l'username esiste già
     if (username_esiste(lista, username)) {
+        printf("Tentativo di registrazione con username già in uso: %s\n", username);
+        fflush(0);
         send_message(client_fd, MSG_ERR, "Username già in uso, per favore scegli un altro nome");
         return; 
     }
