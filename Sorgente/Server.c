@@ -414,45 +414,22 @@ void *thread_func(void *args){
             pthread_exit(NULL);
             break;
 
-       /* case MSG_CANCELLA_UTENTE:
-            // Controllo se l'utente è loggato
-            if (giocatore->username == NULL)
-            {
-                send_message(client_sock, MSG_ERR, "Utente non loggato");
-                break;
-            }
-            printf("client_sock = %d, chiusura del client \n", client_sock);
-            // Mi serve un elimina thread
-            elimina_thread(clients, pthread_self(), &clients_mutex);
-            elimina_giocatore(&lista, giocatore->username, lista_mutex);
-            printf("giocatore [%s] disconesso \n", giocatore->username);
-            close(client_sock);
-
+        case MSG_CANCELLA_UTENTE:
+            pthread_mutex_lock(&lista_mutex);
+            elimina_giocatore(&lista, client_message.data, lista_mutex);
+            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
+            pthread_mutex_unlock(&lista_mutex);
             break;
-        */
-            /* case MSG_LOGIN_UTENTE:
-                 // Controllo se l'utente è loggato
-                 if (giocatore->username != NULL)
-                 {
-                     send_message(client_sock, MSG_ERR, "Utente già loggato");
-                     break;
-                 }
-
-                 listaGiocatori listatemp = RecuperaUtente (lista, message -> text);
-                 if (listatemp == NULL) {
-                         send_message(client_sock,MSG_ERR, "Errore, il giocatore non si è mai registrato. Registrazione utente");
-                         break;
-                     }
-                     //Controllo se il giocatore è loggato in questo momento o meno
-                     if (listatemp->loggato) {
-                         send_message(client_sock, MSG_ERR, "Errore, un giocatore è già loggato con questo nome utente. Fare una nuova registrazione utente",);
-                         break;
-                     }
-                 giocatore = listatemp;
-                 giocatore -> username = client_sock;
-                 send_message(client_sock, MSG_OK, "Utente loggato");
-                 break;
-            */
+        
+        case MSG_LOGIN_UTENTE:
+            pthread_mutex_lock(&lista_mutex);
+            if (username_esiste(&lista, client_message.data)) {
+            send_message(client_sock, MSG_OK, "Login avvenuto con successo");
+            } else {
+            send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
+            }
+            pthread_mutex_unlock(&lista_mutex);
+            break;
         default:
             send_message(client_sock, MSG_ERR, "Comando non valido");
             break;

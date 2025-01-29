@@ -94,8 +94,7 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
 }
 
 // //Funzione per stampare la lista dei client
-void stampa_lista_clienti(Fifo *lista)
-{
+void stampa_lista_clienti(Fifo *lista){
     if (lista->head == NULL)
     {
         printf("Lista dei clienti vuota\n");
@@ -111,62 +110,23 @@ void stampa_lista_clienti(Fifo *lista)
     }
 }
 
-
-/* Funzione per eliminare il giocatore dalla lista
-void elimina_giocatore(Fifo* lista, int client_fd){
-    if (lista == NULL || lista->head == NULL) {
-        send_message(client_fd, MSG_ERR, "Lista vuota");
-        return;
-    }
-
-    Client* current = lista->head;
-    Client* previous = NULL;
-
-    // Cerca il client da eliminare
-    while (current != NULL) {
-        if (current->fd == client_fd) {
-            // Se il client da eliminare è il primo della lista
-            if (previous == NULL) {
-                lista->head = current->next;
-            } else {
-                previous->next = current->next;
-            }
-
-            // Se il client da eliminare è l'ultimo della lista
-            if (current->next == NULL) {
-                lista->tail = previous;
-            }
-
-            free(current);
-            printf("Client con username %d eliminato.\n", client_fd);
-            return;
-        }
-
-        previous = current;
-        current = current->next;
-    }
-
-    printf("Client con username %d non trovato.\n", client_fd);
-}*/
-
-void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t lista_mutex)
-{
+void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t lista_mutex){
     pthread_mutex_lock(&lista_mutex);
     giocatore *corrente = lista->head;
     giocatore *precedente = NULL;
 
-    while (corrente != NULL)
-    {
-        if (strcmp(corrente->username, username) == 0)
-        {
-            if (precedente == NULL)
-            {
+    while (corrente != NULL){
+        if (strcmp(corrente->username, username) == 0){
+            if (precedente == NULL){
                 lista->head = corrente->next;
-            }
-            else
-            {
+            } else {
                 precedente->next = corrente->next;
             }
+            if (corrente == lista->tail) {
+                lista->tail = precedente;
+            }
+            free(corrente->username);
+            free(corrente);
             lista->count--;
             pthread_mutex_unlock(&lista_mutex);
             return;
@@ -175,58 +135,26 @@ void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t li
         corrente = corrente->next;
     }
     pthread_mutex_unlock(&lista_mutex);
-    // se il giocatore non è stato trovato, non fa nulla
 }
 
-
-/*
-void elimina_thread(Fifo * lista, int fd, pthread_mutex_t *clients_mutex){
-    pthread_mutex_lock(&clients_mutex);
-    Client *current = lista->head;
-    Client *precedente = NULL;
-
-    while(current != NULL){
-        if(pthread_equal(current->fd, clients_mutex) != 0){
-            if(precedente == NULL){
-                lista->head = current->next;
-
-                if (lista -> head == NULL){
-                lista->tail = NULL;
-                }
-
-            }
-            else{
-                precedente->next = current->next;
-            }
-            lista->size--;
-            free(current -> username);
-            free(current);
-            pthread_mutex_unlock(&clients_mutex);
-            return;
-        }
-        precedente = current;
-        current = current->next;
-    }
-    pthread_mutex_unlock(&clients_mutex);
-}
-*/
-
-
-
-void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex) {
+void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex){
     pthread_mutex_lock(clients_mutex);
     Client *current = clients->head;
     Client *prev = NULL;
 
     while (current != NULL) {
         if (pthread_equal(current->thread_id, thread_id) != 0) { // Usa thread_id invece di clients_mutex
+            pthread_cancel(current->thread_id);
+            pthread_join(current->thread_id, NULL);
             if (prev == NULL) {
                 clients->head = current->next;
             } else {
                 prev->next = current->next;
             }
+            free(current->username);
             free(current);
-            break;
+            pthread_mutex_unlock(clients_mutex);
+            return;
         }
         prev = current;
         current = current->next;
@@ -234,8 +162,8 @@ void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients
     pthread_mutex_unlock(clients_mutex);
 }
 
-/*Funzione che recupera il nome utente di un giocatore -> NON MI PRENDE LISTA
-listaGiocatori RecuperaUtente(listaGiocatori* newLista, char* username) {
+// Funzione che recupera il nome utente di un giocatore dalla lista
+giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
     pthread_mutex_lock(&newLista->lock);
     // listaGiocatori head = newLista->lista;
     giocatore* lista = newLista->head;
@@ -247,9 +175,8 @@ listaGiocatori RecuperaUtente(listaGiocatori* newLista, char* username) {
         }
         lista = lista->next;
     }
-   // newLista->lista = head;
     //Non ho trovato il nome utente dentro la lista
     pthread_mutex_unlock(&newLista->lock);
     return NULL;
 }
-*/
+
