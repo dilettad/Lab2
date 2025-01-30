@@ -410,6 +410,7 @@ void *thread_func(void *args){
             break;
 
         case MSG_FINE:
+            //send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
             close(client_sock);
             pthread_exit(NULL);
             break;
@@ -430,6 +431,19 @@ void *thread_func(void *args){
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
+        /*
+        case MSG_POST_BACHECA:
+            if (){
+                send_message(client_sock, MSG_OK, "Messaggio postato con successo");
+            } else {
+                send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
+            }
+        break;
+
+        case MSG_SHOW_BACHECA:
+        break;
+        */
+
         default:
             send_message(client_sock, MSG_ERR, "Comando non valido");
             break;
@@ -593,7 +607,7 @@ int main(int argc, char *argv[])
     int server_sock;
     struct sockaddr_in server_addr;
     // char message [128];
-    // Prova SERVER_SHUTDOWN
+    // Segnale per il SERVER_SHUTDOWN
      signal(SIGINT, sigint_handler);
 
     // Definizione dei segnali

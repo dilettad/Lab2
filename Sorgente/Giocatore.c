@@ -69,28 +69,49 @@ int username_esiste(listaGiocatori* lista, char *username){
 // Funzione per registrazione del cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
     if (registra_bool == 1) {
-        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi di nuovo");
+        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
         return;
     }
     // Controllo se l'username contiene solo caratteri validi
-    if (!controlla_caratteri(username))
-    {
+    if (!controlla_caratteri(username)){
         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
         return; 
     }
 
     // Controllo se l'username esiste già
-    if (username_esiste(lista, username)) {
-        printf("Tentativo di registrazione con username già in uso: %s\n", username);
+    if (username_esiste(lista, username)){
+        printf("Tentativo di registrazione con username già presente: %s\n", username);
         fflush(0);
         send_message(client_fd, MSG_ERR, "Username già in uso, per favore scegli un altro nome");
         return; 
     }
 
     add_client(lista, client_fd, username);
+    //setto l'username come usato -> impostare booleano nella lista ad 1
     // Se l'username è valido, invio un messaggio di conferma
     send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
     registra_bool = 1;
+}
+
+int login_utente(int client_fd,listaGiocatori *lista, char *username){
+    giocatore *current = lista->head;
+    if (current -> active == 1){
+        send_message(client_fd, MSG_ERR, "Login già avvenuto, non è possibile registrarsi");
+    }
+    //controllo se l'utente è già registrato
+    if(registra_bool== 1){
+        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
+        return 1;
+    }
+    //controllo se l'utente è in gioco
+    if (!username_esiste(lista, username)){
+        return 1; 
+    }
+    //controllo se il nome utente è gia preso da qualcuno
+    //loggo l'utente
+    send_message(client_fd, MSG_OK, "Login avvenuto con successo");
+    current -> active = 1;
+    return 0;
 }
 
 // //Funzione per stampare la lista dei client

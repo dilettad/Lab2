@@ -8,7 +8,8 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista);
 int controlla_caratteri(const char *username);
 
 int username_esiste(listaGiocatori* lista, char *username);
-
+// Funzione login utente
+int login_utente(int client_fd,listaGiocatori *lista, char *username);
 // Funzione stampa lista clienti
 void stampa_lista_clienti(Fifo *lista);
 

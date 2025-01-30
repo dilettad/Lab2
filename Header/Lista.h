@@ -33,6 +33,8 @@ typedef struct giocatore{
     int client_fd;
     int punteggio;
     int count;
+    int active; // Se il giocatore è attivo (loggato) oppure no
+    
     struct giocatore *next;
 } giocatore;
 

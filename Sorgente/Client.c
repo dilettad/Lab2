@@ -186,6 +186,7 @@ int main(int argc, char *argv[])
     "registra_utente <nome_utente>: per registrarsi\n\n"
     "matrice: richiede al processo server la matrice corrente\n\n"
     "p <parola_indicata>: sottopone al server una parola per verificarne la correttezza e assegnare il punteggio\n\n"
+    "login_utente <nome_utente>: per loggarsi\n\n"
     "fine: per uscire dal gioco\n";
 
     // char* fine =  "Hai deciso di uscire dal gioco!\n";
@@ -196,8 +197,11 @@ int main(int argc, char *argv[])
     while (1)
     {
         int nread;
+        pthread_mutex_lock(&message_mutex);
         printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+        
         SYSC(nread, read(STDIN_FILENO, buffer, BUFFER_SIZE), "errore lettura utente");
+        pthread_mutex_unlock(&message_mutex);
         char *input = (char *)malloc(nread + 1);
         // printf("input:%s\n",buffer);
         strncpy(input, buffer, nread);
@@ -207,15 +211,13 @@ int main(int argc, char *argv[])
         memset(buffer, 0, BUFFER_SIZE);
 
         // Controllo se contiene "aiuto"
-        if (strcmp(input, "aiuto\n") == 0)
-        {
+        if (strcmp(input, "aiuto\n") == 0){
             printf("Ecco a te la lista dei comandi: %s\n", aiuto);
 
             continue;
         }
         // Controllo se contiene "registra_utente"
-        else if (strncmp(input, "registra_utente", 15) == 0)
-        {
+        else if (strncmp(input, "registra_utente", 15) == 0){
             token = strtok(input, " ");
             token = strtok(NULL, " ");
             if (token == NULL)
@@ -227,6 +229,22 @@ int main(int argc, char *argv[])
             {
                 token[strcmp(token, "\n")] = 0;
                 send_message(client_sock, MSG_REGISTRA_UTENTE, token);
+            }
+        }
+
+           // Controllo se contiene "login_utente"
+        else if (strncmp(input, "login_utente", 12) == 0){
+            token = strtok(input, " ");
+            token = strtok(NULL, " ");
+            if (token == NULL)
+            {
+                printf("Errore, manca il nome dell'utente\n");
+                continue;
+            }
+            else
+            {
+                token[strcmp(token, "\n")] = 0;
+                send_message(client_sock, MSG_LOGIN_UTENTE, token);
             }
         }
 
