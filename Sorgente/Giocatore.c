@@ -100,7 +100,7 @@ int login_utente(int client_fd,listaGiocatori *lista, char *username){
     }
     //controllo se l'utente è già registrato
     if(registra_bool== 1){
-        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
+        send_message(client_fd, MSG_ERR, "Una registrazione è avvenuta, non è possibile registrarsi nuovamente");
         return 1;
     }
     //controllo se l'utente è in gioco
@@ -109,7 +109,7 @@ int login_utente(int client_fd,listaGiocatori *lista, char *username){
     }
     //controllo se il nome utente è gia preso da qualcuno
     //loggo l'utente
-    send_message(client_fd, MSG_OK, "Login avvenuto con successo");
+     send_message(client_fd, MSG_OK, "Login avvenuto con successo");
     current -> active = 1;
     return 0;
 }
@@ -131,13 +131,15 @@ void stampa_lista_clienti(Fifo *lista){
     }
 }
 
-void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t lista_mutex){
-    pthread_mutex_lock(&lista_mutex);
+void elimina_giocatore(listaGiocatori *lista, char *username){
+   // pthread_mutex_lock(&lista_mutex);
     giocatore *corrente = lista->head;
     giocatore *precedente = NULL;
 
     while (corrente != NULL){
         if (strcmp(corrente->username, username) == 0){
+            printf("Trovato giocatore da eliminare: %s\n", username);
+            fflush(0);
             if (precedente == NULL){
                 lista->head = corrente->next;
             } else {
@@ -149,13 +151,17 @@ void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t li
             free(corrente->username);
             free(corrente);
             lista->count--;
-            pthread_mutex_unlock(&lista_mutex);
+            // pthread_mutex_unlock(&lista_mutex);
+            printf("Giocatore eliminato con successo: %s\n", username);
+            fflush(0);
             return;
         }
         precedente = corrente;
         corrente = corrente->next;
     }
-    pthread_mutex_unlock(&lista_mutex);
+   // pthread_mutex_unlock(&lista_mutex);
+    printf("Giocatore non trovato: %s\n", username);
+    fflush(0);
 }
 
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex){
@@ -183,7 +189,7 @@ void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients
     pthread_mutex_unlock(clients_mutex);
 }
 
-// Funzione che recupera il nome utente di un giocatore dalla lista
+/* Funzione che recupera il nome utente di un giocatore dalla lista
 giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
     pthread_mutex_lock(&newLista->lock);
     // listaGiocatori head = newLista->lista;
@@ -200,4 +206,5 @@ giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
     pthread_mutex_unlock(&newLista->lock);
     return NULL;
 }
+*/
 

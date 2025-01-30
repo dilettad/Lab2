@@ -17,6 +17,7 @@
 #include "../Header/Matrice.h"
 #include "../Header/FunzioniServer.h"
 #include "../Header/Giocatore.h"
+#include "../Header/Bacheca.h"
 
 #define MAX_CLIENTS 32
 #define MAX_LENGTH_USERNAME 10 // Numero massimo di lunghezza dell'username
@@ -58,6 +59,7 @@ pthread_cond_t scorer_cond, game_cond, lista_cond;
 pthread_mutex_t classifica_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t game_mutex;
 pthread_t scorer_tid;
+pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
 listaGiocatori lista; // Lista giocatori
 Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -417,7 +419,7 @@ void *thread_func(void *args){
 
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
-            elimina_giocatore(&lista, client_message.data, lista_mutex);
+            elimina_giocatore(&lista, client_message.data);
             send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             pthread_mutex_unlock(&lista_mutex);
             break;
@@ -425,24 +427,26 @@ void *thread_func(void *args){
         case MSG_LOGIN_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             if (username_esiste(&lista, client_message.data)) {
-            send_message(client_sock, MSG_OK, "Login avvenuto con successo");
+            send_message(client_sock, MSG_OK, "Utente già loggato");
             } else {
             send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
-        /*
+
         case MSG_POST_BACHECA:
-            if (){
+            if (add_message(client_message.data, client_message.username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
                 send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
             }
         break;
 
-        case MSG_SHOW_BACHECA:
-        break;
-        */
+
+       /* case MSG_SHOW_BACHECA:
+            pthread_mutex_lock(&message);
+        break; */
+        
 
         default:
             send_message(client_sock, MSG_ERR, "Comando non valido");

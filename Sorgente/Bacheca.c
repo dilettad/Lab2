@@ -12,7 +12,7 @@
 Message messages [MAX_MESSAGES];
 int message_count = 0; //Inizializzo il contatore dei messaggi a 0
 //Inizializzo thread mutex
-pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
+// pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
  
 //Funzione per aggiungere messaggi in bacheca
 void add_message(char* text, char* username){
@@ -24,6 +24,8 @@ void add_message(char* text, char* username){
         strcpy(messages[message_count].text, text);
         strcpy(messages[message_count].username, username);
         message_count++;
+        pthread_mutex_unlock(&mess);
+        return 1;
         } else  {         
             printf("Bacheca piena\n");
             //Libero la memoria del messaggio più vecchio
@@ -35,9 +37,12 @@ void add_message(char* text, char* username){
             }
             // Aggiungo il nuovo messaggio all'ultimo posto
             strcpy(messages[MAX_MESSAGES - 1].text, text);
-            strcpy(messages[MAX_MESSAGES - 1].username, username);          
+            strcpy(messages[MAX_MESSAGES - 1].username, username);
+            pthread_mutex_unlock(&mess);          
+            return 1;
         }
     pthread_mutex_unlock(&mess);    
+    return 0;
 }
 
 

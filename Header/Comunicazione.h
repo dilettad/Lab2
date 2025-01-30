@@ -25,6 +25,7 @@ typedef struct {
     char type; 
     unsigned int length; 
     char* data; 
+    char username[50];
 } message;
 
 typedef struct Fifo Fifo;

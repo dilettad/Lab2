@@ -13,7 +13,7 @@ int login_utente(int client_fd,listaGiocatori *lista, char *username);
 // Funzione stampa lista clienti
 void stampa_lista_clienti(Fifo *lista);
 
-void elimina_giocatore(listaGiocatori *lista, char *username, pthread_mutex_t lista_mutex);
+void elimina_giocatore(listaGiocatori *lista, char *username);
 
 //void elimina_thread(Fifo * lista, int fd, pthread_mutex_t *clients_mutex);
 

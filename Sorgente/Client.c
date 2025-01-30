@@ -150,6 +150,7 @@ void *receiver(void *args)
             // exit(0);
             break;
 
+
         default:
             fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
@@ -197,6 +198,7 @@ int main(int argc, char *argv[])
     "matrice: richiede al processo server la matrice corrente\n\n"
     "p <parola_indicata>: sottopone al server una parola per verificarne la correttezza e assegnare il punteggio\n\n"
     "login_utente <nome_utente>: per loggarsi\n\n"
+    "cancella_utente <nome_utente>: per cancellare l'utente\n\n"
     "fine: per uscire dal gioco\n";
 
     // char* fine =  "Hai deciso di uscire dal gioco!\n";
@@ -257,9 +259,24 @@ int main(int argc, char *argv[])
             }
         }
 
+        // Controllo se contiene "cancella_utente"
+        else if (strncmp(input, "cancella_utente", 15) == 0){
+            token = strtok(input, " ");
+            token = strtok(NULL, " ");
+            if (token == NULL)
+            {
+                printf("Errore, manca il nome dell'utente\n");
+                continue;
+            }
+            else
+            {
+                token[strcmp(token, "\n")] = 0;
+                send_message(client_sock, MSG_CANCELLA_UTENTE, token);
+            }
+        }
+
         // Controllo se contiene "matrice"
-        else if (strcmp(input, "matrice\n") == 0)
-        {
+        else if (strcmp(input, "matrice\n") == 0){
             send_message(client_sock, MSG_MATRICE, input);
         }
 
@@ -283,6 +300,14 @@ int main(int argc, char *argv[])
             }
 
             send_message(client_sock, MSG_PAROLA, trim(token));
+        }
+
+         else if (strcmp(input, "show-msg\n") == 0){
+            send_message(client_sock, MSG_SHOW_BACHECA, input);
+        }
+
+        else if (strcmp(input, "testo_messaggio\n") == 0){
+            send_message(client_sock, MSG_POST_BACHECA, input);
         }
 
         // Controllo se contiene "fine"
