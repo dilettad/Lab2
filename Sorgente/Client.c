@@ -94,12 +94,14 @@ void *receiver(void *args)
 
         case MSG_OK:
             printf("\n%s\n", received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             fflush(0);
             break;
 
         case MSG_ERR:
             pthread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             fflush(0);
             break;
 
@@ -120,19 +122,26 @@ void *receiver(void *args)
             printf("\nMatrice: \n");
             stampaMatrice(matrice);
             free(matrice); // Dealloca la memoria della matrice
+            //printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             break;
 
         case MSG_PUNTI_PAROLA:
             printf("\n%s\n", received_msg.data);//messaggio punti
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+    
             break;
 
         case MSG_TEMPO_PARTITA:
             printf("\n%s\n", received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+    
             break;
 
         case MSG_PUNTI_FINALI:
             printf("\nClassifica generale:\n");
             printf("%s\n", (char *)received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+    
             break;
 
         case MSG_SERVER_SHUTDOWN:
@@ -143,6 +152,7 @@ void *receiver(void *args)
 
         default:
             fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             break;
         }
         pthread_mutex_unlock(&message_mutex); // Fine sezione critica
@@ -194,14 +204,13 @@ int main(int argc, char *argv[])
     // pthread_create()
     SYST(retvalue, pthread_create(&receiver_thread, NULL, receiver, &client_sock), "errore creazione thread receiver");
     // writef(retvalue,"prima del thread\n");
+    printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     while (1)
     {
         int nread;
-        pthread_mutex_lock(&message_mutex);
-        printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
-        
+        //pthread_mutex_lock(&message_mutex);
         SYSC(nread, read(STDIN_FILENO, buffer, BUFFER_SIZE), "errore lettura utente");
-        pthread_mutex_unlock(&message_mutex);
+        //pthread_mutex_unlock(&message_mutex);
         char *input = (char *)malloc(nread + 1);
         // printf("input:%s\n",buffer);
         strncpy(input, buffer, nread);
