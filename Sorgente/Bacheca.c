@@ -11,11 +11,11 @@
 //Array per memorizzare gli ultimi 8 messaggi
 Message messages [MAX_MESSAGES];
 int message_count = 0; //Inizializzo il contatore dei messaggi a 0
-//Inizializzo thread mutex
-// pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
+//Inizializzo thread mutex -> qui e non nel server
+pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
  
 //Funzione per aggiungere messaggi in bacheca
-void add_message(char* text, char* username){
+int add_message(char* text, char* username){
     pthread_mutex_lock (&mess);
 
     //Controllo posso inserire il messaggio in quanto < 8 
@@ -26,14 +26,15 @@ void add_message(char* text, char* username){
         message_count++;
         pthread_mutex_unlock(&mess);
         return 1;
-        } else  {         
+    } else {         
             printf("Bacheca piena\n");
             //Libero la memoria del messaggio più vecchio
             free(messages[0].text);
             free(messages[0].username);
             //Sposto i messaggi in modo da lasciare l'ultimo posto in memoria libero
             for (int i = 1; i < MAX_MESSAGES; i++){
-                messages[i-1] = messages[i];
+                strcpy(messages[i - 1].text, messages[i].text);
+                strcpy(messages[i - 1].username, messages[i].username);
             }
             // Aggiungo il nuovo messaggio all'ultimo posto
             strcpy(messages[MAX_MESSAGES - 1].text, text);
@@ -45,14 +46,35 @@ void add_message(char* text, char* username){
     return 0;
 }
 
+char* show_bacheca(){
+    pthread_mutex_lock(&mess);
 
+    // Alloca un buffer per la risposta
+    char *buffer = malloc(MAX_MESSAGES * 160); // 128 + 32 username + extra
+    if (buffer == NULL) {
+        pthread_mutex_unlock(&mess);
+        return NULL;
+    }
+
+    buffer[0] = '\0';  // Inizializza la stringa
+
+    for (int i = 0; i < message_count; i++) {
+        strcat(buffer, messages[i].username);
+        strcat(buffer, ": ");
+        strcat(buffer, messages[i].text);
+        strcat(buffer, "\n");
+    }
+
+    pthread_mutex_unlock(&mess);
+    return buffer;
+}
 
 Message *post_messaggi(int message_count) {
     pthread_mutex_lock(&mess);
 
     // Alloco memoria per l'array di messaggi da restituire
     // Message* read_message = (Message*)malloc(message_count * sizeof(Message));
-    Message *read_message = malloc(message_count * sizeof(Message));
+    Message* read_message = malloc(message_count * sizeof(Message));
 
     // Controllo se già letti
     if (read_message == NULL) {
@@ -62,8 +84,9 @@ Message *post_messaggi(int message_count) {
 
     // Inserisco i messaggi 
     for (int i = 0; i < message_count; i++) {
-        read_message[i].text = malloc(strlen(messages[i].text) + 1);
-        if (read_message[i].text == NULL) {
+        // read_message[i].text = malloc(strlen(messages[i].text) + 1);
+        // read_message[i].username = malloc(strlen(messages[i].username) + 1);
+        /*if (read_message[i].text == NULL || read_message[i].username == NULL) {
             // Gestire l'errore di allocazione
             for (int j = 0; j < i; j++) {
                 free(read_message[j].text);
@@ -72,21 +95,8 @@ Message *post_messaggi(int message_count) {
             free(read_message);
             pthread_mutex_unlock(&mess);
             return NULL;
-        }
-        strcpy(read_message[i].text, messages[i].text);
-        
-        read_message[i].username = malloc(strlen(messages[i].username) + 1);
-        if (read_message[i].username == NULL) {
-            // Gestire l'errore di allocazione
-            free(read_message[i].text);
-            for (int j = 0; j < i; j++) {
-                free(read_message[j].text);
-                free(read_message[j].username);
-            }
-            free(read_message);
-            pthread_mutex_unlock(&mess);
-            return NULL;
-        }
+        }*/
+        strcpy(read_message[i].text, messages[i].text);    
         strcpy(read_message[i].username, messages[i].username);
     }
     pthread_mutex_unlock(&mess);

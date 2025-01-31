@@ -18,6 +18,8 @@
 #include "../Header/FunzioniServer.h"
 #include "../Header/Giocatore.h"
 #include "../Header/Bacheca.h"
+#include "../Header/FileLog.h"
+
 
 #define MAX_CLIENTS 32
 #define MAX_LENGTH_USERNAME 10 // Numero massimo di lunghezza dell'username
@@ -424,28 +426,40 @@ void *thread_func(void *args){
             pthread_mutex_unlock(&lista_mutex);
             break;
         
+       // DEVO INSERIRE QUA IL FILE LOG?     
         case MSG_LOGIN_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             if (username_esiste(&lista, client_message.data)) {
-            send_message(client_sock, MSG_OK, "Utente già loggato");
+                send_message(client_sock, MSG_OK, "Utente già loggato");
+                
             } else {
-            send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
+                send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
+             
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
 
         case MSG_POST_BACHECA:
-            if (add_message(client_message.data, client_message.username)){
+            if (add_message(Sclient_message.data, utente -> username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
                 send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
             }
-        break;
+        break; 
 
 
-       /* case MSG_SHOW_BACHECA:
-            pthread_mutex_lock(&message);
-        break; */
+        case MSG_SHOW_BACHECA:
+            pthread_mutex_lock(&mess);
+            char buffer[1024];
+            bacheca_csv(buffer, sizeof(buffer));
+            pthread_mutex_unlock(&mess);
+                if (messages_cvs != NULL){
+                    send_message(client_sock, MSG_SHOW_BACHECA, messages_cvs);
+                    free(messages_cvs);
+                } else {
+                    send_message(client_sock, MSG_ERR, "Errore nel mostrare la bacheca");
+                }
+        break; 
         
 
         default:
