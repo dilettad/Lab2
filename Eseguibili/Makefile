@@ -17,6 +17,7 @@ TRIE = Trie
 MATRICE = Matrice
 COMMS = Comunicazione
 GIOCATORE = Giocatore
+BACHECA = Bacheca
 
 # Header
 HDRS_COMUNICAZIONE = $(HEADER)Comunicazione.h
@@ -27,6 +28,7 @@ SERVER_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE
 CLIENT_HEADERS = $(HDRS_MATRICE)  $(HDRS_COMUNICAZIONE)
 TEST_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE) 
 HDRS_GIOCATORE = $(HEADER)$(GIOCATORE).h
+HDRS_BACHECA = $(HEADER)$(BACHECA).h
 
 # File Oggetto
 OBJS = $(SERVER).o
@@ -37,6 +39,7 @@ OBJHL = $(LISTA).o
 OBJHCS = $(COMMS).o
 OBJT = $(TEST).o
 OBJG = $(GIOCATORE).o
+OBJB = $(BACHECA).o
 SERVER_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
 CLIENT_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
 TEST_OBJS = $(OBHM) $(OBJHL)
@@ -50,6 +53,7 @@ SRCHCS = $(SORGENTE)$(COMMS).c
 SRCHL = $(SORGENTE)$(LISTA).c
 SRCT = $(SORGENTE)$(TEST).c
 SRCG = $(SORGENTE)$(GIOCATORE).c
+SRCB = $(SORGENTE)$(BACHECA).c
 
 # Input
 PORT = 20000
@@ -68,7 +72,7 @@ all: $(SERVER) $(CLIENT) $(TEST) clean_objs
 
 $(SERVER): $(SERVER_OBJS)
 	@echo Compilazione del Server
-	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG)  -o $(SERVER)
+	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB)  -o $(SERVER)
 
 $(CLIENT): $(CLIENT_OBJS)
 	@echo Compilazione del Client
@@ -76,7 +80,7 @@ $(CLIENT): $(CLIENT_OBJS)
 
 $(TEST): $(TEST_OBJS)
 	@echo Compilazione dei Test
-	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
+	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
 
 
 $(OBJHM):$(SRCHM)
@@ -91,11 +95,14 @@ $(OBJHL):$(SRCHL)
 $(OBJG):$(SRCG)
 	@$(CC) $(CFLAGS) -c $(SRCG) $(HDRS_GIOCATORE)
 
+$(OBJB):$(SRCB)
+	@$(CC) $(CFLAGS) -c $(SRCB) $(HDRS_BACHECA)
+
 
 #Server.o
 $(OBJS):$(SRCS)
 	@echo compilo 
-	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SERVER_HEADERS)
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SERVER_HEADERS)
 
 #Client.o
 $(OBJC):$(SRCC)
