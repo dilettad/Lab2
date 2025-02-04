@@ -145,24 +145,22 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
     return messaggio;
 }
 
-
 // Funzione di invio classifica ai giocatori
-void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica)
-{
+void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica, time_t tempo_iniziale, int durata_pausa){
     pthread_mutex_lock(&lista_mutex);
     // Inizializza un puntatore alla testa della lista
-    giocatore *current = lista->head;
-    while (current != NULL)
-    {
-        if (pthread_equal(current->tid, tid))
-        {                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
+    giocatore* current = lista->head;
+    while (current != NULL){
+        if (pthread_equal(current->tid, tid)){                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
             send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
+            char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+            send_message(current -> client_fd, MSG_TEMPO_ATTESA, temp);
+            free(temp);
         }
         current = current->next; // Passo al giocatore successivo
     }
     pthread_mutex_unlock(&lista_mutex);
 }
-
 
 // Funzione per confrontare i punteggi dei giocatori -> qsort
 int compare_score(const void *a, const void *b)
@@ -175,18 +173,17 @@ int compare_score(const void *a, const void *b)
 
 // HANDLER DEI SEGNALI
 // Funzione di invio segnali a tutti i giocatori della lista
-void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex)
-{
+void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
     pthread_mutex_lock(&lista_mutex);
-    giocatore *current = lista->head; // Inizializza un puntatore alla testa della lista dei giocatori
-    while (current != NULL)
-    {                                    // While finchè ci sono giocatori
+    giocatore* current = lista->head; // Inizializza un puntatore alla testa della lista dei giocatori
+    while (current != NULL){                                    // While finchè ci sono giocatori
         pthread_kill(current->tid, SIG); // Invia segnale SIG al thread current -> tid
         current = current->next;         // Passa al giocatore successivo
     }
     pthread_mutex_unlock(&lista_mutex);
 }
-// TESTATE: RUNTIME ERROR : Può essere per il SIG nei parametri?
+
+
 
 // Funzione per cambiare stato del gioco
 void alarm_handler(int sig)
@@ -222,8 +219,7 @@ void alarm_handler(int sig)
 }
 // TESTATE: RUNTIME ERROR
 // Funzione per invio della classifica
-void sig_classifica(int sig)
-{
+void sigusr2_classifica(int sig){
     pthread_mutex_lock(&lista_mutex);
     // Controllo se ci sono giocatori registrati
     if (lista.head == NULL)
@@ -232,10 +228,13 @@ void sig_classifica(int sig)
         pthread_mutex_unlock(&lista_mutex);
         return;
     }
-    // scorer = 0;
-    sendClassifica(&lista, pthread_self(), lista_mutex, classifica);
+    printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
+    sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_partita);
     pthread_mutex_unlock(&lista_mutex);
 }
+
+
+
 
 
 // Funzione per la chiusura del server -> FUNZIONA
@@ -467,7 +466,7 @@ void *thread_func(void *args){
 
 void *scorer(void *arg){
     printf("Scorer in esecuzione\n");
-
+    signal(SIGUSR2, sigusr2_classifica);
     // Prendo il numero di giocatori registrati
     pthread_mutex_lock(&lista_mutex);
     int num_giocatori = lista.count;
@@ -509,13 +508,13 @@ void *scorer(void *arg){
     }
     printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
     // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
-    invia_SIG(&lista, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
+    invia_SIG(&lista, SIGUSR2, lista_mutex);
     pthread_mutex_lock(&lista_mutex);
     current = lista.head;
     // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
     // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
     for (int i = 0; i < num_giocatori && current != NULL; i++){
-        sendClassifica(&lista, current->tid, lista_mutex, classifica);
+        sendClassifica(&lista, current->tid, lista_mutex, classifica, tempo_iniziale, durata_pausa);
         current = current -> next;
     }
     pthread_mutex_unlock(&lista_mutex);

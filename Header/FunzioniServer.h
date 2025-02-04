@@ -14,7 +14,7 @@
 
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
 
-void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica);
+void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica, time_t tempo_iniziale, int durata_pausa);
 /* Calcola tempo rimanente
 void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
     time_t tempo_attuale = time(NULL);
