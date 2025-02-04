@@ -163,8 +163,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_
 }
 
 // Funzione per confrontare i punteggi dei giocatori -> qsort
-int compare_score(const void *a, const void *b)
-{
+int compare_score(const void *a, const void *b){
     giocatore *playerA = (giocatore *)a;              // Puntatore a convertito in un puntatore della struttura giocatore
     giocatore *playerB = (giocatore *)b;              // Puntatore b convertito in un puntatore della struttura giocatore
     return (playerB->punteggio - playerA->punteggio); // Confronto punteggi in ordine decrescente
@@ -184,6 +183,20 @@ void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
 }
 
 
+// Funzione per invio della classifica
+void sigusr2_classifica(int sig){
+    pthread_mutex_lock(&lista_mutex);
+    // Controllo se ci sono giocatori registrati
+    if (lista.head == NULL)
+    { // Se la testa è vuoto
+        printf("Nessun giocatore registrato, classifica non disponibile \n");
+        pthread_mutex_unlock(&lista_mutex);
+        return;
+    }
+    printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
+    sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_partita);
+    pthread_mutex_unlock(&lista_mutex);
+}
 
 // Funzione per cambiare stato del gioco
 void alarm_handler(int sig)
@@ -218,22 +231,6 @@ void alarm_handler(int sig)
     }
 }
 // TESTATE: RUNTIME ERROR
-// Funzione per invio della classifica
-void sigusr2_classifica(int sig){
-    pthread_mutex_lock(&lista_mutex);
-    // Controllo se ci sono giocatori registrati
-    if (lista.head == NULL)
-    { // Se la testa è vuoto
-        printf("Nessun giocatore registrato, classifica non disponibile \n");
-        pthread_mutex_unlock(&lista_mutex);
-        return;
-    }
-    printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
-    sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_partita);
-    pthread_mutex_unlock(&lista_mutex);
-}
-
-
 
 
 
