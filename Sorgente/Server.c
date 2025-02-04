@@ -61,7 +61,7 @@ pthread_cond_t scorer_cond, game_cond, lista_cond;
 pthread_mutex_t classifica_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t game_mutex;
 pthread_t scorer_tid;
-pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
+// pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
 listaGiocatori lista; // Lista giocatori
 Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -438,27 +438,27 @@ void *thread_func(void *args){
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
-
+        // Perchè non funziona?
         case MSG_POST_BACHECA:
-            if (add_message(Sclient_message.data, utente -> username)){
+            if (add_message(client_message.data, utente -> username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
                 send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
             }
         break; 
 
-
+        
         case MSG_SHOW_BACHECA:
             pthread_mutex_lock(&mess);
             char buffer[1024];
-            bacheca_csv(buffer, sizeof(buffer));
+            bacheca_csv(buffer);
             pthread_mutex_unlock(&mess);
-                if (messages_cvs != NULL){
-                    send_message(client_sock, MSG_SHOW_BACHECA, messages_cvs);
-                    free(messages_cvs);
-                } else {
+                // if (messages_cvs != NULL){
+                    send_message(client_sock, MSG_SHOW_BACHECA, buffer);
+                    /* free(messages_cvs);
+                } else {  
                     send_message(client_sock, MSG_ERR, "Errore nel mostrare la bacheca");
-                }
+                } */
         break; 
         
 
