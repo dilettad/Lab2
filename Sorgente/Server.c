@@ -440,6 +440,7 @@ void *thread_func(void *args){
             break;
         // Perchè non funziona?
         case MSG_POST_BACHECA:
+         printf("Debug: Ricevuto MSG_POST_BACHECA\n");
             if (add_message(client_message.data, utente -> username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
@@ -447,18 +448,13 @@ void *thread_func(void *args){
             }
         break; 
 
-        
         case MSG_SHOW_BACHECA:
             pthread_mutex_lock(&mess);
             char buffer[1024];
             bacheca_csv(buffer);
             pthread_mutex_unlock(&mess);
-                // if (messages_cvs != NULL){
-                    send_message(client_sock, MSG_SHOW_BACHECA, buffer);
-                    /* free(messages_cvs);
-                } else {  
-                    send_message(client_sock, MSG_ERR, "Errore nel mostrare la bacheca");
-                } */
+            // printf("Debug: Contenuto del buffer:\n%s\n", buffer); // Aggiungi questo messaggio di debug
+            send_message(client_sock, MSG_SHOW_BACHECA, buffer);
         break; 
         
 
@@ -482,8 +478,7 @@ void *scorer(void *arg){
 
     pthread_mutex_lock(&lista_mutex);
     // Ciclo per raccogliere i risultati
-    for (int i = 0; current != NULL && i < num_giocatori; i++)
-    {
+    for (int i = 0; current != NULL && i < num_giocatori; i++){
         scorerVector[i].username = strdup(current->username); // copia l'username
         scorerVector[i].punteggio = current->punteggio;       // Copia punteggio
         current = current->next;                              // Passa al prossimo giocatore
@@ -497,34 +492,35 @@ void *scorer(void *arg){
     classifica = (char *)malloc(1024 * sizeof(char));
     classifica[0] = '\0';
     char msg[256];
-    for (int i = 0; i < num_giocatori; i++)
-    {
+    for (int i = 0; i < num_giocatori; i++){
         sprintf(msg, "%s %d\n", scorerVector[i].username, scorerVector[i].punteggio);
         // strcat(classifica, msg, strlen(classifica) - 1 );
         strcat(classifica, msg);
-        if (i < num_giocatori - 1)
-        {
+        if (i < num_giocatori - 1){
             strcat(classifica, ",");
         }
     }
-    strcat(classifica, "\0");
+    //strcat(classifica, "\0");
     printf("Vincitore: %s con %d punti\n", scorerVector[0].username, scorerVector[0].punteggio);
     pthread_mutex_unlock(&classifica_mutex);
 
-    for (int i = 0; i < num_giocatori; i++)
-    {
+    for (int i = 0; i < num_giocatori; i++){
         free(scorerVector[i].username);
     }
     printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
     // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
     invia_SIG(&lista, SIGUSR2, lista_mutex); // Cambiato SIGINT in SIGUSR2
-
+    pthread_mutex_lock(&lista_mutex);
+    current = lista.head;
     // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
     // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
-    for (int i = 0; i < num_giocatori; i++)
-    {
+    for (int i = 0; i < num_giocatori && current != NULL; i++){
         sendClassifica(&lista, current->tid, lista_mutex, classifica);
+        current = current -> next;
     }
+    pthread_mutex_unlock(&lista_mutex);
+    free(classifica);
+    printf("Classifica inviata\n");
     return NULL;
 }
 

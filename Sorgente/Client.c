@@ -150,6 +150,19 @@ void *receiver(void *args)
             // exit(0);
             break;
 
+        case MSG_SHOW_BACHECA:
+            printf("\nMessaggi sulla bacheca:\n");
+            // printf("Debug: Messaggio ricevuto: %s\n", (char *)received_msg.data);
+            printf("%s\n", (char *)received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            break;
+
+        case MSG_POST_BACHECA:
+            printf("\nMessaggio postato sulla bacheca:\n");
+            printf("Debug: Messaggio ricevuto: %s\n", (char *)received_msg.data);
+            printf("%s\n", (char *)received_msg.data);
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            break;    
 
         default:
             fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type);
@@ -199,6 +212,8 @@ int main(int argc, char *argv[])
     "p <parola_indicata>: sottopone al server una parola per verificarne la correttezza e assegnare il punteggio\n\n"
     "login_utente <nome_utente>: per loggarsi\n\n"
     "cancella_utente <nome_utente>: per cancellare l'utente\n\n"
+    "show-msg: per mostrare i messaggi della bacheca\n\n"
+    "msg <testo_messaggio>: per postare un messaggio sulla bacheca\n\n"
     "fine: per uscire dal gioco\n";
 
     // char* fine =  "Hai deciso di uscire dal gioco!\n";
@@ -306,8 +321,20 @@ int main(int argc, char *argv[])
             send_message(client_sock, MSG_SHOW_BACHECA, input);
         }
 
-        else if (strcmp(input, "testo_messaggio\n") == 0){
-            send_message(client_sock, MSG_POST_BACHECA, input);
+
+        else if (strncmp(input, "msg", 3) == 0){
+            token = strtok(input, " ");
+            token = strtok(NULL, " ");
+            if (token == NULL)
+            {
+                printf("Errore, manca il messaggio \n");
+                continue;
+            }
+            else
+            {
+                token[strcmp(token, "\n")] = 0;
+                send_message(client_sock, MSG_POST_BACHECA, token);
+            }
         }
 
         // Controllo se contiene "fine"
