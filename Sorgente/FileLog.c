@@ -13,7 +13,7 @@
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Funzione per registrare un evento nel file di log
-void log(char* utente, char* testo) {
+void file_log(char* utente, char* testo) {
     pthread_mutex_lock(&log_mutex);
     FILE* log_file = fopen(LOG_FILE, "a"); // Apri il file in modalità append
     if (log_file == NULL) {

@@ -1,4 +1,4 @@
 #include <pthread.h>
-//#include <math.h>
+#include <math.h>
 
-void log(char* utente, char* testo);
+void file_log(char* utente, char* testo);
