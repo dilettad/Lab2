@@ -36,29 +36,6 @@ void push(Fifo *lista, Client *new_client)
     lista->size++;
 }
 
-// Funzione rimuove e restituisce il cliente dalla coda - NON CORRETTA
-/* Client * pop (Fifo * list){
-    if (list->size == 0){ //Se lista vuota restituisce NULL
-        return NULL;
-    }
-    // Controllo se la lista è di dimensione 1
-    if (list->size == 1){
-        Client * temp = list->head;
-        list->head = NULL; //Assegna la testa alla coda
-        list->tail = NULL; //Imposta la coda come NULL
-        list->size = 0; // Imposta la dimensione a 0
-        return temp; // Restituisce il cliente
-    }
-    // Ciclo fino all'elemento prima della coda
-    Client* temp = list->head;
-    for (int i = 0; i < list->size - 1; i++){
-        temp = temp->next;
-    }
-    // Aggiorno la coda
-    list->tail = temp;
-    return temp;
-}*/
-
 // Funzione rimuove e restituisce il cliente dalla coda
 Client *pop(Fifo *list)
 {
@@ -121,19 +98,3 @@ void distruggi_lista(listaGiocatori *lista)
     lista->tail = NULL;
     lista->count = 0;
 }
-
-/*
- //Funzione per eliminare la lista dei giocatori
- void distruggi_lista(listaGiocatori * lista) {
-    pthread_mutex_lock(&lista->lista_mutex);
-    giocatore *current = lista->head;
-    while (current != NULL) {
-        giocatore *temp = current;
-        current = current->next;
-        free(temp);
-    }
-    lista->head = NULL;
-    pthread_mutex_unlock(&lista->lista_mutex);
-    pthread_mutex_destroy(&lista->lista_mutex);
-}
-*/

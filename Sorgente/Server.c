@@ -67,7 +67,10 @@ Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
 Client *clients1;
-
+/*VARIABILI PER GESTIONE GIOCO*/
+int turno = 0;
+int game_started = 0;
+    
 
 
 
@@ -199,37 +202,6 @@ void sigusr2_classifica(int sig){
 }
 
 // Funzione per cambiare stato del gioco
-void alarm_handler(int sig)
-{
-    // Gestione del controllo dello stato del gioco
-    if (pausa_gioco == 1)
-    { // Se il gioco è in pausa
-        pthread_mutex_lock(&pausa_gioco_mutex);
-        pausa_gioco = 0; // Cambio lo stato del gioco per indicare il gioco in corso
-        printf("Il gioco è in corso.\n");
-        pthread_mutex_unlock(&pausa_gioco_mutex);
-    }
-    else
-    { // Gestione scandenza tempo
-
-        pthread_mutex_lock(&pausa_gioco_mutex);
-        pausa_gioco = 1; // cambia lo stato del gioco
-        printf("Il gioco è in pausa. \n");
-        pthread_mutex_unlock(&pausa_gioco_mutex);
-
-        // Invio del segnale a tutti i thread giocatori
-        if (lista.count > 0)
-        {
-            // scorer = 1;
-            invia_SIG(&lista, SIGUSR1, lista_mutex);                        // Invia segnale ai giocatori
-            int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL); // Crea un nuovo thread per eseguire la funzione
-            if (retvalue != 0)
-            {
-                perror("Errore nella pthread_create dello scorer");
-            }
-        }
-    }
-}
 // TESTATE: RUNTIME ERROR
 
 
@@ -293,7 +265,9 @@ void *thread_func(void *args){
     utente->fd = client_sock;
     utente->score = 0;
     utente->next = NULL;
+    utente->thread_id = pthread_self();
     push(clients, utente);
+    int registra_bool = 0;
     //giocatore *giocatore = NULL;
     
     // MANCA UN PEZZO ?
@@ -391,10 +365,15 @@ void *thread_func(void *args){
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
+            if (registra_bool == 1) {
+                send_message(client_sock, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
+                continue;
+            }
             pthread_mutex_lock(&lista_mutex);
             //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
             utente->username = client_message.data;
+            registra_bool = 1;
             pthread_mutex_unlock(&lista_mutex);
             break;
 
@@ -526,7 +505,7 @@ void *scorer(void *arg){
 
 // GESTISCE DEL GIOCO: perchè non funzionaa
 void *game(void *arg){
-    int round = 0;
+    //int turno = 0;
     while (1)
     {
         if (lista.count == 0)
@@ -539,14 +518,13 @@ void *game(void *arg){
                 //sleep(1);
             }
         }
-
-        // Inizia la pausa
-        printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
-        sleep(durata_pausa);
+        pausa_gioco = 0;
+        //sleep(durata_pausa);
+        alarm(durata_pausa);
 
         printf("Sono nel thread del gioco \n");
         // SE IL ROUND NON è STATO PREPARATO ALLORA LO PREPARA
-        if (round == 0)
+        if (turno == 0)
         {
 
             // Blocco per accedere alla matrice di gioco
@@ -559,7 +537,7 @@ void *game(void *arg){
             //cella **matrice = generateMatrix();
             Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
             fclose(file);
-            round = 1;
+            turno = 1;
         }
 
         // INIZIA IL GIOCO
@@ -598,7 +576,9 @@ void *game(void *arg){
         
         }
         pthread_mutex_unlock(&lista_mutex);
-       
+        //setto alarm
+        alarm(durata_partita);
+        
         sleep(durata_partita);
 
         // partita terminata e quindi inviare punteggi classifiche ecc ecc ecec ec ec e c ec e c ece c ne ce c e ce
@@ -606,7 +586,100 @@ void *game(void *arg){
         // fai partire il thread dello scorer usando pthread_create
 
         // NOTIFICA CHE IL ROUND PREPARATO È STATO UTILIZZATO E QUINDI BISOGNA PREPARARNE UNO NUOVO
-        round = 0;
+        turno = 0;
+    }
+}
+
+void* prova(){
+    while(1){
+        //ho prepareto il turno?
+        if(turno == 0){
+            // Blocco per accedere alla matrice di gioco
+            FILE *file = fopen("../Matrici.txt", "rb"); //
+             if (file == NULL)
+            {
+                perror("Errore nell'apertura del file");
+                return NULL;  
+            } 
+            //cella **matrice = generateMatrix();
+            Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
+            fclose(file);
+            turno = 1;
+        }
+        //posso partire?
+        if(lista.count<=0){
+            printf("non posso partire\n");
+            continue;
+        }
+        //parto
+        if(game_started == 0){
+            alarm(durata_pausa);
+            game_started = 1;//ho fatto iniziare il conteggio per finire la pausa
+            pausa_gioco = 1;//metto gioco in pausa
+            printf("allarme pausa mandato\n");
+        }
+        
+    }
+}
+
+
+void alarm_handler(int sig)
+{
+    // Gestione del controllo dello stato del gioco
+    if (pausa_gioco == 1)
+    { // Se il gioco è in pausa
+        pthread_mutex_lock(&pausa_gioco_mutex);
+        pausa_gioco = 0; // Cambio lo stato del gioco per indicare il gioco in corso
+        printf("Il gioco è in corso.\n");
+        alarm(durata_partita);
+        pthread_mutex_unlock(&pausa_gioco_mutex);
+    }
+    else
+    { // Gestione scandenza tempo -> pausa_gioco = 0
+
+        pthread_mutex_lock(&pausa_gioco_mutex);
+        pausa_gioco = 1; // cambia lo stato del gioco
+        //printf("Il gioco è in pausa. \n");
+        // Inizia la pausa
+        printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
+        pthread_mutex_unlock(&pausa_gioco_mutex);
+        alarm(pausa_gioco);
+        // Invio del segnale a tutti i thread giocatori
+        if (lista.count > 0)
+        {
+            // scorer = 1;
+            invia_SIG(&lista, SIGUSR1, lista_mutex);                        // Invia segnale ai giocatori
+            int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL); // Crea un nuovo thread per eseguire la funzione
+            if (retvalue != 0)
+            {
+                perror("Errore nella pthread_create dello scorer");
+            }
+        }
+    }
+}
+
+void alarm_hand(int sig){
+    switch (pausa_gioco)
+    {//0 giocando, 1 pausa
+    case 1://è finita la pausa
+        //FINISCE LA PAUSA
+        //ISTANZIO ALLARME
+        alarm(durata_partita);
+        //MANDO LA MATRICE
+        //CAMBIO STATO DI GIOCO
+        pausa_gioco = 0;//metto gioco in gioco
+        printf("allarme partita mandato\ngame on\n");
+        return;
+    
+    case 0://è finita la partita
+        //FINISCE LA PARTITA
+        //RESETTO GIOCO 
+        turno = 0;game_started = 0;pausa_gioco = 1;//metto gioco in pausa
+        //CHIAMO SCORER
+        //LA ALARM SI MANDA DA SOLA nel corpo di prova
+        //DICO A TUTTI I THREAD DI MANDARE PUNTEGGIO ED USERNAME SULLA CODA PROD-CONS -> invia_sig
+        printf("game off\n");
+        break;
     }
 }
 
@@ -624,7 +697,7 @@ int main(int argc, char *argv[]){
     signal(SIGINT, sigint_handler);
     signal(SIGUSR2, sigusr2_classifica);
     // Definizione dei segnali
-    // signal(SIGUSR1, alarm_handler);
+    signal(SIGALRM, alarm_hand);
 
     if (argc < 3)
     {
@@ -672,7 +745,7 @@ int main(int argc, char *argv[]){
     pthread_t gamer;
     int retvalue;
     matrice = generateMatrix();
-    SYST(retvalue, pthread_create(&gamer, NULL, game, NULL), "nella creazione del thread di gioco");
+    SYST(retvalue, pthread_create(&gamer, NULL, prova, NULL), "nella creazione del thread di gioco");
     while (1)
     {
         // Accetta la connessione

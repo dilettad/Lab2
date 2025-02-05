@@ -68,10 +68,6 @@ int username_esiste(listaGiocatori* lista, char *username){
 
 // Funzione per registrazione del cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
-    if (registra_bool == 1) {
-        send_message(client_fd, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
-        return;
-    }
     // Controllo se l'username contiene solo caratteri validi
     if (!controlla_caratteri(username)){
         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
