@@ -392,7 +392,9 @@ void *thread_func(void *args){
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
+            //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
+            utente->username = client_message.data;
             pthread_mutex_unlock(&lista_mutex);
             break;
 
@@ -400,7 +402,7 @@ void *thread_func(void *args){
             if (pausa_gioco == 1 && classifica != NULL)
             {
                 send_message(client_sock, MSG_PUNTI_FINALI, classifica);
-                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
                 send_message(client_sock, MSG_TEMPO_ATTESA, temp);
             }
             else
@@ -436,7 +438,8 @@ void *thread_func(void *args){
             break;
         // Perchè non funziona?
         case MSG_POST_BACHECA:
-         printf("Debug: Ricevuto MSG_POST_BACHECA\n");
+         printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
+
             if (add_message(client_message.data, utente -> username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
@@ -446,8 +449,9 @@ void *thread_func(void *args){
 
         case MSG_SHOW_BACHECA:
             pthread_mutex_lock(&mess);
-            char buffer[1024];
-            bacheca_csv(buffer);
+            //char buffer[1024];
+            //bacheca_csv(buffer);
+            char* buffer = show_bacheca();
             pthread_mutex_unlock(&mess);
             // printf("Debug: Contenuto del buffer:\n%s\n", buffer); // Aggiungi questo messaggio di debug
             send_message(client_sock, MSG_SHOW_BACHECA, buffer);
@@ -606,8 +610,7 @@ void *game(void *arg){
     }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
     Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);
     insert_Trie(Dizionario, "CIAO");
@@ -618,8 +621,8 @@ int main(int argc, char *argv[])
     struct sockaddr_in server_addr;
     // char message [128];
     // Segnale per il SERVER_SHUTDOWN
-     signal(SIGINT, sigint_handler);
-
+    signal(SIGINT, sigint_handler);
+    signal(SIGUSR2, sigusr2_classifica);
     // Definizione dei segnali
     // signal(SIGUSR1, alarm_handler);
 

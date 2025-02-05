@@ -19,15 +19,21 @@ pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
 // Funzione per aggiungere messaggi in bacheca
 int add_message(char* text, char* username){
     pthread_mutex_lock(&mess);
-
+    printf("Aggiungo messaggio\n");
     // Controllo posso inserire il messaggio in quanto < 8 
     if (message_count < MAX_MESSAGES){
         // Aggiungo il messaggio copiandolo
+        printf("Aggiungo messaggio\n");
         strncpy(messages[message_count].text, text, MAX_LENGTH_MESSAGE - 1);
+        printf("Aggiungo messaggio\n");
         messages[message_count].text[MAX_LENGTH_MESSAGE - 1] = '\0';
+        printf("Aggiungo messaggio\n");
         strncpy(messages[message_count].username, username, MAX_LENGTH_USERNAME  - 1);
+        printf("Aggiungo messaggio\n");
         messages[message_count].username[MAX_LENGTH_USERNAME - 1] = '\0';
+        printf("Aggiungo messaggio\n");
         message_count++;
+        printf("Aggiungo messaggio\n");
         pthread_mutex_unlock(&mess);
         return 1; // Successo
     } else {         
@@ -50,12 +56,12 @@ int add_message(char* text, char* username){
 
 
 char* show_bacheca(){
-    pthread_mutex_lock(&mess);
+    //pthread_mutex_lock(&mess);
 
     // Alloca un buffer per la risposta
     char *buffer = malloc(MAX_MESSAGES * 160); // 128 + 32 username + extra
     if (buffer == NULL) {
-        pthread_mutex_unlock(&mess);
+        //pthread_mutex_unlock(&mess);
         return NULL;
     }
 
@@ -68,7 +74,7 @@ char* show_bacheca(){
         strcat(buffer, "\n");
     }
 
-    pthread_mutex_unlock(&mess);
+    //pthread_mutex_unlock(&mess);
     return buffer;
 } 
 
@@ -111,7 +117,7 @@ Message *post_messaggi(int message_count) {
     return read_message;
 }
 
-// Funzione per generare il contenuto della bacheca in formato CSV
+/* Funzione per generare il contenuto della bacheca in formato CSV
 void bacheca_csv(char *filename){
     //Apre il file specificato da 'filename' in modalità scrittura
     FILE *file = fopen(filename, "w");
@@ -130,7 +136,7 @@ void bacheca_csv(char *filename){
     // Chiusura file
     fclose(file); 
 }
-
+*/
 
 //Funzione per liberare i messaggi dalla memoria
 void libera_messaggi(Message * messaggi, int num_messaggi) {

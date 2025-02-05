@@ -158,7 +158,7 @@ void *receiver(void *args)
             break;
 
         case MSG_POST_BACHECA:
-            printf("\nMessaggio postato sulla bacheca:\n");
+            //printf("\nMessaggio postato sulla bacheca:\n");
             printf("Debug: Messaggio ricevuto: %s\n", (char *)received_msg.data);
             printf("%s\n", (char *)received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
