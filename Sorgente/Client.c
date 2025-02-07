@@ -185,7 +185,8 @@ int main(int argc, char *argv[])
     if (argc < 3)
     {
         perror("errore numero parametri input");
-        exit(0);
+        return 0;
+        //exit(0);
     }
     // creazione socket
     SYSC(client_sock, socket(AF_INET, SOCK_STREAM, 0), "Errore nella socket");

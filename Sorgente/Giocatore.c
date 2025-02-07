@@ -21,6 +21,7 @@ void add_client(listaGiocatori* lista, int client_fd, char* username){
     giocatore *new_giocatore = (giocatore *)malloc(sizeof(giocatore));
     new_giocatore->username = strdup(username);
     new_giocatore->client_fd = client_fd;
+    new_giocatore->tid = pthread_self();
     // strcpy(new_giocatore->username, username);
     
     new_giocatore->next = NULL;
