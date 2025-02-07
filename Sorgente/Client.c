@@ -8,6 +8,7 @@
 #include <ctype.h>
 
 
+
 // librerie personali
 #include "../Header/macro.h"
 #include "../Header/Comunicazione.h"
@@ -20,10 +21,8 @@
 #define PORT 8080
 #define BUFFER_SIZE 1024 // Dimensione del buffer
 
-/*TODO*/
-/*
-Aggiungere Segnali, però aspettare il server per farli
-*/
+int durata_partita = 8; // La partita dura 5 minuti quindi 30s
+int durata_pausa = 5;    // La pausa della partita dura 1 minuti
 
 char *ltrim(char *s)
 {
@@ -132,18 +131,26 @@ void *receiver(void *args)
             break;
 
         case MSG_TEMPO_PARTITA:
+            printf("\n Tempo di attesa per la prossima partita: %d\n", durata_partita);
             printf("\n%s\n", received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     
             break;
-
-        case MSG_PUNTI_FINALI:
-            printf("\nClassifica generale:\n");
-            printf("%s\n", (char *)received_msg.data);
+        case MSG_TEMPO_ATTESA:
+            printf("\n Tempo di attesa per la prossima partita: %d\n", durata_pausa);
+            printf("\n%s\n", received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     
             break;
+ 
 
+        case MSG_PUNTI_FINALI:
+            printf("\nClassifica generale:\n");
+            printf("Username:%s, \n tid: %ld\n", (char *)received_msg.data, pthread_self());
+            //printf("Username:%s \n, Punteggio: %d \n, tid: %ld\n", (char *)received_msg.data, punteggio, pthread_self());
+            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            break;
+        
         case MSG_SERVER_SHUTDOWN:
             printf("\n%s\n", received_msg.data);
             exit(EXIT_SUCCESS);

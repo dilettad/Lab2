@@ -11,6 +11,7 @@
 #include "../Header/Lista.h"
 #include "../Header/Comunicazione.h"
 
+
 // Funzione per inviare un messaggio
 void send_message(int client_socket, char type, char *data){
     int retvalue;
