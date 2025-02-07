@@ -158,7 +158,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_
     giocatore* current = lista->head;
     while (current != NULL){
         if (pthread_equal(current->tid, tid)){                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
-            send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
+            //send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
             char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
             send_message(current -> client_fd, MSG_TEMPO_ATTESA, temp);
             free(temp);
@@ -446,7 +446,7 @@ void *scorer(){
     // pthread_mutex_lock(&lista_mutex);
     // Ciclo per raccogliere i risultati        
     for (int i = 0; current != NULL && i < num_giocatori; i++){
-        scorerVector[i].username = strdup(current->username); // copia l'username
+        scorerVector[i].username = strdup(current->username); // copia l'usernamej
         scorerVector[i].punteggio = current->punteggio;       // Copia punteggio
         scorerVector[i].tid = current->tid;                   // Copia tid
         current = current->next;                              // Passa al prossimo giocatore
@@ -462,7 +462,8 @@ void *scorer(){
     classifica[0] = '\0';
     char msg[256];
     for (int i = 0; i < num_giocatori; i++){
-        sprintf(msg, "%s %d %ld\n", scorerVector[i].username, scorerVector[i].punteggio, scorerVector[i].tid);
+        snprintf(msg, sizeof(msg), "%s %d %ld\n", scorerVector[i].username, punteggio, scorerVector[i].tid);
+        // printf("%s \n", msg);
         // strcat(classifica, msg, strlen(classifica) - 1 );
         strcat(classifica, msg);
         if (i < num_giocatori - 1){
@@ -470,7 +471,7 @@ void *scorer(){
         }
     }
     //strcat(classifica, "\0");
-    printf("Vincitore: %s  con %d punti, tid: %ld\n", scorerVector[0].username, punteggio, scorerVector[0].tid);
+    printf("Vincitore: %s con %d punti, tid: %ld\n", scorerVector[0].username, punteggio, scorerVector[0].tid);
     pthread_mutex_unlock(&classifica_mutex);
 
     for (int i = 0; i < num_giocatori; i++){
@@ -483,6 +484,7 @@ void *scorer(){
     pthread_mutex_lock(&lista_mutex);
     current = lista.head;
     pthread_mutex_unlock(&lista_mutex);
+    printf("\n\n\n %s\n\n\n", classifica);
     // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
     // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
     for (int i = 0; i < num_giocatori && current != NULL; i++){
