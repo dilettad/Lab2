@@ -175,6 +175,36 @@ int compare_score(const void *a, const void *b){
     return playerB->punteggio - playerA->punteggio; // Confronto punteggi in ordine decrescente
 }
 
+// Funzione per gestire i punteggio, cercando il giocatore nella lista basandosi sul tid
+int prendi_punteggi(listaGiocatori* lista, pthread_t tid){
+    pthread_mutex_lock(&lista_mutex);
+    giocatore *current = lista->head;
+    while(current != NULL){
+        if (pthread_equal(current -> tid, tid)){
+            int punteggio =  current->punteggio;
+            pthread_mutex_unlock(&lista_mutex);
+            return punteggio;
+        }
+        current = current->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+    return -1;
+}
+
+//Funzione per trovare giocatore
+giocatore* trova_giocatore(listaGiocatori* lista, pthread_t tid) {
+    giocatore* corrente = lista->head;
+    
+    while (corrente != NULL) {
+        if (pthread_equal(corrente->tid, tid)) {
+            return corrente;  // Giocatore trovato, restituisco il puntatore
+        }
+        corrente = corrente->next;
+    }
+    
+    return NULL;  // Giocatore non trovato
+}
+
 
 // HANDLER DEI SEGNALI
 // Funzione di invio segnali a tutti i giocatori della lista
@@ -259,9 +289,6 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE T
 // SOCKET
 //  Funzione del thread
 void *thread_func(void *args){
-
-    // Francesco: Aggiungere ad una lista il client con il suo fd
-
     // Dichiara un puntatore per il valore di ritorno
     int client_sock = *(int *)args;
 
@@ -272,16 +299,14 @@ void *thread_func(void *args){
     utente->next = NULL;
     utente->thread_id = pthread_self();
     push(clients, utente);
-    int registra_bool = 0;
+    //int registra_bool = 0;
 
     int retvalue;
 
-    while (1)
-    {
+    while (1){
         message client_message = receive_message(client_sock);
         writef(retvalue, client_message.data);
-        switch (client_message.type)
-        {
+        switch (client_message.type){
         case MSG_MATRICE:
             pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
@@ -323,24 +348,38 @@ void *thread_func(void *args){
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                 else{
                     printf("Aggiungo la parola alla lista delle parole trovate \n");
-                    // Aggiungo la parola alla lista delle parole trovate
-                    listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); // DA SISTEMARE LA LISTA
-                    //int puntiparola = strlen(client_message.data);
+                    listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
+                    // Recupero il punteggio del giocatore attuale
+                    int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
+                    if(punteggio_corrente == -1){
+                        printf("Errore: giocatore non trovato\n");
+                        send_message(client_sock, MSG_ERR, "Errore nel recupero del punteggio");
+                        pthread_mutex_unlock(&pausa_gioco_mutex);
+                        break;
+                    }
+                    int punti_parola = strlen(client_message.data);
                     printf("Punti parola \n");
                     // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
                     if (strstr(client_message.data, "Qu")){
-                        //puntiparola--;
                         printf("Sottrai \n");
+                        punti_parola -= 1;
                     }
+                    pthread_mutex_lock(&lista_mutex);
+                    giocatore* player = trova_giocatore(&lista, pthread_self());
+                    if (player != NULL){
+                        player -> punteggio += punti_parola;
+                    }
+                    pthread_mutex_unlock(&lista_mutex);
+                    //punteggio_corrente += punti_parola;
                     // Invio i punti della parola
                     char messaggiopuntiparola[90];
                     printf("Punti inviati %ld \n",strlen(client_message.data));
                     sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %ld punti", strlen(client_message.data));
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
                     //sprintf("Punteggio inviato \n", messaggiopuntiparola);
-                    printf("Punteggio inviato \n");
-                    punteggio += strlen(client_message.data); 
-                    printf("Il punteggio attuale è %d \n", punteggio); // Nel server visualizzo i punti totali
+                    printf("Punteggio inviato: %d\n", punti_parola);
+                    //punteggio += strlen(client_message.data); 
+                    printf("Il punteggio attuale è %d \n", punteggio_corrente); // Nel server visualizzo i punti totali
                     fflush(0);
                 }
             } else {
@@ -480,8 +519,9 @@ void *scorer() {
 
     for (int i = 0; i < num_giocatori; i++) {
         const char *username_safe = scorerVector[i]->username ? scorerVector[i]->username : "Sconosciuto";
+        int punteggio_corrente =  prendi_punteggi(&lista, scorerVector[i]->tid);
         int written = snprintf(classifica + offset, max_length - offset, 
-            "%d. %s - %d punti\n", i + 1, username_safe, punteggio);
+            "%d. %s - %d punti\n", i + 1, username_safe, punteggio_corrente);
 
         if (written < 0 || written >= max_length - offset) {
             printf("Errore nella generazione della classifica\n");
