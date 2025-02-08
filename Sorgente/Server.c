@@ -352,15 +352,15 @@ void *thread_func(void *args){
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
-            if (registra_bool == 1) {
-                send_message(client_sock, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
-                continue;
-            }
+            //if (registra_bool == 1) {
+              //  send_message(client_sock, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
+              //  continue;
+            //}
             pthread_mutex_lock(&lista_mutex);
             //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
             utente->username = client_message.data;
-            registra_bool = 1;
+            //registra_bool = 1;
             pthread_mutex_unlock(&lista_mutex);
             break;
 
@@ -433,6 +433,7 @@ void *thread_func(void *args){
 }
 
 void *scorer() {
+    //memset(classifica,0,strlen(classifica));
     printf("Scorer in esecuzione\n");
 
     pthread_mutex_lock(&lista_mutex);
@@ -480,7 +481,7 @@ void *scorer() {
     for (int i = 0; i < num_giocatori; i++) {
         const char *username_safe = scorerVector[i]->username ? scorerVector[i]->username : "Sconosciuto";
         int written = snprintf(classifica + offset, max_length - offset, 
-            "%d. %s-%d punti\n", i + 1, username_safe, punteggio);
+            "%d. %s - %d punti\n", i + 1, username_safe, punteggio);
 
         if (written < 0 || written >= max_length - offset) {
             printf("Errore nella generazione della classifica\n");
