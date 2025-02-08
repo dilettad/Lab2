@@ -92,6 +92,7 @@ void *receiver(void *args)
         {
 
         case MSG_OK:
+            //phread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             fflush(0);
@@ -147,7 +148,7 @@ void *receiver(void *args)
         case MSG_PUNTI_FINALI:
             printf("\nClassifica generale:\n");
             //printf("%s\n", received_msg.data);
-            printf("Username:%s, tid: %ld\n", (char *)received_msg.data, pthread_self());
+            printf("%s,%ld\n", (char *)received_msg.data, pthread_self());
             //printf("Username:%s \n, Punteggio: %d \n, tid: %ld\n", (char *)received_msg.data, punteggio, pthread_self());
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             break;

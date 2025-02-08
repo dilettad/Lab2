@@ -152,17 +152,17 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
 }
 
 // Funzione di invio classifica ai giocatori
-void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_mutex, char *classifica, time_t tempo_iniziale, int durata_pausa){
+void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time_t tempo_iniziale, int durata_pausa){
     pthread_mutex_lock(&lista_mutex);
     // Inizializza un puntatore alla testa della lista
     giocatore* current = lista->head;
     while (current != NULL){
-        if (pthread_equal(current->tid, tid)){                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
-            //send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
+        //if (pthread_equal(current->tid, tid)){                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
+            send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
             char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
             send_message(current -> client_fd, MSG_TEMPO_ATTESA, temp);
             free(temp);
-        }
+        //}
         current = current->next; // Passo al giocatore successivo
     }
     pthread_mutex_unlock(&lista_mutex);
@@ -172,7 +172,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, pthread_mutex_t lista_
 int compare_score(const void *a, const void *b){
     giocatore *playerA = (giocatore *)a;              // Puntatore a convertito in un puntatore della struttura giocatore
     giocatore *playerB = (giocatore *)b;              // Puntatore b convertito in un puntatore della struttura giocatore
-    return (playerB->punteggio - playerA->punteggio); // Confronto punteggi in ordine decrescente
+    return playerB->punteggio - playerA->punteggio; // Confronto punteggi in ordine decrescente
 }
 
 
@@ -403,7 +403,7 @@ void *thread_func(void *args){
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
-        // Perchè non funziona?
+        
         case MSG_POST_BACHECA:
          printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
 
@@ -432,224 +432,150 @@ void *thread_func(void *args){
     }
 }
 
-void *scorer(){
+void *scorer() {
     printf("Scorer in esecuzione\n");
-    //signal(SIGUSR2, sigusr2_classifica_handler);
-    // Prendo il numero di giocatori registrati
+
     pthread_mutex_lock(&lista_mutex);
     int num_giocatori = lista.count;
     pthread_mutex_unlock(&lista_mutex);
 
-    giocatore scorerVector[MAX_CLIENTS];
-    giocatore *current = lista.head;
-
-    // pthread_mutex_lock(&lista_mutex);
-    // Ciclo per raccogliere i risultati        
-    for (int i = 0; current != NULL && i < num_giocatori; i++){
-        scorerVector[i].username = strdup(current->username); // copia l'usernamej
-        scorerVector[i].punteggio = current->punteggio;       // Copia punteggio
-        scorerVector[i].tid = current->tid;                   // Copia tid
-        current = current->next;                              // Passa al prossimo giocatore
+    if (num_giocatori == 0) {
+        printf("Nessun giocatore registrato.\n");
+        return NULL;
     }
-    printf("Scorer: %d giocatori registrati\n", num_giocatori);
-    //pthread_mutex_unlock(&lista_mutex);
 
-    // Ordinamento dei risultati
-    qsort(scorerVector, num_giocatori, sizeof(giocatore), compare_score);
+    giocatore **scorerVector = malloc(num_giocatori * sizeof(giocatore *));
+    if (!scorerVector) {
+        printf("Errore di allocazione memoria\n");
+        return NULL;
+    }
+
+    pthread_mutex_lock(&lista_mutex);
+    giocatore *current = lista.head;
+    for (int i = 0; i < num_giocatori; i++) {
+        scorerVector[i] = current;
+        current = current->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+
+    qsort(scorerVector, num_giocatori, sizeof(giocatore *), compare_score);
 
     pthread_mutex_lock(&classifica_mutex);
-    classifica = (char *)malloc(1024 * sizeof(char));
-    classifica[0] = '\0';
-    char msg[256];
-    for (int i = 0; i < num_giocatori; i++){
-        snprintf(msg, sizeof(msg), "%s %d %ld\n", scorerVector[i].username, punteggio, scorerVector[i].tid);
-        // printf("%s \n", msg);
-        // strcat(classifica, msg, strlen(classifica) - 1 );
-        strcat(classifica, msg);
-        if (i < num_giocatori - 1){
-            strcat(classifica, ",");
-        }
+    int max_length = 1024;
+    classifica = malloc(max_length);
+    if (!classifica) {
+        printf("Errore di allocazione memoria per classifica\n");
+        free(scorerVector);
+        pthread_mutex_unlock(&classifica_mutex);
+        return NULL;
     }
-    //strcat(classifica, "\0");
-    printf("Vincitore: %s con %d punti, tid: %ld\n", scorerVector[0].username, punteggio, scorerVector[0].tid);
+
+    int offset = 0;
+    for (int i = 0; i < num_giocatori; i++) {
+        int written = snprintf(classifica + offset, max_length - offset,
+                               "%d. %s %d\n", i + 1, scorerVector[i]->username, punteggio);
+        offset += written;
+        if (offset >= max_length) break;
+    }
     pthread_mutex_unlock(&classifica_mutex);
 
-    for (int i = 0; i < num_giocatori; i++){
-        free(scorerVector[i].username);
-    }
-    printf("Classifica pronta. %d giocatori registrati.\n", num_giocatori);
-    // Invio segnale a tutti i thread giocatori notificandoli che possono prelevare la classifica
-    invia_SIG(&lista, SIGUSR2, lista_mutex);
-    printf("Scorer terminato\n");
+    printf("Classifica generata:\n%s\n", classifica);
+
     pthread_mutex_lock(&lista_mutex);
     current = lista.head;
     pthread_mutex_unlock(&lista_mutex);
-    printf("\n\n\n %s\n\n\n", classifica);
-    // pthread_cond_broadcast(&classifica_mutex); // Notifico che la classifica è pronta
-    // fai un for e invia ad ogni giocatore la classifica usando sendClassifica
-    for (int i = 0; i < num_giocatori && current != NULL; i++){
-        sendClassifica(&lista, current->tid, lista_mutex, classifica, tempo_iniziale, durata_pausa);
-       // if (current -> next != NULL){
-            current = current -> next;
-    }
-    //pthread_mutex_unlock(&lista_mutex);
+
+    time_t tempo_iniziale = time(NULL);
+    int durata_pausa = 30;
+    sendClassifica(&lista, current->tid, classifica, tempo_iniziale, durata_pausa);
+
+    pthread_mutex_lock(&classifica_mutex);
     free(classifica);
-    printf("Classifica inviata\n");
+    pthread_mutex_unlock(&classifica_mutex);
+    
+    free(scorerVector);
+    printf("Classifica inviata a tutti i giocatori.\n");
     return NULL;
-    printf("SCORER STAMPA TUTTO\n");
 }
 
-// GESTISCE DEL GIOCO -> DILETTA
-/* void *game(void *arg){
-    int round = 0;
-    while (1)
-    {
-        if (lista.count == 0)
-        {
-            printf("Nessun giocatore registrato, attesa...\n");
-            // ATTESA FINO A QUANDO NON SI REGISTRA UN NUOVO GIOCATORE
 
-            while (lista.count == 0)
-            {
-                //sleep(1);
-            }
-        }
+/* Funzione principale dello scorer
+void *scorer() {
+    printf("Scorer in esecuzione\n");
 
-        // Inizia la pausa
-        printf("La partita è in pausa, inizierà tra: %d secondi\n", durata_pausa);
-        alarm(durata_pausa);
-        printf("allarme pausa mandato\n");
-        printf("Sono nel thread del gioco \n");
-        // SE IL ROUND NON è STATO PREPARATO ALLORA LO PREPARA
-        if (round == 0)
-        {
+    pthread_mutex_lock(&lista_mutex);
+    int num_giocatori = lista.count;
+    pthread_mutex_unlock(&lista_mutex);
 
-            // Blocco per accedere alla matrice di gioco
-            FILE *file = fopen("../Matrici.txt", "rb"); //
-             if (file == NULL)
-            {
-                perror("Errore nell'apertura del file");
-                return NULL;  
-            } 
-            //cella **matrice = generateMatrix();
-            Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
-            fclose(file);
-            round = 1;
-        }
-
-        // INIZIA IL GIOCO
-        time(&tempo_iniziale);
-        struct tm* timeinfo = localtime(&tempo_iniziale);
-      
-        char* orario_completo = asctime(timeinfo);
-          char orario[9];
-         for (int i = 0; i < 8; i++) {
-         orario[i] = orario_completo[11 + i];
-        }
-        orario[8] = '\0';
-        
-        snprintf(orario, sizeof(orario), "%.8s", orario_completo + 11);
-
-        // sleep(durata_partita);
-        printf("-----------------------------------------------------------------------\n");
-        //printf("La partita è iniziata alle %ld:%d:%ld con %d giocatori\n", tempo_iniziale,  lista.count);
-        printf("La partita è iniziata alle %s con %d giocatori\n",orario_completo, lista.count);
-        
-
-        // INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
-        pthread_mutex_lock(&lista_mutex);
-        giocatore *current = lista.head;
-        while (current != NULL)
-        {
-            invio_matrice(current->client_fd, matrice);
-            char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-            send_message(current->client_fd, MSG_TEMPO_PARTITA, temp);
-            printf("Inviato a giocatore %d\n", current->client_fd);
-            fflush(0);
-
-            printf("%s\n", temp);
-            free(temp);
-            current = current->next;
-        
-        }
-        pthread_mutex_unlock(&lista_mutex);
-       
-        alarm(durata_partita);
-        printf("allarme partita mandato\n");
-
-        // partita terminata e quindi inviare punteggi classifiche ecc ecc ecec ec ec e c ec e c ece c ne ce c e ce
-
-        // fai partire il thread dello scorer usando pthread_create
-
-        // NOTIFICA CHE IL ROUND PREPARATO È STATO UTILIZZATO E QUINDI BISOGNA PREPARARNE UNO NUOVO
-        round = 0;
+    if (num_giocatori == 0) {
+        printf("Nessun giocatore registrato.\n");
+        return NULL;
     }
-} */
 
-
-
-/* // GAME LOGICA MATTEO
-void* game(){
-    int turn = 0;
-    while(1){
-        //ho prepareto il turno?
-        if(turno == 0){
-            // Blocco per accedere alla matrice di gioco
-            FILE *file = fopen("../Matrici.txt", "rb"); //
-             if (file == NULL)
-            {
-                perror("Errore nell'apertura del file");
-                return NULL;  
-            } 
-            //cella **matrice = generateMatrix();
-            Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
-            fclose(file);
-            turno = 1;
-            turn++;
-        }
-        //posso partire?
-        if(lista.count<=0){
-            printf("Nessun giocatore registrato, attesa ...\n");
-            while (lista.count <= 0){
-               time(&tempo_iniziale);
-            } 
-         continue;
-        }
-       signal (SIGALRM, alarm_handler);
-
-        parto
-        if(game_started == 0){
-            alarm(durata_pausa);
-            game_started = 1;//ho fatto iniziare il conteggio per finire la pausa
-            pausa_gioco = 1;//metto gioco in pausa
-            printf("allarme pausa mandato\n");
-            time(&tempo_iniziale);
-            struct tm* timeinfo = localtime(&tempo_iniziale);
-            char* orario_completo = asctime(timeinfo);
-            char orario[9];
-            snprintf(orario, sizeof(orario), "%.8s", orario_completo + 11);
-            printf("La partita è iniziata alle %s con %d giocatori\n",orario_completo, lista.count);
-            pthread_mutex_lock(&lista_mutex);
-            giocatore *current = lista.head;
-            while (current != NULL){
-                invio_matrice(current->client_fd, matrice);
-                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
-                send_message(current->client_fd, MSG_TEMPO_ATTESA, temp);
-                printf("Inviato a giocatore %d\n", current->client_fd);
-                fflush(0);
-                printf("%s\n", temp);
-                free(temp);
-                current = current->next;
-            }
-            pthread_mutex_unlock(&lista_mutex);
-            alarm(durata_partita);
-            printf("allarme partita mandato\n");
-            printf("il turno e': %d\n",turn);
-            turno = 1;
-        }
+    // Creazione array per ordinamento
+    giocatore *scorerVector = malloc(num_giocatori * sizeof(giocatore*));
+    if (!scorerVector) {
+        printf("Errore di allocazione memoria\n");
+        return NULL;
     }
-}
-*/
+
+    pthread_mutex_lock(&lista_mutex);
+    giocatore *current = lista.head;
+
+    for (int i = 0; current != NULL && i < num_giocatori; i++) {
+        scorerVector[i].username = strdup(current->username);
+        scorerVector[i].punteggio = current->punteggio;
+        scorerVector[i].tid = current->tid;
+        current = current->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+
+    qsort(scorerVector, num_giocatori, sizeof(giocatore *), compare_score);
+
+    pthread_mutex_lock(&classifica_mutex);
+    classifica = malloc(1024);
+    if (!classifica) {
+        printf("Errore di allocazione memoria per classifica\n");
+        free(scorerVector);
+        pthread_mutex_unlock(&classifica_mutex);
+        return NULL;
+    }
+    // DEVO CAMBIARE QUALCOSA
+    classifica[0] = '\0';  // Inizializza stringa vuota
+    char msg[256];
+    for (int i = 0; i < num_giocatori; i++) {
+        snprintf(msg, sizeof(msg), "%d. %s %d\n", i + 1, scorerVector[i].username, scorerVector[i].punteggio);
+        strcat(classifica, msg);
+    }
+    pthread_mutex_unlock(&classifica_mutex);
+    printf("Classifica generata:\n%s\n", classifica);
+    
+
+    for (int i = 0; i < num_giocatori; i++) {
+        free(scorerVector[i].username);
+    }
+    free(scorerVector);
+
+    // Invio della classifica a tutti i giocatori
+    pthread_mutex_lock(&lista_mutex);
+    current = lista.head;
+    pthread_mutex_unlock(&lista_mutex);
+
+    time_t tempo_iniziale = time(NULL);
+    int durata_pausa = 30;
+
+    while (current != NULL) {
+        sendClassifica(&lista, current->tid, classifica, tempo_iniziale, durata_pausa);
+        current = current->next;
+    }
+
+    pthread_mutex_lock(&classifica_mutex);
+    free(classifica);
+    pthread_mutex_unlock(&classifica_mutex);
+
+    printf("Classifica inviata a tutti i giocatori.\n");
+    return NULL;
+}*/
 
 void *game(void *arg){
     int round = 0;
@@ -705,7 +631,7 @@ void *game(void *arg){
         snprintf(orario, sizeof(orario), "%.8s", orario_completo + 11);
         alarm(durata_partita);
         printf("-----------------------------------------------------------------------\n");
-        printf("la partita è iniziata alle %s con %d giocatori\n", orario_completo, lista.count);
+        printf("La partita è iniziata alle %s con %d giocatori\n", orario_completo, lista.count);
         
         //INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
         pthread_mutex_lock(&lista_mutex);
@@ -770,7 +696,7 @@ int main(int argc, char *argv[]){
     Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);
     //insert_Trie(Dizionario, "CIAO");
-    
+ 
     //printf("ciao %d\n", search_Trie("CIAO", Dizionario));
     //Print_Trie();
     int server_sock;
