@@ -204,6 +204,7 @@ void sigusr2_classifica_handler(int sig){
     }
     pthread_mutex_unlock(&lista_mutex);
     printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
+    pthread_create(&scorer_tid, NULL, scorer, NULL);
     //sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_partita);
     //pthread_mutex_unlock(&lista_mutex);
 }
@@ -365,8 +366,7 @@ void *thread_func(void *args){
 
         case MSG_PUNTI_FINALI:
             pthread_mutex_lock(&pausa_gioco_mutex);
-            if (pausa_gioco == 1 && classifica != NULL)
-            {
+            if (pausa_gioco == 1 && classifica != NULL){
                 send_message(client_sock, MSG_PUNTI_FINALI, classifica);
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
                 send_message(client_sock, MSG_TEMPO_ATTESA, temp);
@@ -444,6 +444,7 @@ void *scorer() {
         return NULL;
     }
 
+    // Alloca array di puntatori per i giocatori
     giocatore **scorerVector = malloc(num_giocatori * sizeof(giocatore *));
     if (!scorerVector) {
         printf("Errore di allocazione memoria\n");
@@ -453,13 +454,16 @@ void *scorer() {
     pthread_mutex_lock(&lista_mutex);
     giocatore *current = lista.head;
     for (int i = 0; i < num_giocatori; i++) {
+        if (current == NULL) break;
         scorerVector[i] = current;
         current = current->next;
     }
     pthread_mutex_unlock(&lista_mutex);
 
+    // Ordina i giocatori per punteggio
     qsort(scorerVector, num_giocatori, sizeof(giocatore *), compare_score);
 
+    // Costruzione della classifica
     pthread_mutex_lock(&classifica_mutex);
     int max_length = 1024;
     classifica = malloc(max_length);
@@ -470,33 +474,28 @@ void *scorer() {
         return NULL;
     }
 
+    classifica[0] = '\0';
     int offset = 0;
+
     for (int i = 0; i < num_giocatori; i++) {
-        int written = snprintf(classifica + offset, max_length - offset,
-                               "%d. %s %d\n", i + 1, scorerVector[i]->username, punteggio);
+        const char *username_safe = scorerVector[i]->username ? scorerVector[i]->username : "Sconosciuto";
+        int written = snprintf(classifica + offset, max_length - offset, 
+            "%d. %s-%d punti\n", i + 1, username_safe, punteggio);
+
+        if (written < 0 || written >= max_length - offset) {
+            printf("Errore nella generazione della classifica\n");
+            break;
+        }
         offset += written;
-        if (offset >= max_length) break;
     }
     pthread_mutex_unlock(&classifica_mutex);
 
     printf("Classifica generata:\n%s\n", classifica);
 
-    pthread_mutex_lock(&lista_mutex);
-    current = lista.head;
-    pthread_mutex_unlock(&lista_mutex);
-
-    time_t tempo_iniziale = time(NULL);
-    int durata_pausa = 30;
-    sendClassifica(&lista, current->tid, classifica, tempo_iniziale, durata_pausa);
-
-    pthread_mutex_lock(&classifica_mutex);
-    free(classifica);
-    pthread_mutex_unlock(&classifica_mutex);
-    
     free(scorerVector);
-    printf("Classifica inviata a tutti i giocatori.\n");
     return NULL;
 }
+
 
 
 /* Funzione principale dello scorer
@@ -682,10 +681,12 @@ void alarm_handler(int sig){
         if (lista.count > 0){
             invia_SIG(&lista, SIGUSR2, lista_mutex);
             printf("Invio segnale SIGUSR2\n");
-            int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL);
-            if (retvalue != 0){
-                perror("Errore nella pthread_create dello scorer");
-            }
+            //int retvalue = pthread_create(&scorer_tid, NULL, scorer, NULL);
+            //if (retvalue != 0){
+            //    perror("Errore nella pthread_create dello scorer");
+            //}
+        } else {
+            printf("Nessun giocatore registrato, niente SIGUSR2 \n");
         }
         printf("Il gioco è terminato\n");
         break;
