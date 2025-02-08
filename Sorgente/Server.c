@@ -158,7 +158,9 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
     giocatore* current = lista->head;
     while (current != NULL){
         //if (pthread_equal(current->tid, tid)){                                                                   // Controllo ID del thread del giocatore uguale all'ID del thread passato come parametro
-            send_message(current->client_fd, MSG_PUNTI_FINALI, classifica); // Invia la classifica finale al fd del giocatore
+            char msg[BUFFER_SIZE];
+            snprintf(msg, BUFFER_SIZE, "%s, Il tuo punteggio: %d", classifica, prendi_punteggi(lista, current->tid));
+            send_message(current->client_fd, MSG_PUNTI_FINALI, msg); // Invia la classifica finale al fd del giocatore
             char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
             send_message(current -> client_fd, MSG_TEMPO_ATTESA, temp);
             free(temp);
@@ -305,7 +307,7 @@ void *thread_func(void *args){
         writef(retvalue, client_message.data);
         switch (client_message.type){
         case MSG_MATRICE:
-            pthread_mutex_lock(&pausa_gioco_mutex);
+            //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
                 // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
                 stampaMatrice(matrice); 
@@ -318,11 +320,11 @@ void *thread_func(void *args){
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
                 send_message(client_sock, MSG_TEMPO_ATTESA, temp);
             }
-            pthread_mutex_unlock(&pausa_gioco_mutex);
+            //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
         case MSG_PAROLA:
-            pthread_mutex_lock(&pausa_gioco_mutex);
+           //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
                 Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
@@ -351,7 +353,7 @@ void *thread_func(void *args){
                     if(punteggio_corrente == -1){
                         printf("Errore: giocatore non trovato\n");
                         send_message(client_sock, MSG_ERR, "Errore nel recupero del punteggio");
-                        pthread_mutex_unlock(&pausa_gioco_mutex);
+                        //pthread_mutex_unlock(&pausa_gioco_mutex);
                         break;
                     }
                     int punti_parola = strlen(client_message.data);
@@ -383,7 +385,7 @@ void *thread_func(void *args){
                 // Invio il messaggio di errore
                 send_message(client_sock, MSG_ERR, "Gioco in pausa!");
             }
-            pthread_mutex_unlock(&pausa_gioco_mutex);
+            //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
@@ -401,7 +403,7 @@ void *thread_func(void *args){
             break;
 
         case MSG_PUNTI_FINALI:
-            pthread_mutex_lock(&pausa_gioco_mutex);
+            //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 1 && classifica != NULL){
                 send_message(client_sock, MSG_PUNTI_FINALI, classifica);
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
@@ -411,7 +413,7 @@ void *thread_func(void *args){
             {
                 send_message(client_sock, MSG_ERR, "Classifica non disponibile");
             }
-            pthread_mutex_unlock(&pausa_gioco_mutex);
+            //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
         case MSG_FINE:
@@ -441,8 +443,7 @@ void *thread_func(void *args){
             break;
         
         case MSG_POST_BACHECA:
-         printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
-
+         //printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
             if (add_message(client_message.data, utente -> username)){
                 send_message(client_sock, MSG_OK, "Messaggio postato con successo");
             } else {
@@ -452,11 +453,8 @@ void *thread_func(void *args){
 
         case MSG_SHOW_BACHECA:
             pthread_mutex_lock(&mess);
-            //char buffer[1024];
-            //bacheca_csv(buffer);
             char* buffer = show_bacheca();
             pthread_mutex_unlock(&mess);
-            // printf("Debug: Contenuto del buffer:\n%s\n", buffer); // Aggiungi questo messaggio di debug
             send_message(client_sock, MSG_SHOW_BACHECA, buffer);
         break; 
         
@@ -575,7 +573,7 @@ void *game(void *arg){
         }
         //FINE ATTESA
 
-        //SE ALLA FINE DELLA PAUSA NON CI SONO GIOCATORI REGISTRATI, SI RIPETE IL CICLO DA CAPO E SI ATTENDONO NUOVI GIOCATPORI, MANTENENDO IL ROUND GIÀ PREPARATO
+        //SE ALLA FINE DELLA PAUSA NON CI SONO GIOCATORI REGISTRATI, SI RIPETE IL CICLO DA CAPO E SI ATTENDONO NUOVI GIOCATORI, MANTENENDO IL ROUND GIÀ PREPARATO
         if(lista.count == 0){
             pausa_gioco = 1;
             continue;

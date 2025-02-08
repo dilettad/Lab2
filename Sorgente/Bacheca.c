@@ -19,21 +19,13 @@ pthread_mutex_t mess = PTHREAD_MUTEX_INITIALIZER;
 // Funzione per aggiungere messaggi in bacheca
 int add_message(char* text, char* username){
     pthread_mutex_lock(&mess);
-    printf("Aggiungo messaggio\n");
     // Controllo posso inserire il messaggio in quanto < 8 
     if (message_count < MAX_MESSAGES){
-        // Aggiungo il messaggio copiandolo
-        printf("Aggiungo messaggio\n");
         strncpy(messages[message_count].text, text, MAX_LENGTH_MESSAGE - 1);
-        printf("Aggiungo messaggio\n");
         messages[message_count].text[MAX_LENGTH_MESSAGE - 1] = '\0';
-        printf("Aggiungo messaggio\n");
         strncpy(messages[message_count].username, username, MAX_LENGTH_USERNAME  - 1);
-        printf("Aggiungo messaggio\n");
         messages[message_count].username[MAX_LENGTH_USERNAME - 1] = '\0';
-        printf("Aggiungo messaggio\n");
         message_count++;
-        printf("Aggiungo messaggio\n");
         pthread_mutex_unlock(&mess);
         return 1; // Successo
     } else {         
@@ -81,9 +73,6 @@ char* show_bacheca(){
 
 Message *post_messaggi(int message_count) {
     pthread_mutex_lock(&mess);
-
-    // Alloco memoria per l'array di messaggi da restituire
-    // Message* read_message = (Message*)malloc(message_count * sizeof(Message));
     Message* read_message = malloc(message_count * sizeof(Message));
 
     // Controllo se già letti
@@ -94,19 +83,6 @@ Message *post_messaggi(int message_count) {
 
     // Inserisco i messaggi 
     for (int i = 0; i < message_count; i++) {
-        // read_message[i].text = malloc(strlen(messages[i].text) + 1);
-        // read_message[i].username = malloc(strlen(messages[i].username) + 1);
-        /*
-        if (read_message[i].text == NULL || read_message[i].username == NULL) {
-            // Gestire l'errore di allocazione
-            for (int j = 0; j < i; j++) {
-                free(read_message[j].text);
-                free(read_message[j].username);
-            }
-            free(read_message);
-            pthread_mutex_unlock(&mess);
-            return NULL;
-        } */
         strncpy(read_message[i].text, messages[i].text, MAX_LENGTH_MESSAGE - 1);
         read_message[i].text[MAX_LENGTH_MESSAGE - 1] = '\0';
         strncpy(read_message[i].username, messages[i].username, 32 - 1);

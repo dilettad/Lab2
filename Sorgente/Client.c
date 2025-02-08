@@ -132,7 +132,7 @@ void *receiver(void *args)
             break;
 
         case MSG_TEMPO_PARTITA:
-            printf("\n Tempo di attesa per la prossima partita: %d\n", durata_partita);
+            //printf("\n Tempo di attesa per la prossima partita: %d\n", durata_partita);
             printf("\n%s\n", received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     
@@ -146,10 +146,10 @@ void *receiver(void *args)
  
 
         case MSG_PUNTI_FINALI:
-            printf("\nClassifica generale:\n");
-            //printf("%s\n", received_msg.data);
-            printf("%s,%ld\n", (char *)received_msg.data, pthread_self());
-            //printf("Username:%s \n, Punteggio: %d \n, tid: %ld\n", (char *)received_msg.data, punteggio, pthread_self());
+            printf("\nClassifica generale e punteggio personale ricevuti:\n");
+            printf("%s\n", received_msg.data);
+            //printf("%s,%ld\n", (char *)received_msg.data, pthread_self());
+            //printf("Username:%s \n, Punteggio: %d \n, tid: %ld\n", (char *)received_msg.data, punteggio_corrente, pthread_self());
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
             break;
         
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
             send_message(client_sock, MSG_SHOW_BACHECA, input);
         }
 
-
+// SE FACCIO LA TOKENIZZAZIONE PUO PRENDERMI IN MODO ERRATO IL MESSAGGIO?
         else if (strncmp(input, "msg", 3) == 0){
             token = strtok(input, " ");
             token = strtok(NULL, " ");
