@@ -170,8 +170,8 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
 
 // Funzione per confrontare i punteggi dei giocatori -> qsort
 int compare_score(const void *a, const void *b){
-    giocatore *playerA = (giocatore *)a;              // Puntatore a convertito in un puntatore della struttura giocatore
-    giocatore *playerB = (giocatore *)b;              // Puntatore b convertito in un puntatore della struttura giocatore
+    giocatore *playerA = *(giocatore **)a;              // Puntatore a convertito in un puntatore della struttura giocatore
+    giocatore *playerB = *(giocatore **)b;              // Puntatore b convertito in un puntatore della struttura giocatore
     return playerB->punteggio - playerA->punteggio; // Confronto punteggi in ordine decrescente
 }
 
@@ -221,7 +221,6 @@ void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
     pthread_mutex_unlock(&lista_mutex);
 }
 
-
 // Funzione per invio della classifica
 void sigusr2_classifica_handler(int sig){
     printf("Gestore del segnale SIGUSR2 chiamato \n");
@@ -238,8 +237,6 @@ void sigusr2_classifica_handler(int sig){
     //sendClassifica(&lista, pthread_self(), lista_mutex, classifica, tempo_iniziale, durata_partita);
     //pthread_mutex_unlock(&lista_mutex);
 }
-
-
 
 // Funzione per la chiusura del server -> FUNZIONA
 void sigint_handler(int sig){
@@ -503,6 +500,7 @@ void *scorer() {
     // Ordina i giocatori per punteggio
     qsort(scorerVector, num_giocatori, sizeof(giocatore *), compare_score);
 
+
     // Costruzione della classifica
     pthread_mutex_lock(&classifica_mutex);
     int max_length = 1024;
@@ -536,86 +534,6 @@ void *scorer() {
     free(scorerVector);
     return NULL;
 }
-
-
-
-/* Funzione principale dello scorer
-void *scorer() {
-    printf("Scorer in esecuzione\n");
-
-    pthread_mutex_lock(&lista_mutex);
-    int num_giocatori = lista.count;
-    pthread_mutex_unlock(&lista_mutex);
-
-    if (num_giocatori == 0) {
-        printf("Nessun giocatore registrato.\n");
-        return NULL;
-    }
-
-    // Creazione array per ordinamento
-    giocatore *scorerVector = malloc(num_giocatori * sizeof(giocatore*));
-    if (!scorerVector) {
-        printf("Errore di allocazione memoria\n");
-        return NULL;
-    }
-
-    pthread_mutex_lock(&lista_mutex);
-    giocatore *current = lista.head;
-
-    for (int i = 0; current != NULL && i < num_giocatori; i++) {
-        scorerVector[i].username = strdup(current->username);
-        scorerVector[i].punteggio = current->punteggio;
-        scorerVector[i].tid = current->tid;
-        current = current->next;
-    }
-    pthread_mutex_unlock(&lista_mutex);
-
-    qsort(scorerVector, num_giocatori, sizeof(giocatore *), compare_score);
-
-    pthread_mutex_lock(&classifica_mutex);
-    classifica = malloc(1024);
-    if (!classifica) {
-        printf("Errore di allocazione memoria per classifica\n");
-        free(scorerVector);
-        pthread_mutex_unlock(&classifica_mutex);
-        return NULL;
-    }
-    // DEVO CAMBIARE QUALCOSA
-    classifica[0] = '\0';  // Inizializza stringa vuota
-    char msg[256];
-    for (int i = 0; i < num_giocatori; i++) {
-        snprintf(msg, sizeof(msg), "%d. %s %d\n", i + 1, scorerVector[i].username, scorerVector[i].punteggio);
-        strcat(classifica, msg);
-    }
-    pthread_mutex_unlock(&classifica_mutex);
-    printf("Classifica generata:\n%s\n", classifica);
-    
-
-    for (int i = 0; i < num_giocatori; i++) {
-        free(scorerVector[i].username);
-    }
-    free(scorerVector);
-
-    // Invio della classifica a tutti i giocatori
-    pthread_mutex_lock(&lista_mutex);
-    current = lista.head;
-    pthread_mutex_unlock(&lista_mutex);
-
-    time_t tempo_iniziale = time(NULL);
-    int durata_pausa = 30;
-
-    while (current != NULL) {
-        sendClassifica(&lista, current->tid, classifica, tempo_iniziale, durata_pausa);
-        current = current->next;
-    }
-
-    pthread_mutex_lock(&classifica_mutex);
-    free(classifica);
-    pthread_mutex_unlock(&classifica_mutex);
-
-    printf("Classifica inviata a tutti i giocatori.\n");
-    return NULL;
-}*/
 
 void *game(void *arg){
     int round = 0;
