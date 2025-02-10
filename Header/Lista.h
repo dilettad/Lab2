@@ -43,13 +43,11 @@ typedef struct{
     giocatore *head;
     giocatore *tail;
     int count;
-    pthread_mutex_t lista_mutex;
-    pthread_cond_t lista_cond;
-    pthread_mutex_t lock;
 } listaGiocatori;
 
 void push(Fifo *lista, Client *new_client);
 Client *pop(Fifo *list);
+void deleteClient(Fifo *lista,const char* username);
 int seek(Fifo *list, char *username); // 1 se trova un cliente con quel username 0 altrimenti
 Fifo *create();
 void aggiorna_punteggio(listaGiocatori *lista, char *username, int punteggio);

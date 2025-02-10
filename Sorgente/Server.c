@@ -68,7 +68,7 @@ listaGiocatori lista; // Lista giocatori
 Fifo *clients;        // Lista clienti
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 time_t tempo_iniziale;
-Client *clients1;
+//Client *clients1;
 /*VARIABILI PER GESTIONE GIOCO*/
 int turno = 0;
 pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -77,7 +77,7 @@ int game_started = 0;
 pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-
+/*
 // FUNZIONI PER IL 4 ADDENDUM
 void *client_handler(void *arg){
     int client_index = *(int *)arg;
@@ -122,7 +122,7 @@ void update_client_activity(int client_socket)
     }
     pthread_mutex_unlock(&clients_mutex);
 }
-
+*/
 // FUNZIONI
 // Calcola tempo rimanente
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
@@ -304,6 +304,9 @@ void *thread_func(void *args){
 
     while (1){
         message client_message = receive_message(client_sock);
+        pthread_mutex_lock(&lista_mutex);
+        utente->last_activity = time(NULL);
+        pthread_mutex_unlock(&lista_mutex);
         writef(retvalue, client_message.data);
         switch (client_message.type){
         case MSG_MATRICE:
@@ -649,6 +652,38 @@ void alarm_handler(int sig){
         break;
     }
 }
+// per dieltta io cancello solo il client quindi il giocaotre rimane vivo questo implica che per fare un log in va verificato che il giocaore con un certo nome non sia gia in uso nel caso lo sia non è necessario fare nulla oltre a far partire il thread credo
+void* thread_func_activity(){
+
+
+    while (1)
+    {
+        // uno sleep per fare il controllo solo ogni tanto
+        sleep(5);
+
+        // dovrebbe essere impossibile che clients sia null quindi non faccio quel controllo
+        pthread_mutex_lock(&clients_mutex);
+        if (clients->tail == NULL ) // passa il while in cui scorre la lista 
+            ;
+        Client * current = clients->head;
+        // scorre la lista per e verificare che ci sia qualcono in attivo 
+        
+        while (current){
+        // se lo trova termiare il processo e ripulire la memoria 
+            if  ((int)difftime(current->last_activity,time(NULL)) >  TIMEOUT_MINUTES * 5){
+
+                printf("il client %s dovrebbe eessere ucciso ", current->username);
+                deleteClient(clients,current->username);
+                //elimina_thread_outsideMutex(clients,current->thread_id);
+                }
+            current = current->next;
+        }
+
+        pthread_mutex_unlock(&clients_mutex);
+        
+    }
+    
+} 
 
 int main(int argc, char *argv[]){
     Dizionario = create_node();
@@ -709,6 +744,9 @@ int main(int argc, char *argv[]){
     int retvalue;
     matrice = generateMatrix();
     SYST(retvalue, pthread_create(&partita, NULL, game, NULL), "nella creazione del thread di gioco");
+    pthread_t activity_thread;
+    SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_activity, NULL), "nella creazione del thread di attività");
+    
     while (1)
     {
         // Accetta la connessione

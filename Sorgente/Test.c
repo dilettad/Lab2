@@ -123,7 +123,7 @@ int main(int argc, char* argv[]){
      // Test delle funzioni della lista dei giocatori
     listaGiocatori giocatori;
         giocatori.head = NULL;
-       pthread_mutex_init(&giocatori.lista_mutex, NULL);
+       //pthread_mutex_init(&giocatori.lista_mutex, NULL);
 
      giocatore* giocatore1 = (giocatore*)malloc(sizeof(giocatore));
      giocatore1->username = "player1";

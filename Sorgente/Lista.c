@@ -98,3 +98,35 @@ void distruggi_lista(listaGiocatori *lista)
     lista->tail = NULL;
     lista->count = 0;
 }
+
+// Funzione per eliminare un cliente dalla lista
+void deleteClient(Fifo *lista, const char *username) {
+    if (lista->head == NULL) {
+        return;
+    }
+
+    Client *current = lista->head;
+    Client *previous = NULL;
+
+    while (current != NULL) {
+        if (strcmp(current->username, username) == 0) {
+            if (previous == NULL) {
+                lista->head = current->next;
+            } else {
+                previous->next = current->next;
+            }
+
+            if (current == lista->tail) {
+                lista->tail = previous;
+            }
+
+            free(current->username);
+            free(current);
+            lista->size--;
+            return;
+        }
+
+        previous = current;
+        current = current->next;
+    }
+}

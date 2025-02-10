@@ -161,6 +161,30 @@ void elimina_giocatore(listaGiocatori *lista, char *username){
     fflush(0);
 }
 
+void elimina_thread_outsideMutex(Fifo *clients, pthread_t thread_id){
+    
+    Client *current = clients->head;
+    Client *prev = NULL;
+
+    while (current != NULL) {
+        if (pthread_equal(current->thread_id, thread_id) != 0) { // Usa thread_id invece di clients_mutex
+            pthread_cancel(current->thread_id);
+            pthread_join(current->thread_id, NULL);
+            if (prev == NULL) {
+                clients->head = current->next;
+            } else {
+                prev->next = current->next;
+            }
+            free(current->username);
+            free(current);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+    
+}
+
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex){
     pthread_mutex_lock(clients_mutex);
     Client *current = clients->head;
