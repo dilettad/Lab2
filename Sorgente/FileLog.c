@@ -23,7 +23,7 @@ void file_log(char* utente, char* testo) {
     }
 
     // Scrivi l'evento nel file di log
-    fprintf(log_file, "[%s] %s: %s\n", utente, testo);
+    fprintf(log_file, "[%s] %s\n", utente, testo);
     fflush(log_file);
 
     fclose(log_file); // Chiudi il file

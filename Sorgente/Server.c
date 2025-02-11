@@ -19,6 +19,7 @@
 #include "../Header/Bacheca.h"
 #include "../Header/FileLog.h"
 
+
 int durata_partita = 8; // La partita dura 5 minuti quindi 30s
 int durata_pausa = 5;    // La pausa della partita dura 1 minuti
 
@@ -29,6 +30,7 @@ int durata_pausa = 5;    // La pausa della partita dura 1 minuti
 #define BUFFER_SIZE 1024       // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
+#define FILELOG "FileLog.txt"
 #define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
 typedef struct{
@@ -334,6 +336,7 @@ void *thread_func(void *args){
                         player -> punteggio += punti_parola;
                     }
                     pthread_mutex_unlock(&lista_mutex);
+                    file_log(utente->username, client_message.data);
                     //punteggio_corrente += punti_parola;
                     // Invio i punti della parola
                     char messaggiopuntiparola[90];
@@ -355,18 +358,14 @@ void *thread_func(void *args){
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
-            //if (registra_bool == 1) {
-              //  send_message(client_sock, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
-              //  continue;
-            //}
             pthread_mutex_lock(&lista_mutex);
-            //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
             utente->username = client_message.data;
             utente->active = 1;
             utente->last_activity = time(NULL);
             //registra_bool = 1;
             pthread_mutex_unlock(&lista_mutex);
+            file_log(utente->username, "Registrazione avvenuta con successo");
             break;
 
         case MSG_PUNTI_FINALI:
@@ -392,8 +391,10 @@ void *thread_func(void *args){
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
-            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             pthread_mutex_unlock(&lista_mutex);
+
+            file_log(client_message.data, "Utente cancellato");
+            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             break;
         
        // DEVO INSERIRE QUA IL FILE LOG?     
@@ -495,6 +496,17 @@ void *scorer() {
     pthread_mutex_unlock(&classifica_mutex);
 
     printf("Classifica generata:\n%s\n", classifica);
+
+    pthread_mutex_lock(&lista_mutex);
+    current = lista.head;
+    while (current != NULL) {
+        char log_entry[128];
+        snprintf(log_entry, sizeof(log_entry), "Punteggio finale: %d punti", current->punteggio);
+        file_log(current->username, log_entry);
+        current = current->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+
 
     free(scorerVector);
     return NULL;
