@@ -100,19 +100,20 @@ int trovaParolaAux(cella **matrice, int i, int j, char *parola, int index)
 
 
 // Funzione per cercare sulla matrice
-int trovaParola(cella **matrice, char *parola)
-{
-    printf("%s\n", parola);
-    for (size_t i = 0; i < MATRIX_SIZE; i++)
-    {
-        for (size_t j = 0; j < MATRIX_SIZE; j++)
-        {
-            if (matrice[i][j].value == parola[0])
-            { // Controlla se il primo carattere corrisponde
+int trovaParola(cella **matrice, char *parola){
+    printf("Debug: cerco la parola %s nella matrice\n", parola);
+    
+    for (int i = 0; i < MATRIX_SIZE; i++){
+        for (int j = 0; j < MATRIX_SIZE; j++){
+            printf("Debug: Controllo posizione [%d, %d] = %d\n", i,j, matrice[i][j].value);
+            if (matrice[i][j].value == parola[0]){ // Controlla se il primo carattere corrisponde
+               printf("Debug: Trovata prima lettera '%c' in [%d, %d]\n", parola[0], i, j);
+                
                 matrice[i][j].usato = true;
                 // printf("forse\n");
                 if (trovaParolaAux(matrice, i, j, parola, 1)) // Ricorsiva
-                    return 1;                                 // Parola trovata
+                printf("Debug: parola trovata nella matrice\n");    
+                return 1;                                 // Parola trovata
             }
             matrice[i][j].usato = false; // Se non trovata, ripristino la cella
         }

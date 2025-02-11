@@ -329,6 +329,8 @@ void *thread_func(void *args){
         case MSG_PAROLA:
            //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
+                client_message.data[strcspn(client_message.data, "\n")] = '\0'; // Rimuove newline
+                //client_message.data = trim(client_message.data);
                 Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
@@ -339,6 +341,10 @@ void *thread_func(void *args){
                 }
                 // Controllo se parola è in matrice
                 else if (!trovaParola(matrice, client_message.data)){
+                    printf("Debug: Tentativo di trovare %s nella matrice.\n", client_message.data);
+                    printf("Matrice attuale: \n");
+                    stampaMatrice(matrice);
+                    printf("Debug: La parola non è stata trovata. \n");
                     send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
                     break;
                 }
@@ -652,7 +658,7 @@ void alarm_handler(int sig){
         break;
     }
 }
-// per dieltta io cancello solo il client quindi il giocaotre rimane vivo questo implica che per fare un log in va verificato che il giocaore con un certo nome non sia gia in uso nel caso lo sia non è necessario fare nulla oltre a far partire il thread credo
+// per diletta io cancello solo il client quindi il giocaotre rimane vivo questo implica che per fare un log in va verificato che il giocaore con un certo nome non sia gia in uso nel caso lo sia non è necessario fare nulla oltre a far partire il thread credo
 void* thread_func_activity(){
 
 
@@ -672,7 +678,7 @@ void* thread_func_activity(){
         // se lo trova termiare il processo e ripulire la memoria 
             if  ((int)difftime(current->last_activity,time(NULL)) >  TIMEOUT_MINUTES * 5){
 
-                printf("il client %s dovrebbe eessere ucciso ", current->username);
+                printf("il client %s dovrebbe eere ucciso ", current->username);
                 deleteClient(clients,current->username);
                 //elimina_thread_outsideMutex(clients,current->thread_id);
                 }
