@@ -76,53 +76,6 @@ pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
 int game_started = 0;
 pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
-/*
-// FUNZIONI PER IL 4 ADDENDUM
-void *client_handler(void *arg){
-    int client_index = *(int *)arg;
-    free(arg);
-
-    while (1)
-    {
-        pthread_mutex_lock(&clients_mutex);
-        if (!clients1[client_index].active)
-        {
-            pthread_mutex_unlock(&clients_mutex);
-            break;
-        }
-
-        time_t now = time(NULL);
-        if (difftime(now, clients1[client_index].last_activity) > TIMEOUT_MINUTES * 60)
-        {
-            printf("Client %s inattivo, espulsione in corso...\n", clients1[client_index].username);
-            clients1[client_index].active = 0; // Segna come non attivo
-            close(clients1[client_index].fd);  // Chiudi il socket ??
-            pthread_mutex_unlock(&clients_mutex);
-            break;
-        }
-        pthread_mutex_unlock(&clients_mutex);
-        sleep(1); // Controlla periodicamente
-    }
-
-    pthread_exit(NULL);
-}
-
-void update_client_activity(int client_socket)
-{
-    pthread_mutex_lock(&clients_mutex);
-    for (int i = 0; i < MAX_CLIENTS; ++i)
-    {
-        if (clients1[i].fd == client_socket && clients1[i].active)
-        {
-            clients1[i].last_activity = time(NULL);
-            printf("Aggiornata attività per %s.\n", clients1[i].username);
-            break;
-        }
-    }
-    pthread_mutex_unlock(&clients_mutex);
-}
-*/
 // FUNZIONI
 // Calcola tempo rimanente
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
@@ -297,12 +250,17 @@ void *thread_func(void *args){
     utente->score = 0;
     utente->next = NULL;
     utente->thread_id = pthread_self();
+    utente -> active = 0;
     push(clients, utente);
     //int registra_bool = 0;
 
     int retvalue;
 
     while (1){
+        if(client_sock < 0){
+            printf("Tentativo di leggere da un socket chiuso, il thread è stato terminato\n");
+            pthread_exit (NULL);
+        }
         message client_message = receive_message(client_sock);
         pthread_mutex_lock(&lista_mutex);
         utente->last_activity = time(NULL);
@@ -342,8 +300,6 @@ void *thread_func(void *args){
                 // Controllo se parola è in matrice
                 else if (!trovaParola(matrice, client_message.data)){
                     printf("Debug: Tentativo di trovare %s nella matrice.\n", client_message.data);
-                    printf("Matrice attuale: \n");
-                    stampaMatrice(matrice);
                     printf("Debug: La parola non è stata trovata. \n");
                     send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
                     break;
@@ -407,6 +363,8 @@ void *thread_func(void *args){
             //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
             utente->username = client_message.data;
+            utente->active = 1;
+            utente->last_activity = time(NULL);
             //registra_bool = 1;
             pthread_mutex_unlock(&lista_mutex);
             break;
@@ -658,38 +616,53 @@ void alarm_handler(int sig){
         break;
     }
 }
-// per diletta io cancello solo il client quindi il giocaotre rimane vivo questo implica che per fare un log in va verificato che il giocaore con un certo nome non sia gia in uso nel caso lo sia non è necessario fare nulla oltre a far partire il thread credo
-void* thread_func_activity(){
 
+void *thread_func_activity() {
+    while (1) {
+        sleep(10); // Controlla ogni 10 secondi
 
-    while (1)
-    {
-        // uno sleep per fare il controllo solo ogni tanto
-        sleep(5);
-
-        // dovrebbe essere impossibile che clients sia null quindi non faccio quel controllo
         pthread_mutex_lock(&clients_mutex);
-        if (clients->tail == NULL ) // passa il while in cui scorre la lista 
-            ;
-        Client * current = clients->head;
-        // scorre la lista per e verificare che ci sia qualcono in attivo 
-        
-        while (current){
-        // se lo trova termiare il processo e ripulire la memoria 
-            if  ((int)difftime(current->last_activity,time(NULL)) >  TIMEOUT_MINUTES * 5){
+        Client* prev = NULL;
+        Client *current = clients->head;
+        time_t now = time(NULL);
 
-                printf("il client %s dovrebbe eere ucciso ", current->username);
-                deleteClient(clients,current->username);
-                //elimina_thread_outsideMutex(clients,current->thread_id);
-                }
+        while (current != NULL) {
+            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES* 10) {
+                printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
+             
+            if (current->active){
+            // Rimuove il giocatore dalla partita ma mantiene l'utente registrato -> quindi devo mettere un elimina_thread
+               elimina_giocatore(&lista, current->username); 
+            }
+               
+                pthread_cancel(current -> thread_id); // Cancella il thread
+                pthread_join(current -> thread_id, NULL); // attenda la terminazione del thread e rilascia le risorse associate
+
+            if (current->fd > 0){
+                // Invia un messaggio di disconnessione
+                send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");
+
+                // Chiudi la connessione e rimuovi il client dalla lista
+                close(current->fd);
+                current -> fd = -1; 
+            }    
+             // Rimuovere il client dalla lista in modo sicuro
+             if (prev == NULL) {
+                clients->head = current->next;
+            } else {
+                prev->next = current->next;
+            }
+            deleteClient(clients, current->username);
+            free(current);
+            break; 
+         
+            }
+            prev = current;
             current = current->next;
         }
-
         pthread_mutex_unlock(&clients_mutex);
-        
     }
-    
-} 
+}
 
 int main(int argc, char *argv[]){
     Dizionario = create_node();
@@ -749,6 +722,13 @@ int main(int argc, char *argv[]){
     pthread_t partita;
     int retvalue;
     matrice = generateMatrix();
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--disconnetti-dopo") == 0 && i + 1 < argc) {
+            printf("Timeout client impostato a %d secondi\n", TIMEOUT_MINUTES);
+        }
+    }
+
     SYST(retvalue, pthread_create(&partita, NULL, game, NULL), "nella creazione del thread di gioco");
     pthread_t activity_thread;
     SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_activity, NULL), "nella creazione del thread di attività");

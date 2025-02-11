@@ -160,7 +160,7 @@ void elimina_giocatore(listaGiocatori *lista, char *username){
     printf("Giocatore non trovato: %s\n", username);
     fflush(0);
 }
-
+/*
 void elimina_thread_outsideMutex(Fifo *clients, pthread_t thread_id){
     
     Client *current = clients->head;
@@ -183,7 +183,7 @@ void elimina_thread_outsideMutex(Fifo *clients, pthread_t thread_id){
         current = current->next;
     }
     
-}
+} */
 
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex){
     pthread_mutex_lock(clients_mutex);
