@@ -30,7 +30,7 @@ int durata_pausa = 5;    // La pausa della partita dura 1 minuti
 #define BUFFER_SIZE 1024       // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
-#define FILELOG "FileLog.txt"
+
 #define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
 typedef struct{
