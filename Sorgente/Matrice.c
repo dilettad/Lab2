@@ -10,6 +10,7 @@
 #include "../Header/Comunicazione.h"
 
 #define MATRIX_SIZE 4
+pthread_mutex_t parole_trovate_mutex = PTHREAD_MUTEX_INITIALIZER;
 // DA SISTEMARE STAMPA MATRICE 
 
 // Funzione per generare una matrice
@@ -161,7 +162,7 @@ void svuotaMatrice(cella **matrice){
 }
 
 
-// Controlla se parola è stata già trovata dall'utente
+/* Controlla se parola è stata già trovata dall'utente
 int esiste_paroleTrovate(paroleTrovate *head, const char *parola)
 {
     if (head == NULL)
@@ -178,9 +179,24 @@ int esiste_paroleTrovate(paroleTrovate *head, const char *parola)
         current = current->next;
     }
     return 0; // parola non trovata, quindi valida
+} */
+
+int esiste_paroleTrovate(paroleTrovate *lista, char *parola) {
+    pthread_mutex_lock(&parole_trovate_mutex);
+    paroleTrovate *current = lista;
+    while (current != NULL) {
+        if (strcmp(current->parola, parola) == 0) {
+            pthread_mutex_unlock(&parole_trovate_mutex);
+            return 1; // Parola trovata
+        }
+        current = current->next;
+    }
+    pthread_mutex_unlock(&parole_trovate_mutex);
+    return 0; // Parola non trovata
 }
 
-// AGGIUNGE UNA PAROLA TROVATA ALLA LISTA DI PAROLE TROVATE DA QUEL GIOCATORE DURANTE QUELLA PARTITA
+
+/* AGGIUNGE UNA PAROLA TROVATA ALLA LISTA DI PAROLE TROVATE DA QUEL GIOCATORE DURANTE QUELLA PARTITA
 paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola){
     paroleTrovate *new_node = (paroleTrovate *)malloc(sizeof(paroleTrovate)); // Alloca memoria per un nuovo nodo
     if (!new_node)
@@ -197,7 +213,21 @@ paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola){
     new_node->next = head; // Collega il nuovo nodo alla testa della lista
     return new_node;       // Restituisce il nuovo nodo
 }
+*/
 
+paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola) {
+    pthread_mutex_lock(&parole_trovate_mutex);
+    paroleTrovate *nuova_parola = malloc(sizeof(paroleTrovate));
+    if (nuova_parola == NULL) {
+        perror("Errore di allocazione memoria");
+        pthread_mutex_unlock(&parole_trovate_mutex);
+        return lista;
+    }
+    nuova_parola->parola = strdup(parola);
+    nuova_parola->next = lista;
+    pthread_mutex_unlock(&parole_trovate_mutex);
+    return nuova_parola;
+}
 
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket

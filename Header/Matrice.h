@@ -35,8 +35,10 @@ void Carica_MatricedaFile(FILE* file, cella** matrice);
 
 void svuotaMatrice(cella** matrice);
 
-int esiste_paroleTrovate(paroleTrovate* head, const char* parola);
-paroleTrovate* aggiungi_parolaTrovata(paroleTrovate* head, const char* parola);
+//int esiste_paroleTrovate(paroleTrovate* head, const char* parola);
+int esiste_paroleTrovate(paroleTrovate *lista, char *parola);
+//paroleTrovate* aggiungi_parolaTrovata(paroleTrovate* head, const char* parola);
+paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola);
 
 char* matrice_to_string(cella** matrix, int size);
 
