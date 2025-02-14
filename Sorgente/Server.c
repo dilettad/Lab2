@@ -31,6 +31,7 @@ int durata_pausa = 5;    // La pausa della partita dura 1 minuti
 #define DIZIONARIO "../Dizionario.txt"
 #define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
+
 typedef struct{
     char *matrix_file;
     float durata_partita;
@@ -329,8 +330,9 @@ void *thread_func(void *args){
         case MSG_PAROLA:
            //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
-                client_message.data[strcspn(client_message.data, "\n")] = '\0'; // Rimuove newline
-                //client_message.data = trim(client_message.data);
+                client_message.data[strcspn(client_message.data, "\n")] = '\0';
+                client_message.data[strcspn(client_message.data, "\r")] = '\0'; // Rimuove eventuali \r
+                
                 Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
@@ -368,9 +370,9 @@ void *thread_func(void *args){
                     int punti_parola = strlen(client_message.data);
                     printf("Punti parola \n");
                     // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
-                    if (strstr(client_message.data, "Qu")){
+                    if (strstr(client_message.data, "QU")){
                         printf("Sottrai \n");
-                        punti_parola -= 1;
+                        punti_parola = punti_parola - 1;
                     }
                     pthread_mutex_lock(&lista_mutex);
                     giocatore* player = trova_giocatore(&lista, pthread_self());
@@ -378,11 +380,12 @@ void *thread_func(void *args){
                         player -> punteggio += punti_parola;
                     }
                     pthread_mutex_unlock(&lista_mutex);
+                    file_log(utente->username, client_message.data);
                     //punteggio_corrente += punti_parola;
                     // Invio i punti della parola
                     char messaggiopuntiparola[90];
-                    printf("Punti inviati %ld \n",strlen(client_message.data));
-                    sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %ld punti", strlen(client_message.data));
+                    printf("Punti inviati %d, \n", punti_parola);
+                    sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %d punti", punti_parola);
                     send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
                     //sprintf("Punteggio inviato \n", messaggiopuntiparola);
                     printf("Punteggio inviato: %d\n", punti_parola);
@@ -399,16 +402,15 @@ void *thread_func(void *args){
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
-            //if (registra_bool == 1) {
-              //  send_message(client_sock, MSG_ERR, "Registrazione già avvenuta, non è possibile registrarsi");
-              //  continue;
-            //}
             pthread_mutex_lock(&lista_mutex);
-            //printf("Debug: Ricevuto MSG_REGISTRA_UTENTE:%s\n",client_message.data);
             registrazione_client(client_sock, client_message.data, &lista);
-            utente->username = client_message.data;
+            utente->username = strdup(client_message.data);
+            //utente->active = 1;
+            //utente->last_activity =  time(NULL);
             //registra_bool = 1;
+            //file_log(utente->username, "Registrazione");
             pthread_mutex_unlock(&lista_mutex);
+            file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
             break;
 
         case MSG_PUNTI_FINALI:
@@ -426,16 +428,27 @@ void *thread_func(void *args){
             break;
 
         case MSG_FINE:
-            //send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
+        /*
+            if(utente->username){
+                free(utente->username);
+            }
+        */   
             close(client_sock);
             pthread_exit(NULL);
+            //send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
             break;
 
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
-            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             pthread_mutex_unlock(&lista_mutex);
+          /*  if (utente->username) {
+                free(utente->username);
+                utente->username = NULL;
+            }
+          */      
+            file_log(client_message.data, "Utente cancellato");
+            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             break;
         
        // DEVO INSERIRE QUA IL FILE LOG?     

@@ -8,7 +8,7 @@
 #include "../Header/Lista.h"
 #include "../Header/FileLog.h"
 
-#define LOG_FILE "../Eseguibili/FileLog.txt"
+#define LOG_FILE "FileLog.txt"
 
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -21,10 +21,11 @@ void file_log(char* utente, char* testo) {
         pthread_mutex_unlock(&log_mutex);
         return;
     }
-
-    // Scrivi l'evento nel file di log
-    fprintf(log_file, "[%s] %s: %s\n", utente, testo);
-    fflush(log_file);
+    utente[strcspn(utente, "\n")] = '\0';
+    printf("LOGGING: [%s]%s\n", utente, testo);
+    fprintf(log_file, "[%s]%s\n",utente, testo);
+    //fflush(stdout);
+    fflush(NULL);
 
     fclose(log_file); // Chiudi il file
     pthread_mutex_unlock(&log_mutex);

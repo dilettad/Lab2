@@ -18,6 +18,7 @@ MATRICE = Matrice
 COMMS = Comunicazione
 GIOCATORE = Giocatore
 BACHECA = Bacheca
+FILELOG = FileLog
 
 # Header
 HDRS_COMUNICAZIONE = $(HEADER)Comunicazione.h
@@ -29,6 +30,7 @@ CLIENT_HEADERS = $(HDRS_MATRICE)  $(HDRS_COMUNICAZIONE)
 TEST_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE) 
 HDRS_GIOCATORE = $(HEADER)$(GIOCATORE).h
 HDRS_BACHECA = $(HEADER)$(BACHECA).h
+HDRSFL_FILELOG = $(HEADER)$(FILELOG).h
 
 # File Oggetto
 OBJS = $(SERVER).o
@@ -40,6 +42,7 @@ OBJHCS = $(COMMS).o
 OBJT = $(TEST).o
 OBJG = $(GIOCATORE).o
 OBJB = $(BACHECA).o
+OBJFL = $(FILELOG).o
 SERVER_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
 CLIENT_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
 TEST_OBJS = $(OBHM) $(OBJHL)
@@ -54,6 +57,7 @@ SRCHL = $(SORGENTE)$(LISTA).c
 SRCT = $(SORGENTE)$(TEST).c
 SRCG = $(SORGENTE)$(GIOCATORE).c
 SRCB = $(SORGENTE)$(BACHECA).c
+SRCFL = $(SORGENTE)$(FILELOG).c
 
 # Input
 PORT = 20000
@@ -72,7 +76,7 @@ all: $(SERVER) $(CLIENT) $(TEST) clean_objs
 
 $(SERVER): $(SERVER_OBJS)
 	@echo Compilazione del Server
-	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB)  -o $(SERVER)
+	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL) -o $(SERVER)
 
 $(CLIENT): $(CLIENT_OBJS)
 	@echo Compilazione del Client
@@ -80,7 +84,7 @@ $(CLIENT): $(CLIENT_OBJS)
 
 $(TEST): $(TEST_OBJS)
 	@echo Compilazione dei Test
-	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
+	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
 
 
 $(OBJHM):$(SRCHM)
@@ -102,7 +106,7 @@ $(OBJB):$(SRCB)
 #Server.o
 $(OBJS):$(SRCS)
 	@echo compilo 
-	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SERVER_HEADERS)
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL) $(SERVER_HEADERS)
 
 #Client.o
 $(OBJC):$(SRCC)
