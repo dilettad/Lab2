@@ -3,6 +3,7 @@
   "files.associations": {
     "*.rmd": "markdown",
     "giocatore.h": "c",
-    "pthread.h": "c"
+    "pthread.h": "c",
+    "comunicazione.h": "c"
   }
 }

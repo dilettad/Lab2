@@ -45,6 +45,7 @@ char *trim(char *s)
     return rtrim(ltrim(s));
 }
 
+
 // define di progetto
 //  #define HOST "127.0.0.1"
 //  #define PORT 8080
@@ -55,8 +56,7 @@ int fd_server;
 pthread_mutex_t message_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Definisco la funzione che gestisce la SIGINT
-void GestoreSigint(int sig)
-{
+void GestoreSigint(int sig){
     int retvalue;
     // Distruggo il mutex utilizzato per la gestione dei messaggi
     retvalue = pthread_mutex_destroy(&message_mutex);
@@ -77,17 +77,20 @@ void GestoreSigint(int sig)
     exit(EXIT_SUCCESS);
 }
 
-void *receiver(void *args)
-{
+void *receiver(void *args){
     int client_sock = *(int *)args; // Assumiamo che args contenga il socket
     message received_msg;
 
     while (1)
     {
         received_msg = receive_message(client_sock);
+        printf("Messaggio ricevuto di tipo: %c\n", received_msg.type);
+
         cella **matrice = generateMatrix();
         // Gestione del messaggio in base al tipo
         pthread_mutex_lock(&message_mutex); // Inizio sezione critica
+       
+
         switch (received_msg.type)
         {
 
@@ -132,7 +135,7 @@ void *receiver(void *args)
             break;
 
         case MSG_TEMPO_PARTITA:
-            //printf("\n Tempo di attesa per la prossima partita: %d\n", durata_partita);
+            printf("\n Tempo di attesa per la prossima partita: %d\n", durata_partita);
             printf("\n%s\n", received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     
@@ -143,16 +146,13 @@ void *receiver(void *args)
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
     
             break;
- 
-
+    
         case MSG_PUNTI_FINALI:
-            printf("\nClassifica generale e punteggio personale ricevuti:\n");
-            printf("%s\n", received_msg.data);
-            //printf("%s,%ld\n", (char *)received_msg.data, pthread_self());
-            //printf("Username:%s \n, Punteggio: %d \n, tid: %ld\n", (char *)received_msg.data, punteggio_corrente, pthread_self());
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
-            break;
-        
+            printf("\nDEBUG: Messaggio classifica ricevuto!\n");
+            printf("Classifica:\n%s\n", received_msg.data);
+               fflush(stdout);
+        break; 
+
         case MSG_SERVER_SHUTDOWN:
             printf("\n%s\n", received_msg.data);
             exit(EXIT_SUCCESS);
@@ -171,7 +171,7 @@ void *receiver(void *args)
             //printf("Debug: Messaggio ricevuto: %s\n", (char *)received_msg.data);
             printf("%s\n", (char *)received_msg.data);
             printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
-            break;    
+            break; 
 
         default:
             fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type);
@@ -353,6 +353,12 @@ int main(int argc, char *argv[])
             send_message(client_sock, MSG_FINE, input);
             break;
         }
+      /*  else if (strcmp (input, "inviapunteggio\n") == 0)
+        {   
+            sleep(1);
+            send_message(client_sock, MSG_PUNTI_FINALI, input);
+           // break;
+        } */
         else
             printf("comando non disponibile\n");
         // Inviare messaggio al server

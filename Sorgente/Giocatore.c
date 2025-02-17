@@ -11,7 +11,6 @@
 #include "../Header/Comunicazione.h"
 #include "../Header/Trie.h"
 #include "../Header/Lista.h"
-// in lista struttura client
 #include "../Header/Giocatore.h"
 
 int registra_bool = 0; // Per vedere se è loggato o no

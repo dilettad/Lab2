@@ -16,6 +16,7 @@
 #define MSG_CANCELLA_UTENTE 'D' 
 #define MSG_LOGIN_UTENTE 'L'  
 
+
 #define MAX_LENGTH_USERNAME 10 //Numero massimo di lunghezza dell'username
 #define MAX_CLIENTS 32 // Numero massimo di giocatori
 
