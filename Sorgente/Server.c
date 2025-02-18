@@ -99,8 +99,6 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
 
 
 void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time_t tempo_iniziale, int durata_pausa) {
-    static int classifica_inviata = 0;  // Flag per evitare doppio invio
-
     pthread_mutex_lock(&lista_mutex);
 
     if (classifica == NULL || strlen(classifica) == 0) {
@@ -109,15 +107,11 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
         return;
     }
     
-    if (classifica_inviata) {  
-        printf("DEBUG: La classifica è già stata inviata, salto l'invio.\n");
-        pthread_mutex_unlock(&lista_mutex);
-        return;
-    } 
+
     giocatore* current = lista->head;
     while (current != NULL) {
         if (fcntl(current->client_fd, F_GETFD) != -1) { 
-            printf("DEBUG: Invio classifica a %s\n", current->username);
+            printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
             send_message(current->client_fd, MSG_PUNTI_FINALI, classifica);
             printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
         } else {
@@ -126,7 +120,6 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
         current = current->next;
     }
 
-    classifica_inviata = 1;  // Imposta il flag per evitare doppio invio
     pthread_mutex_unlock(&lista_mutex);
 }
 
@@ -185,7 +178,6 @@ giocatore* trova_giocatore(listaGiocatori* lista, pthread_t tid) {
     
     return NULL;  // Giocatore non trovato
 }
-
 
 
 // HANDLER DEI SEGNALI
@@ -248,46 +240,7 @@ void sigusr2_classifica_handler(int sig) {
     handler_chiamato = 0;   
 }
 
-/*
-void sigusr2_classifica_handler(int sig) {
-    printf("Gestore del segnale SIGUSR2 chiamato\n");
-
-    pthread_mutex_lock(&lista_mutex);
-    if (lista.head == NULL) {
-        printf("Nessun giocatore registrato, classifica non disponibile\n");
-        pthread_mutex_unlock(&lista_mutex);
-        return;
-    }
-    pthread_mutex_unlock(&lista_mutex);
-
-    printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
-
-    // Genera la classifica
-    pthread_create(&scorer_tid, NULL, scorer, NULL);
-    pthread_join(scorer_tid, NULL);
-
-    if (classifica == NULL) {
-        printf("ERRORE: La classifica è NULL dopo scorer(), impossibile inviarla\n");
-        return;
-    }
-
-    sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);
-
-    // **Assicura che la classifica non venga più inviata**
-    classifica_inviata = 1;
-
-    printf("DEBUG: pausa_gioco impostata a 1 dopo l'invio della classifica\n");
-    
-    // **Forza la ripartenza del nuovo round**
-    pthread_mutex_lock(&pausa_gioco_mutex);
-    pausa_gioco = 1;
-    pthread_mutex_unlock(&pausa_gioco_mutex);
-    alarm(durata_pausa);
-}
-*/
-
-
-// Funzione per la chiusura del server -> FUNZIONA
+// Funzione per la chiusura del server
 void sigint_handler(int sig){
     // Questa funzione chiude tutti quanti i client attivi (NON SOLO I GIOCATORI)
     pthread_mutex_lock(&clients_mutex);
@@ -314,14 +267,12 @@ void sigint_handler(int sig){
 }
 
 void alarm_handler(int sig){
-   static int sigusr2_inviato = 0;
 
     switch (pausa_gioco){//0 giocando, 1 pausa
     case 1:
         alarm(durata_partita);
         pausa_gioco = 0;
         printf("allarme partita mandato\nIl gioco è in corso\n");
-        sigusr2_inviato = 0;
         return;
     
     case 0:
@@ -330,17 +281,15 @@ void alarm_handler(int sig){
         pausa_gioco = 1;//metto gioco in pausa
         printf("La partita è finita, inizierà tra: %d secondi\n", durata_pausa);
     //    sigusr2_classifica_handler(SIGUSR2);
-    if (!sigusr2_inviato) {
+    
         if (lista.count > 0) {
             invia_SIG(&lista, SIGUSR2, lista_mutex);
             printf("Invio segnale SIGUSR2\n");
-            sigusr2_inviato = 1; // Impedisce invii multipli per lo stesso round
+          
         } else {
             printf("DEBUG: Nessun giocatore registrato, SIGUSR2 non inviato.\n");
         }
-    } else {
-        printf("DEBUG: SIGUSR2 già inviato, salto.\n");
-    }
+
 
         alarm(durata_pausa);
         //CHIAMO SCORER
@@ -360,6 +309,8 @@ void alarm_handler(int sig){
         break;
     }
 }
+
+
 
 // SOCKET
 //  Funzione del thread
@@ -504,12 +455,12 @@ void *thread_func(void *args){
             //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
-        case MSG_FINE:          
+        case MSG_FINE:      
             close(client_sock);
             pthread_exit(NULL);
             send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
-            break;
-
+            break; 
+        
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
@@ -583,10 +534,9 @@ void *scorer() {
         }
         //reset_punteggi();
         memset(classifica,0,max_length);
-        printf("Scorer in esecuzione\n");
 
-   
 
+    printf("Scorer in esecuzione\n");
     pthread_mutex_lock(&lista_mutex);
     int num_giocatori = lista.count;
     pthread_mutex_unlock(&lista_mutex);
@@ -631,19 +581,11 @@ void *scorer() {
         offset += written;
     }
     classifica[offset] = '\0';
-    /* Stampa di debug per verificare i byte della stringa della classifica
-       printf("Classifica generata (byte):\n");
-       for (int i = 0; i < offset; i++) {
-           printf("%02x ", (unsigned char)classifica[i]);
-       }
-       printf("\n");
-    pthread_mutex_unlock(&classifica_mutex); */
 
     printf("Classifica generata:\n%s\n", classifica);
-    sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);   
-    
+   // sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);   
     free(scorerVector);
-    free(classifica);
+   // free(classifica);
     reset_punteggi();
     return NULL;
 }
@@ -661,8 +603,8 @@ void *game(void *arg){
         //REGISTRAZIONE DEI SEGNALI
         //signal(SIGUSR2, alarm_handler);
         
-        classifica_inviata = 0;
-        printf("DEBUG: classifica_inviata resettata a 0\n");
+       // classifica_inviata = 0;
+       // printf("DEBUG: classifica_inviata resettata a 0\n");
 
         //INIZIA LA PAUSA
         time(&tempo_iniziale);

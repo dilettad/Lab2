@@ -159,7 +159,7 @@ void elimina_giocatore(listaGiocatori *lista, char *username){
     printf("Giocatore non trovato: %s\n", username);
     fflush(0);
 }
-
+/*
 void elimina_thread_outsideMutex(Fifo *clients, pthread_t thread_id){
     
     Client *current = clients->head;
@@ -208,6 +208,31 @@ void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients
     }
     pthread_mutex_unlock(clients_mutex);
 }
+*/
+/*
+void elimina_thread(Fifo *clients, pthread_t thread, pthread_mutex_t *clients_mutex){
+    pthread_mutex_lock(&clients_mutex);
+    Client *corrente = clients->head;
+    Client *prev =  NULL;
+
+    while(corrente != NULL){
+        if(pthread_equal(corrente->thread_id, thread) != 0){
+            if(prev == NULL){
+                clients->head = corrente->next;
+            }
+            else{
+                prev->next = corrente->next;
+            }
+            clients->size--;
+            pthread_mutex_unlock(&clients_mutex);
+            return;
+        }
+        prev = corrente;
+        corrente = corrente->next;
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+*/
 
 /* Funzione che recupera il nome utente di un giocatore dalla lista
 giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){

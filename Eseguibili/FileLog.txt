@@ -199,3 +199,18 @@
 [porcocane]CASI
 [perche]Registrazione avvenuta con successo
 [perche]CASI
+[dariaa]Registrazione avvenuta con successo
+[dariaa]CASI
+[dariaa]CASE
+[dariaa]QUASI
+[fra]Registrazione avvenuta con successo
+[fra]CASI
+[fra]Registrazione avvenuta con successo
+[fra]CASI
+[elia]Registrazione avvenuta con successo
+[giuseppe]Registrazione avvenuta con successo
+[giuseppe]CASI
+[porcocanee]Registrazione avvenuta con successo
+[porcocanee]CASI
+[porcocanee]CASE
+[porcocanee]QUASI
