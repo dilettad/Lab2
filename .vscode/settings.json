@@ -2,6 +2,8 @@
   "C_Cpp_Runner.msvcBatchPath": "",
   "files.associations": {
     "*.rmd": "markdown",
-    "giocatore.h": "c"
+    "giocatore.h": "c",
+    "pthread.h": "c",
+    "comunicazione.h": "c"
   }
 }

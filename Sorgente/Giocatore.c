@@ -11,7 +11,6 @@
 #include "../Header/Comunicazione.h"
 #include "../Header/Trie.h"
 #include "../Header/Lista.h"
-// in lista struttura client
 #include "../Header/Giocatore.h"
 
 int registra_bool = 0; // Per vedere se è loggato o no
@@ -209,6 +208,31 @@ void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients
     }
     pthread_mutex_unlock(clients_mutex);
 }
+*/
+/*
+void elimina_thread(Fifo *clients, pthread_t thread, pthread_mutex_t *clients_mutex){
+    pthread_mutex_lock(&clients_mutex);
+    Client *corrente = clients->head;
+    Client *prev =  NULL;
+
+    while(corrente != NULL){
+        if(pthread_equal(corrente->thread_id, thread) != 0){
+            if(prev == NULL){
+                clients->head = corrente->next;
+            }
+            else{
+                prev->next = corrente->next;
+            }
+            clients->size--;
+            pthread_mutex_unlock(&clients_mutex);
+            return;
+        }
+        prev = corrente;
+        corrente = corrente->next;
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+*/
 
 /* Funzione che recupera il nome utente di un giocatore dalla lista
 giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
