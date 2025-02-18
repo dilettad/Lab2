@@ -71,6 +71,7 @@ pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t scorer_tid;
 
+void Controlla_Comando(message client_message,int client_sock,Client* utente);
 // FUNZIONI
 // Calcola tempo rimanente
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
@@ -156,13 +157,13 @@ void Load_Dictionary(Trie *Dictionary, char *path_to_dict){    // APRO IL FILE T
     }
     char word[256];
     // LEGGO TUTTO IL FILE
-    while (fscanf(dict, "%s", word) != EOF)
-    {
+    while (fscanf(dict, "%s", word) != EOF){
         Caps_Lock(word); 
         insert_Trie(Dizionario, word);
-      
+    //  printf("DEBUG: Parola caricata nel dizionario -> %s\n", word);
     }
     return;
+    //fclose(dict);
 }
 
 //Funzione per trovare giocatore
@@ -335,179 +336,188 @@ void *thread_func(void *args){
 
     while (1){
         message client_message = receive_message(client_sock);
+
+        char utente_copy[64];
+        strncpy(utente_copy, client_message.data, sizeof(utente_copy) - 1);
+        utente_copy[sizeof(utente_copy) - 1] = '\0';
+
         pthread_mutex_lock(&lista_mutex);
         utente->last_activity = time(NULL);
         pthread_mutex_unlock(&lista_mutex);
-        writef(retvalue, client_message.data);
+        //writef(retvalue, client_message.data);
         switch (client_message.type){
-        case MSG_MATRICE:
-            //pthread_mutex_lock(&pausa_gioco_mutex);
-            if (pausa_gioco == 0){
-                // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
-                stampaMatrice(matrice); 
-                invio_matrice(client_sock, matrice); 
-                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-                printf("Il tempo è %s", temp);
-                send_message(client_sock, MSG_TEMPO_PARTITA, temp);
-            } else {
-                // Invio il tempo di pausa rimanente
-                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
-                send_message(client_sock, MSG_TEMPO_ATTESA, temp);
-            }
-            //pthread_mutex_unlock(&pausa_gioco_mutex);
-            break;
-
-        case MSG_PAROLA:
-           //pthread_mutex_lock(&pausa_gioco_mutex);
-            if (pausa_gioco == 0){
-                client_message.data[strcspn(client_message.data, "\n")] = '\0';
-                client_message.data[strcspn(client_message.data, "\r")] = '\0'; // Rimuove eventuali \r
-                
-                Caps_Lock(client_message.data);
-                printf("La parola da cercare è %s\n", client_message.data);
-                fflush(0);
-                // Controllo se la parola è già stata trovata
-                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
-                    send_message(client_sock, MSG_PUNTI_PAROLA, "0");
-                    break;
+            case MSG_MATRICE:
+                //pthread_mutex_lock(&pausa_gioco_mutex);
+                if (pausa_gioco == 0){
+                    // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
+                    stampaMatrice(matrice); 
+                    invio_matrice(client_sock, matrice); 
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                    printf("Il tempo è %s", temp);
+                    send_message(client_sock, MSG_TEMPO_PARTITA, temp);
+                } else {
+                    // Invio il tempo di pausa rimanente
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+                    send_message(client_sock, MSG_TEMPO_ATTESA, temp);
                 }
-                // Controllo se parola è in matrice
-                else if (!trovaParola(matrice, client_message.data)){
-                    printf("Debug: Tentativo di trovare %s nella matrice.\n", client_message.data);
-                    printf("Matrice attuale: \n");
-                    stampaMatrice(matrice);
-                    printf("Debug: La parola non è stata trovata. \n");
-                    send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
-                    break;
-                }
-                // Controllo se parola è nel dizionario
-                else if (search_Trie(client_message.data, Dizionario) == -1){
-                    send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
-                    break;
-                }
-                // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
-                else{
-                    printf("Aggiungo la parola alla lista delle parole trovate \n");
-                    listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
-                    // Recupero il punteggio del giocatore attuale
-                    int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
-                    if(punteggio_corrente == -1){
-                        printf("Errore: giocatore non trovato\n");
-                        send_message(client_sock, MSG_ERR, "Errore nel recupero del punteggio");
-                        //pthread_mutex_unlock(&pausa_gioco_mutex);
+                //pthread_mutex_unlock(&pausa_gioco_mutex);
+                break;
+    
+            case MSG_PAROLA:
+               //pthread_mutex_lock(&pausa_gioco_mutex);
+                if (pausa_gioco == 0){
+                    //client_message.data[strcspn(client_message.data, "\n")] = '\0';
+                    //client_message.data[strcspn(client_message.data, "\r")] = '\0'; // Rimuove eventuali \r
+    
+                    Caps_Lock(client_message.data);
+                    printf("La parola da cercare è %s\n", client_message.data);
+                    fflush(0);
+                    // Controllo se la parola è già stata trovata
+                    if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
+                        send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                         break;
                     }
-                    int punti_parola = strlen(client_message.data);
-                    printf("Punti parola \n");
-                    // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
-                    if (strstr(client_message.data, "QU")){
-                        printf("Sottrai \n");
-                        punti_parola = punti_parola - 1;
+                    // Controllo se parola è in matrice
+                    else if (!trovaParola(matrice, client_message.data)){
+                        printf("Debug: Tentativo di trovare %s nella matrice.\n", client_message.data);
+                        printf("Matrice attuale: \n");
+                        stampaMatrice(matrice);
+                        printf("Debug: La parola non è stata trovata. \n");
+                        send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
+                    break;
                     }
-                    pthread_mutex_lock(&lista_mutex);
-                    giocatore* player = trova_giocatore(&lista, pthread_self());
-                    if (player != NULL){
-                        player -> punteggio += punti_parola;
+                    // Controllo se parola è nel dizionario
+                    else if (search_Trie(client_message.data, Dizionario) == -1){
+                        send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
+                        break;
                     }
-                    pthread_mutex_unlock(&lista_mutex);
-                    file_log(utente->username, client_message.data);
-                    //punteggio_corrente += punti_parola;
-                    // Invio i punti della parola
-                    char messaggiopuntiparola[90];
-                    printf("Punti inviati %d, \n", punti_parola);
-                    sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %d punti", punti_parola);
-                    send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
-                    //sprintf("Punteggio inviato \n", messaggiopuntiparola);
-                    printf("Punteggio inviato: %d\n", punti_parola);
-                    //punteggio += strlen(client_message.data); 
-                    printf("Il punteggio attuale è %d \n", punteggio_corrente); // Nel server visualizzo i punti totali
-                    fflush(0);
+                    // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
+                    else{
+                        printf("Aggiungo la parola alla lista delle parole trovate \n");
+                        listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
+                        // Recupero il punteggio del giocatore attuale
+                        int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
+                        if(punteggio_corrente == -1){
+                            printf("Errore: giocatore non trovato\n");
+                            send_message(client_sock, MSG_ERR, "Errore nel recupero del punteggio");
+                            //pthread_mutex_unlock(&pausa_gioco_mutex);
+                            break;
+                        }
+                        int punti_parola = strlen(client_message.data);
+                        printf("Punti parola \n");
+                        // Se la parola contiene "Q" con "u" a seguito, sottraggo di uno i punti
+                        if (strstr(client_message.data, "QU")){
+                            printf("Sottrai \n");
+                            punti_parola = punti_parola - 1;
+                        }
+                        pthread_mutex_lock(&lista_mutex);
+                        giocatore* player = trova_giocatore(&lista, pthread_self());
+                        if (player != NULL){
+                            player -> punteggio += punti_parola;
+                        }
+                        pthread_mutex_unlock(&lista_mutex);
+                        //file_log(utente_copy, client_message.data);
+                        //punteggio_corrente += punti_parola;
+                        // Invio i punti della parola
+                        char messaggiopuntiparola[90];
+                        printf("Punti inviati %d, \n", punti_parola);
+                        sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %d punti", punti_parola);
+                        send_message(client_sock, MSG_PUNTI_PAROLA, messaggiopuntiparola);
+                        //sprintf("Punteggio inviato \n", messaggiopuntiparola);
+                        printf("Punteggio inviato: %d\n", punti_parola);
+                        //punteggio += strlen(client_message.data); 
+                        printf("Il punteggio attuale è %d \n", punteggio_corrente); // Nel server visualizzo i punti totali
+                        fflush(0);
+                    }
+                } else {
+                    // Invio il messaggio di errore
+                    send_message(client_sock, MSG_ERR, "Gioco in pausa!");
                 }
-            } else {
-                // Invio il messaggio di errore
-                send_message(client_sock, MSG_ERR, "Gioco in pausa!");
-            }
-            //pthread_mutex_unlock(&pausa_gioco_mutex);
-            break;
-
-        // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
-        case MSG_REGISTRA_UTENTE:
-            pthread_mutex_lock(&lista_mutex);
-            registrazione_client(client_sock, client_message.data, &lista);
-            utente->username = strdup(client_message.data);
-            pthread_mutex_unlock(&lista_mutex);
-            file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
-            break;
-
-        case MSG_PUNTI_FINALI:
-            //pthread_mutex_lock(&pausa_gioco_mutex);
-            printf("Debug: RICHIESTA CLASSIFICA RICEVUTA, pausa gioco %d, classifica:%s\n", pausa_gioco, classifica ? classifica: "NULL");
+                //pthread_mutex_unlock(&pausa_gioco_mutex);
+                break;
+    
+            // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
+            case MSG_REGISTRA_UTENTE:
+                pthread_mutex_lock(&lista_mutex);
+                registrazione_client(client_sock, client_message.data, &lista);
+                utente->username = strdup(client_message.data);
+                pthread_mutex_unlock(&lista_mutex);
+                //file_log(utente_copy, "Registrazione avvenuta con successo");
+               // file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
+                break;
+    
+            case MSG_PUNTI_FINALI:
+                //pthread_mutex_lock(&pausa_gioco_mutex);
+                printf("Debug: RICHIESTA CLASSIFICA RICEVUTA, pausa gioco %d, classifica:%s\n", pausa_gioco, classifica ? classifica: "NULL");
+                
+                if (pausa_gioco == 1 && classifica != NULL){
+                    send_message(client_sock, MSG_PUNTI_FINALI, classifica);
+                    char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
+                    send_message(client_sock, MSG_TEMPO_ATTESA, temp);
+                }
+                else
+                {
+                    send_message(client_sock, MSG_ERR, "Classifica non disponibile");
+                }
+                //pthread_mutex_unlock(&pausa_gioco_mutex);
+                break;
+    
+            case MSG_FINE:      
+                close(client_sock);
+                pthread_exit(NULL);
+                send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
+                break; 
             
-            if (pausa_gioco == 1 && classifica != NULL){
-                send_message(client_sock, MSG_PUNTI_FINALI, classifica);
-                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
-                send_message(client_sock, MSG_TEMPO_ATTESA, temp);
-            }
-            else
-            {
-                send_message(client_sock, MSG_ERR, "Classifica non disponibile");
-            }
-            //pthread_mutex_unlock(&pausa_gioco_mutex);
-            break;
-
-        case MSG_FINE:      
-            close(client_sock);
-            pthread_exit(NULL);
-            send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
+            case MSG_CANCELLA_UTENTE:
+                pthread_mutex_lock(&lista_mutex);
+                elimina_giocatore(&lista, client_message.data);
+                pthread_mutex_unlock(&lista_mutex);
+              /*  if (utente->username) {
+                    free(utente->username);
+                    utente->username = NULL;
+                }
+              */      
+           
+              //file_log(utente_copy, "Utente cancellato");
+                send_message(client_sock, MSG_OK, "Utente cancellato con successo");
+                break;
+            
+            
+           case MSG_LOGIN_UTENTE:
+               pthread_mutex_lock(&lista_mutex);
+                if (username_esiste(&lista, client_message.data)) {
+                    //send_message(client_sock, MSG_OK, "Utente già loggato");
+                  
+                //file_log(utente_copy, "Utente già loggato");
+                } else {
+                    send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
+                   //file_log(utente_copy, "Utente non trovato, registrati prima");
+                }
+                pthread_mutex_unlock(&lista_mutex);
+                break;
+            
+            case MSG_POST_BACHECA:
+             //printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
+                if (add_message(client_message.data, utente -> username)){
+                    send_message(client_sock, MSG_OK, "Messaggio postato con successo");
+                } else {
+                    send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
+                }
             break; 
-        
-        case MSG_CANCELLA_UTENTE:
-            pthread_mutex_lock(&lista_mutex);
-            elimina_giocatore(&lista, client_message.data);
-            pthread_mutex_unlock(&lista_mutex);
-          /*  if (utente->username) {
-                free(utente->username);
-                utente->username = NULL;
+    
+            case MSG_SHOW_BACHECA:
+                pthread_mutex_lock(&mess);
+                char* buffer = show_bacheca();
+                pthread_mutex_unlock(&mess);
+                send_message(client_sock, MSG_SHOW_BACHECA, buffer);
+            break; 
+            
+    
+            default:
+                send_message(client_sock, MSG_ERR, "Comando non valido");
+                break;
             }
-          */      
-            file_log(client_message.data, "Utente cancellato");
-            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
-            break;
-        
-        
-       case MSG_LOGIN_UTENTE:
-           pthread_mutex_lock(&lista_mutex);
-            if (username_esiste(&lista, client_message.data)) {
-                //send_message(client_sock, MSG_OK, "Utente già loggato");
-                file_log(client_message.data, "Utente già loggato");
-            } else {
-                send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
-                file_log(client_message.data, "Utente non trovato, registrati prima");
-            }
-            pthread_mutex_unlock(&lista_mutex);
-            break;
-        
-        case MSG_POST_BACHECA:
-         //printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
-            if (add_message(client_message.data, utente -> username)){
-                send_message(client_sock, MSG_OK, "Messaggio postato con successo");
-            } else {
-                send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
-            }
-        break; 
-
-        case MSG_SHOW_BACHECA:
-            pthread_mutex_lock(&mess);
-            char* buffer = show_bacheca();
-            pthread_mutex_unlock(&mess);
-            send_message(client_sock, MSG_SHOW_BACHECA, buffer);
-        break; 
-        
-
-        default:
-            send_message(client_sock, MSG_ERR, "Comando non valido");
-            break;
-        }
+        //free(client_message.data);
     }
 }
 
@@ -515,6 +525,7 @@ void reset_punteggi() {
     pthread_mutex_lock(&lista_mutex);
     giocatore *current = lista.head;
     while (current != NULL) {
+        printf("DEBUG: Azzerando punteggio per %s (prima: %d punti)\n", current->username, current->punteggio);
         current->punteggio = 0;
         current = current->next;
     }
