@@ -20,12 +20,18 @@
 #include "../Header/Bacheca.h"
 #include "../Header/FileLog.h"
 
+
+
+int durata_partita = 8; // La partita dura 5 minuti quindi 30s
+int durata_pausa = 5;    // La pausa della partita dura 1 minuti
+
 #define MAX_CLIENTS 32
 #define MAX_LENGTH_USERNAME 10 // Numero massimo di lunghezza dell'username
 #define NUM_THREADS 5          // Numero di thread da creare
 #define BUFFER_SIZE 1024       // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
+
 #define TIMEOUT_MINUTES 2 // 2 minuti di inattività
 
 // DEFINIZIONE delle funzioni
@@ -71,7 +77,6 @@ pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t scorer_tid;
 
-void Controlla_Comando(message client_message,int client_sock,Client* utente);
 // FUNZIONI
 // Calcola tempo rimanente
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
@@ -325,6 +330,7 @@ void *thread_func(void *args){
     utente->score = 0;
     utente->next = NULL;
     utente->thread_id = pthread_self();
+    utente -> active = 0;
     push(clients, utente);
     //int registra_bool = 0;
 
@@ -335,6 +341,10 @@ void *thread_func(void *args){
     int retvalue;
 
     while (1){
+        if(client_sock < 0){
+            printf("Tentativo di leggere da un socket chiuso, il thread è stato terminato\n");
+            pthread_exit (NULL);
+        }
         message client_message = receive_message(client_sock);
 
         char utente_copy[64];
@@ -449,6 +459,7 @@ void *thread_func(void *args){
             case MSG_PUNTI_FINALI:
                 //pthread_mutex_lock(&pausa_gioco_mutex);
                 printf("Debug: RICHIESTA CLASSIFICA RICEVUTA, pausa gioco %d, classifica:%s\n", pausa_gioco, classifica ? classifica: "NULL");
+
                 
                 if (pausa_gioco == 1 && classifica != NULL){
                     send_message(client_sock, MSG_PUNTI_FINALI, classifica);
@@ -595,6 +606,7 @@ void *scorer() {
 
     printf("Classifica generata:\n%s\n", classifica);
    // sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);   
+
     free(scorerVector);
    // free(classifica);
     reset_punteggi();
@@ -741,6 +753,13 @@ int main(int argc, char *argv[]){
     pthread_t partita;
     int retvalue;
     matrice = generateMatrix();
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--disconnetti-dopo") == 0 && i + 1 < argc) {
+            printf("Timeout client impostato a %d secondi\n", TIMEOUT_MINUTES);
+        }
+    }
+
     SYST(retvalue, pthread_create(&partita, NULL, game, NULL), "nella creazione del thread di gioco");
    // pthread_t activity_thread;
   //  SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_activity, NULL), "nella creazione del thread di attività");

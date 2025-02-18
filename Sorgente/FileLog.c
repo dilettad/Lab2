@@ -9,7 +9,6 @@
 #include "../Header/FileLog.h"
 
 #define LOG_FILE "FileLog.txt"
-
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Funzione per registrare un evento nel file di log -> 1° versione originale
@@ -34,7 +33,7 @@ void file_log(char* utente, char* testo) {
 /* // VERSIONE CON COPIA UTENTE
 void file_log(char* utente, char* testo) {
     pthread_mutex_lock(&log_mutex);
-    FILE* log_file = fopen(LOG_FILE, "a"); // Apri il file in modalità append
+    FILE* log_file = fopen(FILELOG, "a"); // Apri il file in modalità append
     if (log_file == NULL) {
         perror("Errore nell'apertura del file di log");
         pthread_mutex_unlock(&log_mutex);
@@ -45,6 +44,7 @@ void file_log(char* utente, char* testo) {
     char utente_copy[64];  // Assumendo che i nomi utente siano corti
     (utente_copy, utente, sizeof(utente_copy) - 1);
     utente_copy[sizeof(utente_copy) - 1] = '\0'; // Assicura terminazione corretta
+
 
     utente_copy[strcspn(utente_copy, "\r\n")] = '\0';  // Rimuove newline
 
