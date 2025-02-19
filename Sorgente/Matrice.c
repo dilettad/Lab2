@@ -162,26 +162,6 @@ void svuotaMatrice(cella **matrice){
     free(matrice);
 }
 
-
-/* Controlla se parola è stata già trovata dall'utente
-int esiste_paroleTrovate(paroleTrovate *head, const char *parola)
-{
-    if (head == NULL)
-    {
-        return 0; // lista vuota
-    }
-    paroleTrovate *current = head; // Inizializza puntatore corrente alla testa della lista
-    while (current != NULL)
-    {
-        if (strcmp(current->parola, parola) == 0)
-        {
-            return 1; // parola trovata, quindi già proposta precedentemente
-        }
-        current = current->next;
-    }
-    return 0; // parola non trovata, quindi valida
-} */
-
 int esiste_paroleTrovate(paroleTrovate *lista, char *parola) {
     pthread_mutex_lock(&parole_trovate_mutex);
     paroleTrovate *current = lista;
@@ -195,26 +175,6 @@ int esiste_paroleTrovate(paroleTrovate *lista, char *parola) {
     pthread_mutex_unlock(&parole_trovate_mutex);
     return 0; // Parola non trovata
 }
-
-
-/* AGGIUNGE UNA PAROLA TROVATA ALLA LISTA DI PAROLE TROVATE DA QUEL GIOCATORE DURANTE QUELLA PARTITA
-paroleTrovate *aggiungi_parolaTrovata(paroleTrovate *head, const char *parola){
-    paroleTrovate *new_node = (paroleTrovate *)malloc(sizeof(paroleTrovate)); // Alloca memoria per un nuovo nodo
-    if (!new_node)
-    {
-        perror("Errore di allocazione della memoria\n"); // Messaggio di errore
-        return head;                                     // Lista originale
-    }
-    new_node->parola = strdup(parola); // Duplica la stringa della parola
-    if (!new_node->parola)
-    {
-        perror("Errore di allocazione della memoria per la parola\n"); // Messaggio di errore
-        return head;                                                   // Lista originale
-    }
-    new_node->next = head; // Collega il nuovo nodo alla testa della lista
-    return new_node;       // Restituisce il nuovo nodo
-}
-*/
 
 paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola) {
     pthread_mutex_lock(&parole_trovate_mutex);

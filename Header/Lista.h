@@ -30,7 +30,7 @@ typedef struct Fifo{
 typedef struct giocatore{
     char *username;
     pthread_t tid;
-    int client_fd;
+   // int client_fd;//sta cosa deve morire capisci dove viene usato e distruggilo
     int punteggio;
     int count;
     int active; // Se il giocatore è attivo (loggato) oppure no
