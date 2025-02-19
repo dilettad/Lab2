@@ -13,7 +13,7 @@
 
 
 // Funzione per inviare un messaggio
-void send_message(int client_socket, char type, char *data){
+void send_message(int client_socket, char type, char* data){
     int retvalue;
     int len = strlen(data);
     // printf("invio messaggio\n");
@@ -36,7 +36,7 @@ message receive_message(int client_socket){
     // printf("attendo messaggio\n");
     SYSC(retvalue, read(client_socket, &msg.length, sizeof(int)), "errore lettura lunghezza messaggio\n");
     // ricevo tipo messaggio
-    SYSC(retvalue, read(client_socket, &msg.type, sizeof(char)), "errore lettur atipo messaggio\n")
+    SYSC(retvalue, read(client_socket, &msg.type, sizeof(char)), "errore lettura tipo messaggio\n")
     // alloco campo data del messaggio
     msg.data = (char *)malloc(msg.length + 1); // Alloca in memoria lo spazio necessario per il data
     // ricevo messagio

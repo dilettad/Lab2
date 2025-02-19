@@ -249,13 +249,12 @@ int main(int argc, char *argv[])
         // Controllo se contiene "aiuto"
         if (strcmp(input, "aiuto\n") == 0){
             printf("Ecco a te la lista dei comandi: %s\n", aiuto);
-
             continue;
         }
         // Controllo se contiene "registra_utente"
         else if (strncmp(input, "registra_utente", 15) == 0){
             token = strtok(input, " ");
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "\n");
             if (token == NULL)
             {
                 printf("Errore, manca il nome dell'utente\n");
@@ -263,7 +262,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                token[strcmp(token, "\n")] = 0;
+                //token[strcmp(token, "\n")] = 0;
                 send_message(client_sock, MSG_REGISTRA_UTENTE, token);
             }
         }
@@ -271,7 +270,7 @@ int main(int argc, char *argv[])
            // Controllo se contiene "login_utente"
         else if (strncmp(input, "login_utente", 12) == 0){
             token = strtok(input, " ");
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "\n");
             if (token == NULL)
             {
                 printf("Errore, manca il nome dell'utente\n");
@@ -279,7 +278,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                token[strcmp(token, "\n")] = 0;
+                //token[strcmp(token, "\n")] = 0;
                 send_message(client_sock, MSG_LOGIN_UTENTE, token);
             }
         }
@@ -287,7 +286,7 @@ int main(int argc, char *argv[])
         // Controllo se contiene "cancella_utente"
         else if (strncmp(input, "cancella_utente", 15) == 0){
             token = strtok(input, " ");
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "\n");
             if (token == NULL)
             {
                 printf("Errore, manca il nome dell'utente\n");
@@ -295,7 +294,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                token[strcmp(token, "\n")] = 0;
+                //token[strcmp(token, "\n")] = 0;
                 send_message(client_sock, MSG_CANCELLA_UTENTE, token);
             }
         }
@@ -312,7 +311,7 @@ int main(int argc, char *argv[])
             token = strtok(input, " ");
 
             // Ottenere il secondo token (la parola dopo "p")
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "\n");
             if (token == NULL)
             {
                 printf("Errore, manca la parola da controllare\n");
@@ -324,17 +323,17 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            send_message(client_sock, MSG_PAROLA, trim(token));
+            send_message(client_sock, MSG_PAROLA, token);
         }
 
-         else if (strcmp(input, "show-msg\n") == 0){
+        else if (strcmp(input, "show-msg\n") == 0){
             send_message(client_sock, MSG_SHOW_BACHECA, input);
         }
 
 // SE FACCIO LA TOKENIZZAZIONE PUO PRENDERMI IN MODO ERRATO IL MESSAGGIO?
         else if (strncmp(input, "msg", 3) == 0){
             token = strtok(input, " ");
-            token = strtok(NULL, " ");
+            token = strtok(NULL, "\n");
             if (token == NULL)
             {
                 printf("Errore, manca il messaggio \n");
@@ -342,7 +341,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                token[strcmp(token, "\n")] = 0;
+                //token[strcmp(token, "\n")] = 0;
                 send_message(client_sock, MSG_POST_BACHECA, token);
             }
         }
