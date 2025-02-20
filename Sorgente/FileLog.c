@@ -4,13 +4,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
+
 #include "../Header/macro.h"
 #include "../Header/Lista.h"
 #include "../Header/FileLog.h"
 #define FILELOG "FileLog.txt"
-pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Funzione per registrare un evento nel file di log
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 void file_log(char* utente, char* testo) {
     pthread_mutex_lock(&log_mutex);
     FILE* log_file = fopen(FILELOG, "a"); // Apri il file in modalità append
@@ -21,7 +22,7 @@ void file_log(char* utente, char* testo) {
     }
     utente[strcspn(utente, "\n")] = ' ';
     // Scrivi l'evento nel file di log
-    fprintf(log_file, "[ %s]%s\n",utente, testo);
+    fprintf(log_file, "[%s]%s\n",utente, testo);
     fflush(log_file);
 
     fclose(log_file); // Chiudi il file
