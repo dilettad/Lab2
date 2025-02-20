@@ -111,7 +111,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
             if (current->isPlayer == 1) { 
                 //printf("DEBUG: Invio classifica a %s\n", current->username);
                 printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
-                send_message(current->socket, MSG_PUNTI_FINALI, classifica);
+                send_message(current->fd, MSG_PUNTI_FINALI, classifica);
                 printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
             } else {
                 printf("ERRORE: Socket di %s non valido\n", current->username);
