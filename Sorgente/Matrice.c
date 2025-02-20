@@ -123,11 +123,9 @@ int trovaParola(cella **matrice, char *parola){
 
 
 // Funzione per creare la matrice da un file
-void Carica_MatricedaFile(FILE *file, cella **matrice)
-{
+void Carica_MatricedaFile(FILE *file, cella **matrice){
     // Controllo del file, esistenza
-    if (file == NULL)
-    {
+    if (file == NULL){
         printf("Errore di apertura del file\n");
         return;
     }
@@ -151,8 +149,6 @@ void Carica_MatricedaFile(FILE *file, cella **matrice)
     // Carico la matrice dal file
     // InputStringa(matrice, file);
 } 
-
-
 
 // Funzione per svuotare la matrice
 void svuotaMatrice(cella **matrice){
@@ -189,6 +185,7 @@ paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola) {
     pthread_mutex_unlock(&parole_trovate_mutex);
     return nuova_parola;
 }
+
 
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket

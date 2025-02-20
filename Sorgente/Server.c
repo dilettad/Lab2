@@ -188,12 +188,12 @@ void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
     printf("Invio segnale %d a tutti i giocatori \n", SIG);
     Client* current = clients->head;
     while (current != NULL){   
-        if(current->isPlayer== 1){                                 // While finchè ci sono giocatori
+        //if(current->isPlayer== 1){                                 // While finchè ci sono giocatori
             printf("Invio segnale %d al giocatore con tid %ld\n", SIG, current->thread_id);
             pthread_kill(current->thread_id, SIG); // Invia segnale SIG al thread current -> tid
-        } else {
+        //} else {
             printf ("DEBUG: Il client %s è già disconesso, segnale non inviato\n", current->username);
-        }
+        //}
             current = current->next;         // Passa al giocatore successivo
     }
     pthread_mutex_unlock(&clients_mutex);
@@ -331,6 +331,11 @@ void *thread_func(void *args){
         utente->last_activity = time(NULL);
         pthread_mutex_unlock(&lista_mutex);
         writef(retvalue, client_message.data);
+      
+        listaParoleTrovate =  NULL;
+          
+
+        printf("[PAROLETROVATE]: lista parole trovate?\n");
         switch (client_message.type){
         case MSG_MATRICE:
             //pthread_mutex_lock(&pausa_gioco_mutex);
@@ -358,6 +363,7 @@ void *thread_func(void *args){
                 Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
+
                 // Controllo se la parola è già stata trovata
                 if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
@@ -438,6 +444,7 @@ void *thread_func(void *args){
             while(current!=NULL){
                 if(pthread_equal(current->thread_id,pthread_self())){
                     current->isPlayer = 1;
+                    current->username = client_message.data;
                     pthread_mutex_unlock(&clients_mutex);
                     break;
                 }
@@ -477,18 +484,12 @@ void *thread_func(void *args){
        case MSG_FINE:      
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
             
-            pthread_mutex_lock(&lista_mutex);
-            elimina_giocatore(&lista, utente->username);  // Rimuove il giocatore dalla lista
-            pthread_mutex_unlock(&lista_mutex);
-
-            // Invia un messaggio di chiusura
-            //send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
-
+            pthread_mutex_lock(&clients_mutex);
+            deleteClient(clients,pthread_self());
+            pthread_mutex_unlock(&clients_mutex);    
             // Chiude il socket in modo sicuro
-            if (client_sock >= 0) {
-                close(client_sock);
-            }
-
+            close(client_sock);
+            printf("[Handler] thread terminato\n");
             pthread_exit(NULL);
 
         
@@ -678,6 +679,7 @@ void *game(void *arg){
             pausa_gioco = 1;
             continue;
         }
+          printf("DEBUG: Lista parole trovate resettata per il nuovo round\n");
 
         //INIZIA IL GIOCO
         time(&tempo_iniziale);
@@ -710,7 +712,7 @@ void *game(void *arg){
         }
         printf("DEBUG: Chiamando sigusr2_classifica_handler\n");
         sigusr2_classifica_handler(SIGUSR2);
-
+       
         pausa_gioco = 1;
         round = 0;
     }

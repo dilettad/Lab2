@@ -39,6 +39,7 @@ void svuotaMatrice(cella** matrice);
 int esiste_paroleTrovate(paroleTrovate *lista, char *parola);
 //paroleTrovate* aggiungi_parolaTrovata(paroleTrovate* head, const char* parola);
 paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola);
+void libera_paroleTrovate(paroleTrovate *lista);
 
 char* matrice_to_string(cella** matrix, int size);
 

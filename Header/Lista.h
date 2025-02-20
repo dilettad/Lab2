@@ -47,7 +47,7 @@ typedef struct{
 
 void push(Fifo *lista, Client *new_client);
 Client *pop(Fifo *list);
-void deleteClient(Fifo *lista,const char* username);
+void deleteClient(Fifo *lista,pthread_t tid);
 int seek(Fifo *list, char *username); // 1 se trova un cliente con quel username 0 altrimenti
 Fifo *create();
 void aggiorna_punteggio(listaGiocatori *lista, char *username, int punteggio);
