@@ -57,7 +57,6 @@ cella **matrice;
 paroleTrovate *listaParoleTrovate = NULL;
 Trie *Dizionario;
 Parametri parametri;
-Client *clients1;
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -97,29 +96,29 @@ char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
 }
 
 void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time_t tempo_iniziale, int durata_pausa) {
-   
-    pthread_mutex_lock(&lista_mutex);
-
+   //stampa di debug
     if (classifica == NULL || strlen(classifica) == 0) {
         printf("ERRORE: La classifica è NULL o vuota, non verrà inviata!\n");
-        pthread_mutex_unlock(&lista_mutex);
+        //pthread_mutex_unlock(&lista_mutex);
         return;
     }
 
     printf("Debug: Inizio invio classifica\n");
-
-    giocatore* current = lista->head;
+    
+    pthread_mutex_unlock(&clients_mutex);
+    Client* current = clients->head;
     while (current != NULL) {
-        if (fcntl(current->client_fd, F_GETFD) != -1) { 
-            //printf("DEBUG: Invio classifica a %s\n", current->username);
-            printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
-            send_message(current->client_fd, MSG_PUNTI_FINALI, classifica);
-            printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
-        } else {
-            printf("ERRORE: Socket di %s non valido\n", current->username);
+            if (current->isPlayer == 1) { 
+                //printf("DEBUG: Invio classifica a %s\n", current->username);
+                printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
+                send_message(current->socket, MSG_PUNTI_FINALI, classifica);
+                printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
+            } else {
+                printf("ERRORE: Socket di %s non valido\n", current->username);
+            }
+            current = current->next;
         }
-        current = current->next;
-    }
+    pthread_mutex_unlock(&clients_mutex);
 
     printf("DEBUG: Fine invio classifica\n");
     pthread_mutex_unlock(&lista_mutex);
@@ -185,20 +184,19 @@ giocatore* trova_giocatore(listaGiocatori* lista, pthread_t tid) {
 // HANDLER DEI SEGNALI
 // Funzione di invio segnali a tutti i giocatori della lista
 void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
-    pthread_mutex_lock(&lista_mutex);
-    giocatore* current = lista->head; // Inizializza un puntatore alla testa della lista dei giocatori
-    printf("Tid giocatore %ld \n", current->tid);
+    pthread_mutex_lock(&clients_mutex);
     printf("Invio segnale %d a tutti i giocatori \n", SIG);
+    Client* current = clients->head;
     while (current != NULL){   
-        if(fcntl(current->client_fd, F_GETFD) != 1){                                 // While finchè ci sono giocatori
-            printf("Invio segnale %d al giocatore con tid %ld\n", SIG, current->tid);
-            pthread_kill(current->tid, SIG); // Invia segnale SIG al thread current -> tid
+        if(current->isPlayer== 1){                                 // While finchè ci sono giocatori
+            printf("Invio segnale %d al giocatore con tid %ld\n", SIG, current->thread_id);
+            pthread_kill(current->thread_id, SIG); // Invia segnale SIG al thread current -> tid
         } else {
             printf ("DEBUG: Il client %s è già disconesso, segnale non inviato\n", current->username);
         }
             current = current->next;         // Passa al giocatore successivo
     }
-    pthread_mutex_unlock(&lista_mutex);
+    pthread_mutex_unlock(&clients_mutex);
 }
 
 void sigusr2_classifica_handler(int sig) {
@@ -426,10 +424,30 @@ void *thread_func(void *args){
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
+            //lock lista giocatori
             pthread_mutex_lock(&lista_mutex);
+            //registro il giocatore
             registrazione_client(client_sock, client_message.data, &lista);
-            utente->username = strdup(client_message.data);
+            //libero lock giocatori
             pthread_mutex_unlock(&lista_mutex);
+            //acquisisco lock client
+            pthread_mutex_lock(&clients_mutex);
+            //ciclo per aggiornare lo stato del client
+            Client* current = clients->head;
+                
+            while(current!=NULL){
+                if(pthread_equal(current->thread_id,pthread_self())){
+                    current->isPlayer = 1;
+                    pthread_mutex_unlock(&clients_mutex);
+                    break;
+                }
+            }
+
+            utente->username = strdup(client_message.data);
+
+            utente->isPlayer = 1;
+            pthread_mutex_unlock(&clients_mutex);
+            
             //file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
             break;
 
@@ -600,25 +618,16 @@ void *scorer() {
         offset += written;
     }
     classifica[offset] = '\0';
-    /* Stampa di debug per verificare i byte della stringa della classifica
-       printf("Classifica generata (byte):\n");
-       for (int i = 0; i < offset; i++) {
-           printf("%02x ", (unsigned char)classifica[i]);
-       }
-       printf("\n");
-    pthread_mutex_unlock(&classifica_mutex); */
 
-    printf("Classifica generata:\n%s\n", classifica);
-    //sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);   
-    
-    // sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);   
+    printf("Classifica generata:\n%s\n", classifica);  
     free(scorerVector);
-    //free(classifica);
-    // free(classifica);
     reset_punteggi();
     return NULL;
 }
 
+/********************/
+/*GESTIONE DEL GIOCO*/
+/*******************/
 void *game(void *arg){
     int round = 0;
     while(1){
@@ -681,16 +690,20 @@ void *game(void *arg){
         printf("La partita è iniziata alle %s con %d giocatori\n", orario_completo, lista.count);
 
         //INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
-        pthread_mutex_lock(&lista_mutex);
-        giocatore* current = lista.head;
+        pthread_mutex_lock(&clients_mutex);
+        //giocatore* current = lista.head;
+        Client* current = clients->head;
         while (current != NULL){
-            invio_matrice(current->client_fd, matrice);
-            char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
-            send_message(current->client_fd, MSG_TEMPO_PARTITA, temp);
-            printf("Inviato a giocatore %d\n", current->client_fd);
+            printf("[invio matrice] inzio a mandare");
+            //if(current->isPlayer==1){
+                invio_matrice(current->fd, matrice);
+                char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
+                send_message(current->fd, MSG_TEMPO_PARTITA, temp);
+                printf("Inviato a giocatore %d\n", current->socket);
+            //}
             current = current->next;
         }
-        pthread_mutex_unlock(&lista_mutex);
+        pthread_mutex_unlock(&clients_mutex);
 
         while(!pausa_gioco){
             //attesa
@@ -702,64 +715,7 @@ void *game(void *arg){
         round = 0;
     }
 }
-
-/*void* thread_func_activity(){
-    while(1){
-        sleep(10);
-        time_t now = time(NULL);
-        
-        pthread_mutex_lock(&clients_mutex);
-        Client* prev = NULL;
-        Client *current = clients->head;
-        
-        while (current != NULL) {
-            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES* 10) {
-                printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
-             
-           
-               
-                //pthread_cancel(current -> thread_id); // Cancella il thread
-                //pthread_join(current -> thread_id, NULL); // attenda la terminazione del thread e rilascia le risorse associate
-            
-                if (current->fd > 0){
-                // Invia un messaggio di disconnessione
-                send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");
-                // Chiudi la connessione e rimuovi il client dalla lista
-                close(current->fd);
-                current -> fd = -1; 
-            }   
-
-            if (current->active){
-                // Rimuove il giocatore dalla partita ma mantiene l'utente registrato -> quindi devo mettere un elimina_thread
-                elimina_giocatore(&lista, current->username); 
-               // elimina_thread(clients, pthread_self(), &clients_mutex);
-                }
-
-            pthread_mutex_unlock(&clients_mutex);
-            elimina_thread(clients, current->thread_id, &clients_mutex);
-            pthread_mutex_lock(&clients_mutex);
-
-            prev = NULL;
-            current = clients->head;
-            continue;
-
-            //  // Rimuovere il client dalla lista in modo sicuro
-            //  if (prev == NULL) {
-            //     clients->head = current->next;
-            // } else {
-            //     prev->next = current->next;
-            // }
-            // deleteClient(clients, current->username);
-            // free(current);
-            // break; 
-         
-            }
-            prev = current;
-            current = current->next; 
-        }
-        pthread_mutex_unlock(&clients_mutex);
-    }
-}*/
+//DISCONNESSIONE INATTIVITA
 void *thread_func_activity() {
     while (1) {
         sleep(10);
@@ -768,21 +724,11 @@ void *thread_func_activity() {
         pthread_mutex_lock(&clients_mutex);
         Client *prev = NULL;
         Client *current = clients->head;
-
         while (current != NULL) {
             if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 10) {
                 printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
-
-                // Chiude il socket del client solo se è valido
-                if (current->fd >= 0) {
-                    send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");
-                    close(current->fd);
-                    current->fd = -1;
-                }
-
-                // Rimuove il giocatore dalla partita ma mantiene l'utente registrato
-                elimina_giocatore(&lista, current->username);
-
+                int retvalue;
+                writef(retvalue,"[SERVER]dopo aver mandato\n");
                 // Rimuove il thread del client
                 elimina_thread(clients, current->thread_id, &clients_mutex);
 
@@ -800,8 +746,9 @@ void *thread_func_activity() {
         pthread_mutex_unlock(&clients_mutex);
     }
 }
-
-
+/////////
+/*MAIN*/
+////////
 int main(int argc, char *argv[]){
     Dizionario = create_node();
     Load_Dictionary(Dizionario, DIZIONARIO);

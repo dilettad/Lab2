@@ -106,12 +106,13 @@ void *receiver(void *args)
             break;
 
         case MSG_FINE:
-            pthread_mutex_unlock(&message_mutex);
+            //pthread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
             exit(EXIT_SUCCESS);
             break;
 
         case MSG_MATRICE:
+            printf("\nMatrice: \n");
             if (matrice == NULL)
             {
                 fprintf(stderr, "Errore nell'allocazione della matrice\n");

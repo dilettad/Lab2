@@ -20,7 +20,7 @@ int registra_bool = 0; // Per vedere se è loggato o no
 void add_client(listaGiocatori* lista, int client_fd, char* username){
     giocatore *new_giocatore = (giocatore *)malloc(sizeof(giocatore));
     new_giocatore->username = strdup(username);
-    new_giocatore->client_fd = client_fd;
+    //new_giocatore->client_fd = client_fd;
     new_giocatore->tid = pthread_self();
     // strcpy(new_giocatore->username, username);
     
@@ -205,27 +205,33 @@ giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
 }
 */
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex) {
-    pthread_mutex_lock(clients_mutex);
+    printf("[elimina_thread]inizio\n");
+                
+    //pthread_mutex_lock(clients_mutex);
+    
+    printf("[elimina_thread]preso info client\n");
     Client *current = clients->head;
+    printf("[elimina_thread]preso info client\n");
     Client *prev = NULL;
 
+    printf("[elimina_thread]preso info client\n");
     while (current != NULL) {
         if (pthread_equal(current->thread_id, thread_id)) { 
             printf("[SERVER] Eliminazione del thread per il client %s (tid: %ld)\n", 
             current->username ? current->username : "Sconosciuto", thread_id);
-
-            // Chiude il socket del client
-            if (current->fd >= 0) {
-                printf("[SERVER] Chiudo il socket del client %s (fd: %d)\n", current->username, current->fd);
-                close(current->fd);
-                //current->fd = -1;
-            }
-
-
+            send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");
             // Cancella il thread solo se è ancora attivo
             pthread_cancel(current->thread_id);
             pthread_join(current->thread_id, NULL);
+            // Chiude il socket del client
+            //if (current->fd >= 0) {
+            printf("[SERVER] Chiudo il socket del client %s (fd: %d)\n", current->username, current->fd);
+            close(current->fd);
+                //current->fd = -1;
+            //}
 
+
+            
             // Rimuove il client dalla lista
             if (prev == NULL) {
                 clients->head = current->next;
@@ -236,13 +242,13 @@ void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients
             // Libera la memoria
             free(current->username);
             free(current);
-            pthread_mutex_unlock(clients_mutex);
+            //pthread_mutex_unlock(clients_mutex);
             return;
         }
         prev = current;
         current = current->next;
     }
 
-    pthread_mutex_unlock(clients_mutex);
+    //pthread_mutex_unlock(clients_mutex);
 }
 

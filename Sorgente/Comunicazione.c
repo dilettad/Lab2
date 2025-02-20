@@ -24,6 +24,7 @@ void send_message(int client_socket, char type, char* data){
     SYSC(retvalue, write(client_socket, &type, sizeof(char)), "errore lettur atipo messaggio\n")
     // printf("invio messaggio\n");
     // invio del campo data
+    //printf("%s\n",data);
     SYSC(retvalue, write(client_socket, data, len), "nell'invio del payload")
     // printf("invio messaggio\n");
 }

@@ -12,7 +12,7 @@ typedef struct Client{
     int fd;              // File descriptor del client
     int score;           // Punteggio utente
     int socket;          // Socket del client
-    int active;          // Se attivo(1) o no (0)
+    int isPlayer;        // Stato del client
     struct Client *next; // Puntatore al prossimo utente (per la lista)
     struct sockaddr_in address; // Indirizzo del client 
     pthread_t thread_id; // ID del thread
@@ -30,7 +30,7 @@ typedef struct Fifo{
 typedef struct giocatore{
     char *username;
     pthread_t tid;
-   // int client_fd;//sta cosa deve morire capisci dove viene usato e distruggilo
+    //int client_fd;//sta cosa deve morire capisci dove viene usato e distruggilo
     int punteggio;
     int count;
     int active; // Se il giocatore è attivo (loggato) oppure no
