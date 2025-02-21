@@ -69,15 +69,6 @@ pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t scorer_tid;
 
-
-void print_debug_string(const char *str) {
-    printf("DEBUG STRING: ");
-    for (size_t i = 0; i < strlen(str); i++) {
-        printf("[%c:%02X] ", str[i], (unsigned char)str[i]);
-    }
-    printf("\n");
-}
-
 // FUNZIONI
 // Calcola tempo rimanente
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
@@ -113,13 +104,14 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
     }
 
     printf("Debug: Inizio invio classifica\n");
-    
+
     pthread_mutex_unlock(&clients_mutex);
     Client* current = clients->head;
     while (current != NULL) {
             if (current->isPlayer == 1) { 
                 //printf("DEBUG: Invio classifica a %s\n", current->username);
                 printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
+                send_message(current->socket, MSG_PUNTI_FINALI, classifica);
                 send_message(current->fd, MSG_PUNTI_FINALI, classifica);
                 printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
             } else {
@@ -241,7 +233,7 @@ void sigusr2_classifica_handler(int sig) {
 
     // Invia la classifica ai giocatori
     sendClassifica(&lista, pthread_self(), classifica, tempo_iniziale, durata_pausa);
-    
+
 
     printf("DEBUG: pausa_gioco impostata a 1 dopo l'invio della classifica\n");
 
@@ -294,13 +286,13 @@ void alarm_handler(int sig){
         pausa_gioco = 1;//metto gioco in pausa
         printf("La partita è finita, inizierà tra: %d secondi\n", durata_pausa);
     //    sigusr2_classifica_handler(SIGUSR2);
-    
+
     if (!sigusr2_inviato){
         if (lista.count > 0) {
             invia_SIG(&lista, SIGUSR2, lista_mutex);
             printf("Invio segnale SIGUSR2\n");
          //   sigusr2_inviato = 1; // Impedisce invii multipli per lo stesso round
-          
+
         } else {
             printf("DEBUG: Nessun giocatore registrato, SIGUSR2 non inviato.\n");
         }
@@ -332,19 +324,18 @@ void *thread_func(void *args){
     utente->last_activity = time(NULL);  // Aggiorna il timestamp dell'attività
     pthread_mutex_unlock(&lista_mutex);
 
-    //int retvalue;
+    int retvalue;
 
     while (1){
         message client_message = receive_message(client_sock);
-        printf("[PAROLA PRESA]: %s\n", client_message.data);
         pthread_mutex_lock(&lista_mutex);
         utente->last_activity = time(NULL);
         pthread_mutex_unlock(&lista_mutex);
-       // writef(retvalue, client_message.data);
-      
-        listaParoleTrovate =  NULL;
-          
-
+        writef(retvalue, client_message.data);
+    /*if(pausa_gioco == 1){
+            listaParoleTrovate =  NULL;
+           } // NON MI LIBERA CORRETTAMENTE
+    */
         printf("[PAROLETROVATE]: lista parole trovate?\n");
         switch (client_message.type){
         case MSG_MATRICE:
@@ -373,19 +364,10 @@ void *thread_func(void *args){
                 Caps_Lock(client_message.data);
                 printf("La parola da cercare è %s\n", client_message.data);
                 fflush(0);
-              
-                
-                client_message.data[strcspn(client_message.data, "\n")] = '\0';
-                client_message.data[strcspn(client_message.data, "\r")] = '\0'; // Rimuove eventuali \r
-                client_message.data[strcspn(client_message.data, " ")] = '\0'; // Rimuove eventuali \r
-
-                Caps_Lock(client_message.data);
-                printf("La parola da cercare è %s\n", client_message.data);
-                fflush(stdout);
 
                 // Controllo se la parola è già stata trovata
                 if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
-                    send_message(client_sock, MSG_PUNTI_PAROLA, "Questa parole vale 0 perchè già scritta");
+                    send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                     break;
                 }
                 // Controllo se parola è in matrice
@@ -404,7 +386,7 @@ void *thread_func(void *args){
                 }
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                 else{
-                    printf("Aggiungo la parola %s alla lista delle parole trovate \n", client_message.data);
+                    printf("Aggiungo la parola alla lista delle parole trovate \n");
                     listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
                     // Recupero il punteggio del giocatore attuale
                     int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
@@ -427,9 +409,7 @@ void *thread_func(void *args){
                         player -> punteggio += punti_parola;
                     }
                     pthread_mutex_unlock(&lista_mutex);
-                    
                     //file_log(utente->username, client_message.data);
-                    //fflush(NULL);
                     //punteggio_corrente += punti_parola;
                     // Invio i punti della parola
                     char messaggiopuntiparola[90];
@@ -449,6 +429,7 @@ void *thread_func(void *args){
             //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
+        // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
         case MSG_REGISTRA_UTENTE:
             //lock lista giocatori
             pthread_mutex_lock(&lista_mutex);
@@ -460,7 +441,7 @@ void *thread_func(void *args){
             pthread_mutex_lock(&clients_mutex);
             //ciclo per aggiornare lo stato del client
             Client* current = clients->head;
-                
+
             while(current!=NULL){
                 if(pthread_equal(current->thread_id,pthread_self())){
                     current->isPlayer = 1;
@@ -473,11 +454,9 @@ void *thread_func(void *args){
             utente->username = strdup(client_message.data);
 
             utente->isPlayer = 1;
-           
             pthread_mutex_unlock(&clients_mutex);
-           // file_log(utente->username, "Registrazione avvenuta con successo");
-           // fflush(NULL);
 
+            //file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
             break;
 
         case MSG_PUNTI_FINALI:
@@ -505,17 +484,16 @@ void *thread_func(void *args){
         */
        case MSG_FINE:      
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
-            
+
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients,pthread_self());
-            pthread_mutex_unlock(&clients_mutex);
-            lista.count --;    
+            pthread_mutex_unlock(&clients_mutex);    
             // Chiude il socket in modo sicuro
             close(client_sock);
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);
 
-        
+
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
@@ -524,7 +502,7 @@ void *thread_func(void *args){
                 free(utente->username);
                 utente->username = NULL;
             }
-          */    
+          */      
             //file_log(client_message.data, "Utente cancellato");
             send_message(client_sock, MSG_OK, "Utente cancellato con successo");
             break;
@@ -534,10 +512,10 @@ void *thread_func(void *args){
            pthread_mutex_lock(&lista_mutex);
             if (username_esiste(&lista, client_message.data)) {
                 //send_message(client_sock, MSG_OK, "Utente già loggato");
-                file_log(client_message.data, "Utente già loggato");
+              //  file_log(client_message.data, "Utente già loggato");
             } else {
                 send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
-                file_log(client_message.data, "Utente non trovato, registrati prima");
+               // file_log(client_message.data, "Utente non trovato, registrati prima");
             }
             pthread_mutex_unlock(&lista_mutex);
             break;
@@ -595,7 +573,7 @@ void *scorer() {
         memset(classifica,0,max_length);
         printf("Scorer in esecuzione\n");
     pthread_mutex_unlock(&classifica_mutex);
-   
+
 
     printf("Scorer in esecuzione\n");
     pthread_mutex_lock(&lista_mutex);
@@ -694,6 +672,7 @@ void *game(void *arg){
 
         while(pausa_gioco){
             //attesa
+            listaParoleTrovate = NULL;
         }
         //FINE ATTESA
 
@@ -732,10 +711,11 @@ void *game(void *arg){
 
         while(!pausa_gioco){
             //attesa
+          
         }
         printf("DEBUG: Chiamando sigusr2_classifica_handler\n");
         sigusr2_classifica_handler(SIGUSR2);
-       
+
         pausa_gioco = 1;
         round = 0;
     }
@@ -756,7 +736,7 @@ void *thread_func_activity() {
                 writef(retvalue,"[SERVER]dopo aver mandato\n");
                 // Rimuove il thread del client
                 elimina_thread(clients, current->thread_id, &clients_mutex);
-                lista.count --;   
+
                 // Ripristina il puntatore per continuare la scansione della lista
                 if (prev == NULL) {
                     current = clients->head;
@@ -858,4 +838,5 @@ int main(int argc, char *argv[]){
             return 1;
         }
     }
-}    
+
+}   
