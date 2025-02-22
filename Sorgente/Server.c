@@ -339,6 +339,10 @@ void *thread_func(void *args){
         printf("[PAROLETROVATE]: lista parole trovate?\n");
         switch (client_message.type){
         case MSG_MATRICE:
+        if (utente->isPlayer == 0){
+            send_message(client_sock, MSG_ERR, "Devi essere loggato per richiedere la matrice di gioco");
+            break;
+        }
             //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
                 // Gioco quindi invio la matrice attuale e il tempo di gioco rimanente
@@ -356,6 +360,10 @@ void *thread_func(void *args){
             break;
 
         case MSG_PAROLA:
+        if (utente->isPlayer == 0){
+            send_message(client_sock, MSG_ERR, "Devi essere loggato per indicare la parola");
+            break;
+        }
            //pthread_mutex_lock(&pausa_gioco_mutex);
             if (pausa_gioco == 0){
                 client_message.data[strcspn(client_message.data, "\n")] = '\0';
@@ -475,13 +483,6 @@ void *thread_func(void *args){
             //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
-        /*          
-        case MSG_FINE:      
-            close(client_sock);
-            pthread_exit(NULL);
-            send_message(client_sock, MSG_FINE, "Disconnessione avvenuta con successo");
-            break;
-        */
        case MSG_FINE:      
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
 
