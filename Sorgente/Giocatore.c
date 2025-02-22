@@ -153,7 +153,7 @@ int login_utente(int client_fd, listaGiocatori *lista, char *username){
     }
 
     //  pthread_mutex_unlock(&lista_mutex);
-    send_message(client_fd, MSG_ERR, "Errore: username non trovato.");
+  //  send_message(client_fd, MSG_ERR, "Errore: username non trovato.");
     return 1;
 }
 

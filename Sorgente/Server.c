@@ -438,16 +438,15 @@ void *thread_func(void *args){
             break;
 
         // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
-        case MSG_REGISTRA_UTENTE:
-            //lock lista giocatori
+        /*case MSG_REGISTRA_UTENTE:
+   
             pthread_mutex_lock(&lista_mutex);
-            //registro il giocatore
             registrazione_client(client_sock, client_message.data, &lista);
-            //libero lock giocatori
             pthread_mutex_unlock(&lista_mutex);
-            //acquisisco lock client
+
+
             pthread_mutex_lock(&clients_mutex);
-            //ciclo per aggiornare lo stato del client
+ 
             Client* current = clients->head;
 
             while(current!=NULL){
@@ -460,12 +459,41 @@ void *thread_func(void *args){
             }
 
             utente->username = strdup(client_message.data);
-
             utente->isPlayer = 1;
             pthread_mutex_unlock(&clients_mutex);
 
             //file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
+            break;*/
+            case MSG_REGISTRA_UTENTE:
+            pthread_mutex_lock(&lista_mutex);
+            registrazione_client(client_sock, client_message.data, &lista);
+            
+            // Attiva l'utente subito dopo la registrazione
+            giocatore *newPlayer = lista.head;
+            while (newPlayer != NULL) {
+                if (strcmp(newPlayer->username, client_message.data) == 0) {
+                    newPlayer->active = 1;  
+                    break;
+                }
+                newPlayer = newPlayer->next;
+            }
+            pthread_mutex_unlock(&lista_mutex);
+        
+            pthread_mutex_lock(&clients_mutex);
+            Client* current = clients->head;
+        
+            while(current != NULL){
+                if(pthread_equal(current->thread_id, pthread_self())){
+                    current->isPlayer = 1;
+                    current->username = strdup(client_message.data);
+                    break;
+                }
+                current = current->next;
+            }
+            pthread_mutex_unlock(&clients_mutex);
+            send_message(client_sock, MSG_OK, "Registrazione avvenuta con successo e login automatico.");
             break;
+            
 
         case MSG_PUNTI_FINALI:
             //pthread_mutex_lock(&pausa_gioco_mutex);
@@ -540,6 +568,8 @@ void *thread_func(void *args){
                 pthread_mutex_unlock(&clients_mutex);
             }
         break;
+
+        
 
         case MSG_POST_BACHECA:
             if (utente->isPlayer == 0){
