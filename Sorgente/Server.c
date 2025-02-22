@@ -659,97 +659,96 @@ void *scorer() {
 /********************/
 /*GESTIONE DEL GIOCO*/
 /*******************/
-void *game(void *arg){
+void *game(void *arg) {
     int round = 0;
-    while(1){
-        if(lista.count == 0){
-            printf("Nessun giocatore registrato, attesa...\n");
-            //ATTESA FINO A QUANDO NON SI REGISTRA UN NUOVO GIOCATORE
-            while(lista.count == 0){
-                time(&tempo_iniziale);
-            }
-        }
-        //REGISTRAZIONE DEI SEGNALI
-        //signal(SIGUSR2, alarm_handler);
 
+    while (1) {
+        // 🔹 Attendi almeno un giocatore registrato prima di iniziare
+        pthread_mutex_lock(&lista_mutex);
+        while (lista.count == 0) {
+            pthread_mutex_unlock(&lista_mutex);
+            printf("Nessun giocatore registrato, attesa...\n");
+            sleep(1);
+            pthread_mutex_lock(&lista_mutex);
+        }
+        pthread_mutex_unlock(&lista_mutex);
 
         printf("DEBUG: classifica_inviata resettata a 0\n");
-       // classifica_inviata = 0;
-       // printf("DEBUG: classifica_inviata resettata a 0\n");
 
-        //INIZIA LA PAUSA
+        // 🔹 INIZIA LA PAUSA PRIMA DEL NUOVO ROUND
         time(&tempo_iniziale);
         alarm(durata_pausa);
         printf("-----------------------------------------------------------------------\n");
         printf("Il round è terminato, inizierà tra: %d secondi\n", durata_pausa);
 
+        // 🔹 Reset della lista delle parole trovate per ogni giocatore (non Client!)
+        pthread_mutex_lock(&clients_mutex);
         Client * player1 = clients->head;
         while (player1 != NULL){
            // libera_paroleTrovate(player1->paroleTrovate);
             player1->paroleTrovate = NULL;
             player1 = player1->next;
         }
-        printf("[DEBUG LISTA PAROLE TROVATE GIOCATORE]: La lista delle parole trovate resettata per il nuovo round");
+        pthread_mutex_unlock(&clients_mutex);
+        printf("[DEBUG LISTA PAROLE TROVATE]: Lista parole resettata per il nuovo round\n");
 
-        //SE IL ROUND NON è STATO PREPARATO ALLORA LO PREPARA  -> è giusto??
-        if(round == 0){
-            //pthread_mutex_lock(&matrix_mutex);
-            FILE *file = fopen("../Matrici.txt", "rb"); //
-             if (file == NULL)
-            {
+        // 🔹 SE IL ROUND NON È STATO PREPARATO, LO PREPARA
+        if (round == 0) {
+            FILE *file = fopen("../Matrici.txt", "rb");
+            if (file == NULL) {
                 perror("Errore nell'apertura del file");
-                return NULL;  
-            } 
-            //cella **matrice = generateMatrix();
-            Carica_MatricedaFile(file, matrice);        // Carica i dati della matrice dal file
+                return NULL;
+            }
+            Carica_MatricedaFile(file, matrice);
             fclose(file);
-            //pthread_mutex_unlock(&matrix_mutex);
             round = 1;
         }
 
-        while(pausa_gioco){
-            //attesa
-          //  listaParoleTrovate = NULL;
+        // 🔹 Attendi che la pausa finisca
+        while (pausa_gioco) {
+            sleep(1);
         }
-        //FINE ATTESA
 
-        //SE ALLA FINE DELLA PAUSA NON CI SONO GIOCATORI REGISTRATI, SI RIPETE IL CICLO DA CAPO E SI ATTENDONO NUOVI GIOCATORI, MANTENENDO IL ROUND GIÀ PREPARATO
-        if(lista.count == 0){
+        // 🔹 Se alla fine della pausa non ci sono giocatori, ripeti il ciclo
+        pthread_mutex_lock(&lista_mutex);
+        if (lista.count == 0) {
+            pthread_mutex_unlock(&lista_mutex);
             pausa_gioco = 1;
             continue;
         }
-          printf("DEBUG: Lista parole trovate resettata per il nuovo round\n");
+        pthread_mutex_unlock(&lista_mutex);
 
-        //INIZIA IL GIOCO
+        printf("DEBUG: Lista parole trovate resettata per il nuovo round\n");
+
+        // 🔹 INIZIA IL GIOCO
         time(&tempo_iniziale);
-        struct tm* timeinfo = localtime(&tempo_iniziale);
-        char* orario_completo = asctime(timeinfo);
+        struct tm *timeinfo = localtime(&tempo_iniziale);
+        char *orario_completo = asctime(timeinfo);
         char orario[9];
         snprintf(orario, sizeof(orario), "%.8s", orario_completo + 11);
         alarm(durata_partita);
         printf("-----------------------------------------------------------------------\n");
         printf("La partita è iniziata alle %s con %d giocatori\n", orario_completo, lista.count);
 
-        //INVIO DELLA MATRICE E DEL TEMPO RIMANENTE AI GIOCATORI REGISTRATI E QUINDI PARTECIPANTI AL GIOCO
+        // 🔹 INVIA LA MATRICE SOLO AI GIOCATORI REGISTRATI
         pthread_mutex_lock(&clients_mutex);
-        //giocatore* current = lista.head;
-        Client* current = clients->head;
-        while (current != NULL){
-            printf("[invio matrice] inzio a mandare");
-            //if(current->isPlayer==1){
+        Client *current = clients->head;
+        while (current != NULL) {
+            if (current->isPlayer == 1) { // 🔹 Controlla che il client sia registrato
+                printf("[INVIO MATRICE] Invio a %s\n", current->username);
                 invio_matrice(current->fd, matrice);
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
                 send_message(current->fd, MSG_TEMPO_PARTITA, temp);
-                printf("Inviato a giocatore %d\n", current->socket);
-            //}
+            }
             current = current->next;
         }
         pthread_mutex_unlock(&clients_mutex);
 
-        while(!pausa_gioco){
-            //attesa
-          
+        // 🔹 ATTENDI LA FINE DEL ROUND
+        while (!pausa_gioco) {
+            sleep(1);
         }
+
         printf("DEBUG: Chiamando sigusr2_classifica_handler\n");
         sigusr2_classifica_handler(SIGUSR2);
 
@@ -757,6 +756,9 @@ void *game(void *arg){
         round = 0;
     }
 }
+
+
+
 //DISCONNESSIONE INATTIVITA
 void *thread_func_activity() {
     while (1) {
@@ -859,8 +861,7 @@ int main(int argc, char *argv[]){
     pthread_t activity_thread;
     SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_activity, NULL), "nella creazione del thread di attività");
 
-    while (1)
-    {
+    while (1){   
         // Accetta la connessione
         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_len);
         printf("Connessione accettata\n");
