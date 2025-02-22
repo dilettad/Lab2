@@ -29,3 +29,7 @@
 [ dilettaaa ]Registrazione avvenuta con successo
 [ madonna ]Registrazione avvenuta con successo
 [ porcocane ]Registrazione avvenuta con successo
+[paolo ]CASI
+[pippo ]CASI
+[dile ]CASE
+[dile  ]VOLTA

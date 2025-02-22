@@ -187,6 +187,16 @@ paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola) {
 }
 
 
+void libera_paroleTrovate(paroleTrovate *lista) {
+    while (lista != NULL) {
+        paroleTrovate *temp = lista;
+        lista = lista->next;
+        free(temp);
+    }
+}
+
+
+
 // Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket
 void invio_matrice(int client_fd, cella **matrix){

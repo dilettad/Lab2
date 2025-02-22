@@ -1,3 +1,9 @@
+#ifndef MATRICE_H
+#define MATRICE_H
+
+
+
+
 #include <stdio.h>
 #include <stdbool.h> 
 #include <stdio.h>
@@ -44,3 +50,5 @@ void libera_paroleTrovate(paroleTrovate *lista);
 char* matrice_to_string(cella** matrix, int size);
 
 void invio_matrice(int client_fd, cella** matrix);
+
+#endif // MATRICE_H

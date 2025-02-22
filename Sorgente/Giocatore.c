@@ -88,8 +88,28 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
     // Se l'username è valido, invio un messaggio di conferma
     send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
     registra_bool = 1;
+    
 }
 
+/*Funzione che recupera il nome utente di un giocatore dalla lista
+giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
+    pthread_mutex_lock(&newLista->lock);
+    // listaGiocatori head = newLista->lista;
+    giocatore* lista = newLista->head;
+    //Fino a che la lista non è vuota, controllo se il nome utente coincide con quello nella lista
+    while (lista != NULL) {
+        if (strcmp(lista->username, username) == 0) {
+            pthread_mutex_unlock(&newLista->lock);
+            return lista; //?
+        }
+        lista = lista->next;
+    }
+    //Non ho trovato il nome utente dentro la lista
+    pthread_mutex_unlock(&newLista->lock);
+    return NULL;
+}
+*/
+/*
 int login_utente(int client_fd,listaGiocatori *lista, char *username){
     giocatore *current = lista->head;
     if (current -> active == 1){
@@ -109,7 +129,34 @@ int login_utente(int client_fd,listaGiocatori *lista, char *username){
      send_message(client_fd, MSG_OK, "Login avvenuto con successo");
     current -> active = 1;
     return 0;
+}*/
+
+int login_utente(int client_fd, listaGiocatori *lista, char *username){
+   // pthread_mutex_lock(&lista_mutex);
+    giocatore *current = lista->head;
+    // Scansiona la lista per trovare il giocatore
+    while (current != NULL) {
+        if (strcmp(current->username, username) == 0) {
+            if (current->active == 1) {
+             //   pthread_mutex_unlock(&lista_mutex);
+                send_message(client_fd, MSG_ERR, "Sei già loggato");
+                return 1;
+            }
+
+            // Attiva il giocatore
+            current->active = 1;
+           // pthread_mutex_unlock(&lista_mutex);
+            send_message(client_fd, MSG_OK, "Login avvenuto con successo");
+            return 0;
+        }
+        current = current->next;
+    }
+
+    //  pthread_mutex_unlock(&lista_mutex);
+    send_message(client_fd, MSG_ERR, "Errore: username non trovato.");
+    return 1;
 }
+
 
 // //Funzione per stampare la lista dei client
 void stampa_lista_clienti(Fifo *lista){
@@ -160,50 +207,7 @@ void elimina_giocatore(listaGiocatori *lista, char *username){
     printf("Giocatore non trovato: %s\n", username);
     fflush(0);
 }
-/*
-void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex){
-    pthread_mutex_lock(clients_mutex);
-    Client *current = clients->head;
-    Client *prev = NULL;
 
-    while (current != NULL) {
-        if (pthread_equal(current->thread_id, thread_id) != 0) { // Usa thread_id invece di clients_mutex
-            pthread_cancel(current->thread_id);
-            pthread_join(current->thread_id, NULL);
-            if (prev == NULL) {
-                clients->head = current->next;
-            } else {
-                prev->next = current->next;
-            }
-            free(current->username);
-            free(current);
-            pthread_mutex_unlock(clients_mutex);
-            return;
-        }
-        prev = current;
-        current = current->next;
-    }
-    pthread_mutex_unlock(clients_mutex);
-}
-*/
-/* Funzione che recupera il nome utente di un giocatore dalla lista
-giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
-    pthread_mutex_lock(&newLista->lock);
-    // listaGiocatori head = newLista->lista;
-    giocatore* lista = newLista->head;
-    //Fino a che la lista non è vuota, controllo se il nome utente coincide con quello nella lista
-    while (lista != NULL) {
-        if (strcmp(lista->username, username) == 0) {
-            pthread_mutex_unlock(&newLista->lock);
-            return lista; //?
-        }
-        lista = lista->next;
-    }
-    //Non ho trovato il nome utente dentro la lista
-    pthread_mutex_unlock(&newLista->lock);
-    return NULL;
-}
-*/
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex) {
     printf("[elimina_thread]inizio\n");
                 

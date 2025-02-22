@@ -4,6 +4,7 @@
 // Definizione del tipo di dati per struttura utente
 #include <pthread.h>
 #include <netinet/in.h>
+#include "Matrice.h"
 #define MSG_SERVER_SHUTDOWN 'B'
 struct Client;
 
@@ -17,6 +18,7 @@ typedef struct Client{
     struct sockaddr_in address; // Indirizzo del client 
     pthread_t thread_id; // ID del thread
     time_t last_activity; // Ultima attività dell'utente 
+  
 } Client;
 
 
@@ -34,8 +36,8 @@ typedef struct giocatore{
     int punteggio;
     int count;
     int active; // Se il giocatore è attivo (loggato) oppure no
-    
     struct giocatore *next;
+    paroleTrovate *paroleTrovate;
 } giocatore;
 
 // Lista giocatori registrati
