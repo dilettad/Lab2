@@ -485,7 +485,6 @@ void *thread_func(void *args){
 
        case MSG_FINE:      
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
-
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients,pthread_self());
             pthread_mutex_unlock(&clients_mutex);    
@@ -494,7 +493,7 @@ void *thread_func(void *args){
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);
 
-        case MSG_CANCELLA_UTENTE:
+      /* case MSG_CANCELLA_UTENTE: // Errato perchè così faccio il logout
             pthread_mutex_lock(&lista_mutex);
              Client *player = clients->head;
                  giocatore* prova = lista.head;
@@ -505,10 +504,13 @@ void *thread_func(void *args){
             while (player != NULL) {
                 if (strcmp(player ->username, client_message.data) == 0) {
                     // Disattiva il giocatore invece di eliminarlo
-                    player ->isPlayer= 0;
+                    player ->isPlayer = 0;
                     prova->active = 0;
                     lista.count --;
+                    elimina_giocatore(&lista, client_message.data);
                     pthread_mutex_unlock(&lista_mutex);
+
+
                     send_message(client_sock, MSG_OK, "Utente disconnesso con successo. Puoi loggarti di nuovo.");
                     break;
                     //close(client_sock);
@@ -518,7 +520,72 @@ void *thread_func(void *args){
             }
             pthread_mutex_unlock(&lista_mutex);
             //send_message(client_sock, MSG_ERR, "Errore: utente non trovato.");
+        break; */
+
+        /*case MSG_CANCELLA_UTENTE:
+        printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);
+        
+        pthread_mutex_lock(&clients_mutex);
+        deleteClient(clients,pthread_self());
+        pthread_mutex_unlock(&clients_mutex); 
+        
+        pthread_mutex_lock(&lista_mutex);
+        elimina_giocatore(&lista, client_message.data);
+       // deleteClient(clients,pthread_self());
+        pthread_mutex_unlock(&lista_mutex);
+        
+        // Chiude il socket in modo sicuro
+        close(client_sock);
+        printf("[Handler] Cancellazione avvenuta con successo\n");
+        pthread_exit(NULL);
         break;
+        */
+
+        //Controllo se il giocatore è loggato o meno
+       /*case MSG_CANCELLA_UTENTE:
+        //Elimino il giocatore dalla lista
+        if (utente->isPlayer == 0){
+            send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnettersi");
+            break;
+        }  
+        pthread_mutex_lock(&lista_mutex);
+        elimina_giocatore(&lista, client_message.data);
+        pthread_mutex_unlock(&lista_mutex);
+
+        close(client_sock);
+        printf("[Handler] Cancellazione avvenuta con successo\n");
+        pthread_exit(NULL);
+        break;
+        */
+
+        case MSG_CANCELLA_UTENTE:
+            printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);
+
+            
+            if (utente->isPlayer == 0) {
+                send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnetterti");
+                break;
+            }
+
+            pthread_mutex_lock(&lista_mutex);
+            elimina_giocatore(&lista, client_message.data);
+            pthread_mutex_unlock(&lista_mutex);
+
+            send_message(client_sock, MSG_FINE, "Utente cancellato correttamente");
+           
+            pthread_mutex_lock(&clients_mutex);
+            deleteClient(clients, pthread_self());
+            pthread_mutex_unlock(&clients_mutex);
+
+            shutdown(client_sock, SHUT_RDWR);  
+            close(client_sock);
+
+            printf("[Handler] Cancellazione avvenuta con successo\n");
+
+            // Termina il thread in modo pulito
+            pthread_exit(NULL);
+            break;
+
 
 
         case MSG_LOGIN_UTENTE:
