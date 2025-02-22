@@ -65,61 +65,71 @@ void stampaMatrice(cella **matrice){
     // return;
 }
 
-// Funzione ricorsiva per cercare una parola
-int trovaParolaAux(cella **matrice, int i, int j, char *parola, int index)
-{
-    // Variazioni coordinate in base alle 8 direzionali: verticali, orizzontali e diagonali
-    int cose[] = {0, 1, 0, -1, 1, 0, -1, 0, 1, 1, 1, -1, -1, 1, -1, -1};
-    // printf("%c\n",parola[index]);
-    if (index >= strlen(parola))
-    {
-        return 1; // Parola trovata
+int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) {
+    if (index >= strlen(parola)) {
+        return 1;  // Se abbiamo verificato tutta la parola, allora esiste
     }
 
-    for (size_t c = 0; c < 16; c += 2)
-    {
-        int x = i + cose[c];     // coordinata x aggiornata
-        int y = j + cose[c + 1]; // coordinata y aggiornata
-
-        // printf("%c\n",matrice[x][y].value );
-        if (x < MATRIX_SIZE && y < MATRIX_SIZE && x >= 0 && y >= 0)
-        {
-            if (matrice[x][y].value == parola[index] && matrice[x][y].usato == false)
-            {
-                matrice[x][y].usato = true;
-                if (trovaParolaAux(matrice, x, y, parola, index + 1))
-                {
-                    return 1;
-                }
-                matrice[x][y].usato = false;
-            }
-        }
+    // Controlla i limiti della matrice
+    if (i < 0 || i >= MATRIX_SIZE || j < 0 || j >= MATRIX_SIZE) {
+        return 0;
     }
-    return 0; // Parola non trovata
+
+    //Caso speciale: gestione della lettera "Q"
+    if (matrice[i][j].value == 'Q' && index + 1 < strlen(parola) && parola[index] == 'Q' && parola[index + 1] == 'U') {
+        printf("DEBUG: Trovata 'QU' in (%d, %d)\n", i, j);
+        return trovaParolaAux(matrice, i + 1, j, parola, index + 2) ||  
+               trovaParolaAux(matrice, i - 1, j, parola, index + 2) ||  
+               trovaParolaAux(matrice, i, j + 1, parola, index + 2) ||  
+               trovaParolaAux(matrice, i, j - 1, parola, index + 2) ||  
+               trovaParolaAux(matrice, i + 1, j + 1, parola, index + 2) ||  
+               trovaParolaAux(matrice, i - 1, j - 1, parola, index + 2) ||  
+               trovaParolaAux(matrice, i + 1, j - 1, parola, index + 2) ||  
+               trovaParolaAux(matrice, i - 1, j + 1, parola, index + 2);  
+    }
+
+
+    if (matrice[i][j].value != parola[index]) {
+        return 0;
+    }
+
+    printf("DEBUG: Lettera %c trovata in (%d, %d), index %d\n", parola[index], i, j, index);
+
+    // Controlla in tutte le 8 direzioni possibili
+    return trovaParolaAux(matrice, i + 1, j, parola, index + 1) ||  
+           trovaParolaAux(matrice, i - 1, j, parola, index + 1) || 
+           trovaParolaAux(matrice, i, j + 1, parola, index + 1) ||  
+           trovaParolaAux(matrice, i, j - 1, parola, index + 1) ||  
+           trovaParolaAux(matrice, i + 1, j + 1, parola, index + 1) || 
+           trovaParolaAux(matrice, i - 1, j - 1, parola, index + 1) ||  
+           trovaParolaAux(matrice, i + 1, j - 1, parola, index + 1) ||  
+           trovaParolaAux(matrice, i - 1, j + 1, parola, index + 1);  
 }
 
-
-// Funzione per cercare sulla matrice
-int trovaParola(cella **matrice, char *parola){
-    printf("Debug: cerco la parola %s nella matrice\n", parola);
+int trovaParola(cella** matrice, char* parola) {
+    printf("DEBUG: Verifica della parola %s nella matrice\n", parola);
     
-    for (int i = 0; i < MATRIX_SIZE; i++){
-        for (int j = 0; j < MATRIX_SIZE; j++){
-            printf("Debug: Controllo posizione [%d, %d] = %d\n", i,j, matrice[i][j].value);
-            if (matrice[i][j].value == parola[0]){ // Controlla se il primo carattere corrisponde
-               printf("Debug: Trovata prima lettera '%c' in [%d, %d]\n", parola[0], i, j);
-                
-                matrice[i][j].usato = true;
-                // printf("forse\n");
-                if (trovaParolaAux(matrice, i, j, parola, 1)) // Ricorsiva
-                printf("Debug: parola trovata nella matrice\n");    
-                return 1;                                 // Parola trovata
+    int trovata = 0;  // Variabile per indicare se la parola è stata trovata
+
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            if (matrice[i][j].value == parola[0]) {  // Se la prima lettera corrisponde
+                printf("DEBUG: Prima lettera trovata in (%d, %d)\n", i, j);
+                if (trovaParolaAux(matrice, i, j, parola, 0)) {
+                    trovata = 1;
+                    break;
+                }
             }
-            matrice[i][j].usato = false; // Se non trovata, ripristino la cella
         }
     }
-    return 0; // Parola non trovata
+
+    if (!trovata) {
+        printf("DEBUG: La parola %s NON è nella matrice!\n", parola);
+    }
+
+    return trovata;
 }
+
 
 
 // Funzione per creare la matrice da un file
@@ -186,18 +196,6 @@ paroleTrovate* aggiungi_parolaTrovata(paroleTrovate *lista, char *parola) {
     return nuova_parola;
 }
 
-
-void libera_paroleTrovate(paroleTrovate *lista) {
-    while (lista != NULL) {
-        paroleTrovate *temp = lista;
-        lista = lista->next;
-        free(temp);
-    }
-}
-
-
-
-// Invio della matrice e del tempo rimanente in base alla fase del gioco in cui è il giocatore
 // Invio matrice al client attraverso un socket
 void invio_matrice(int client_fd, cella **matrix){
     char *data = matrice_to_string(matrix, 4); // Conversione matrice in stringa
