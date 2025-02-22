@@ -18,7 +18,7 @@ typedef struct Client{
     struct sockaddr_in address; // Indirizzo del client 
     pthread_t thread_id; // ID del thread
     time_t last_activity; // Ultima attività dell'utente 
-  
+    paroleTrovate *paroleTrovate;
 } Client;
 
 
@@ -37,7 +37,6 @@ typedef struct giocatore{
     int count;
     int active; // Se il giocatore è attivo (loggato) oppure no
     struct giocatore *next;
-    paroleTrovate *paroleTrovate;
 } giocatore;
 
 // Lista giocatori registrati

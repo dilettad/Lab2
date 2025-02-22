@@ -374,7 +374,7 @@ void *thread_func(void *args){
                 fflush(0);
 
                 // Controllo se la parola è già stata trovata
-                if (esiste_paroleTrovate(listaParoleTrovate, client_message.data)){
+                if (esiste_paroleTrovate(utente->paroleTrovate, client_message.data)){
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
                     break;
                 }
@@ -395,7 +395,7 @@ void *thread_func(void *args){
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                 else{
                     printf("Aggiungo la parola alla lista delle parole trovate \n");
-                    listaParoleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
+                    utente->paroleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
                     // Recupero il punteggio del giocatore attuale
                     int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
                     if(punteggio_corrente == -1){
@@ -683,6 +683,14 @@ void *game(void *arg){
         printf("-----------------------------------------------------------------------\n");
         printf("Il round è terminato, inizierà tra: %d secondi\n", durata_pausa);
 
+        Client * player1 = clients->head;
+        while (player1 != NULL){
+           // libera_paroleTrovate(player1->paroleTrovate);
+            player1->paroleTrovate = NULL;
+            player1 = player1->next;
+        }
+        printf("[DEBUG LISTA PAROLE TROVATE GIOCATORE]: La lista delle parole trovate resettata per il nuovo round");
+
         //SE IL ROUND NON è STATO PREPARATO ALLORA LO PREPARA  -> è giusto??
         if(round == 0){
             //pthread_mutex_lock(&matrix_mutex);
@@ -701,7 +709,7 @@ void *game(void *arg){
 
         while(pausa_gioco){
             //attesa
-            listaParoleTrovate = NULL;
+          //  listaParoleTrovate = NULL;
         }
         //FINE ATTESA
 
@@ -759,7 +767,7 @@ void *thread_func_activity() {
         Client *prev = NULL;
         Client *current = clients->head;
         while (current != NULL) {
-            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 10) {
+            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 60) {
                 printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
                 int retvalue;
                 writef(retvalue,"[SERVER]dopo aver mandato\n");
@@ -827,7 +835,7 @@ int main(int argc, char *argv[]){
     }
 
     // Se funziona il bind, il socket si mette in ascolto per poter accettare connessioni in entrata
-    if (listen(server_sock, 5) < 0)
+    if (listen(server_sock, 32) < 0)
     {
         // Fallisce: messaggio di errore e chiusura socket
         perror("Listen fallita");
