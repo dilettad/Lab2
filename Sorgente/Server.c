@@ -663,7 +663,7 @@ void *game(void *arg) {
     int round = 0;
 
     while (1) {
-        // 🔹 Attendi almeno un giocatore registrato prima di iniziare
+  
         pthread_mutex_lock(&lista_mutex);
         while (lista.count == 0) {
             pthread_mutex_unlock(&lista_mutex);
@@ -675,13 +675,12 @@ void *game(void *arg) {
 
         printf("DEBUG: classifica_inviata resettata a 0\n");
 
-        // 🔹 INIZIA LA PAUSA PRIMA DEL NUOVO ROUND
+        // 
         time(&tempo_iniziale);
         alarm(durata_pausa);
         printf("-----------------------------------------------------------------------\n");
         printf("Il round è terminato, inizierà tra: %d secondi\n", durata_pausa);
 
-        // 🔹 Reset della lista delle parole trovate per ogni giocatore (non Client!)
         pthread_mutex_lock(&clients_mutex);
         Client * player1 = clients->head;
         while (player1 != NULL){
@@ -692,7 +691,7 @@ void *game(void *arg) {
         pthread_mutex_unlock(&clients_mutex);
         printf("[DEBUG LISTA PAROLE TROVATE]: Lista parole resettata per il nuovo round\n");
 
-        // 🔹 SE IL ROUND NON È STATO PREPARATO, LO PREPARA
+        // SE IL ROUND NON È STATO PREPARATO, LO PREPARA
         if (round == 0) {
             FILE *file = fopen("../Matrici.txt", "rb");
             if (file == NULL) {
@@ -704,12 +703,12 @@ void *game(void *arg) {
             round = 1;
         }
 
-        // 🔹 Attendi che la pausa finisca
+        // Attendi che la pausa finisca
         while (pausa_gioco) {
             sleep(1);
         }
 
-        // 🔹 Se alla fine della pausa non ci sono giocatori, ripeti il ciclo
+        //Se alla fine della pausa non ci sono giocatori, ripeti il ciclo
         pthread_mutex_lock(&lista_mutex);
         if (lista.count == 0) {
             pthread_mutex_unlock(&lista_mutex);
@@ -720,7 +719,7 @@ void *game(void *arg) {
 
         printf("DEBUG: Lista parole trovate resettata per il nuovo round\n");
 
-        // 🔹 INIZIA IL GIOCO
+        //INIZIA IL GIOCO
         time(&tempo_iniziale);
         struct tm *timeinfo = localtime(&tempo_iniziale);
         char *orario_completo = asctime(timeinfo);
@@ -730,11 +729,11 @@ void *game(void *arg) {
         printf("-----------------------------------------------------------------------\n");
         printf("La partita è iniziata alle %s con %d giocatori\n", orario_completo, lista.count);
 
-        // 🔹 INVIA LA MATRICE SOLO AI GIOCATORI REGISTRATI
+        // INVIA LA MATRICE SOLO AI GIOCATORI REGISTRATI
         pthread_mutex_lock(&clients_mutex);
         Client *current = clients->head;
         while (current != NULL) {
-            if (current->isPlayer == 1) { // 🔹 Controlla che il client sia registrato
+            if (current->isPlayer == 1) { //Controlla che il client sia registrato
                 printf("[INVIO MATRICE] Invio a %s\n", current->username);
                 invio_matrice(current->fd, matrice);
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
@@ -744,7 +743,7 @@ void *game(void *arg) {
         }
         pthread_mutex_unlock(&clients_mutex);
 
-        // 🔹 ATTENDI LA FINE DEL ROUND
+        // ATTENDI LA FINE DEL ROUND
         while (!pausa_gioco) {
             sleep(1);
         }
