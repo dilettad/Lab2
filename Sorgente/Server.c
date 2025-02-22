@@ -493,48 +493,76 @@ void *thread_func(void *args){
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);
 
-
         case MSG_CANCELLA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
-            elimina_giocatore(&lista, client_message.data);
-            pthread_mutex_unlock(&lista_mutex);
-          /*  if (utente->username) {
-                free(utente->username);
-                utente->username = NULL;
+             Client *player = clients->head;
+                 giocatore* prova = lista.head;
+             if (utente->isPlayer == 0){
+                 send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnettersi");
+                 break;
+             }  
+            while (player != NULL) {
+                if (strcmp(player ->username, client_message.data) == 0) {
+                    // Disattiva il giocatore invece di eliminarlo
+                    player ->isPlayer= 0;
+                    prova->active = 0;
+                    lista.count --;
+                    pthread_mutex_unlock(&lista_mutex);
+                    send_message(client_sock, MSG_OK, "Utente disconnesso con successo. Puoi loggarti di nuovo.");
+                    break;
+                    //close(client_sock);
+                    //pthread_exit(NULL);
+                }
+                player  = player ->next;
             }
-          */      
-            //file_log(client_message.data, "Utente cancellato");
-            send_message(client_sock, MSG_OK, "Utente cancellato con successo");
-            break;
+            pthread_mutex_unlock(&lista_mutex);
+            //send_message(client_sock, MSG_ERR, "Errore: utente non trovato.");
+        break;
 
 
-       case MSG_LOGIN_UTENTE:
-           pthread_mutex_lock(&lista_mutex);
-            if (username_esiste(&lista, client_message.data)) {
-                //send_message(client_sock, MSG_OK, "Utente già loggato");
-              //  file_log(client_message.data, "Utente già loggato");
-            } else {
-                send_message(client_sock, MSG_ERR, "Username non trovato, per favore registrati prima");
-               // file_log(client_message.data, "Utente non trovato, registrati prima");
+        case MSG_LOGIN_UTENTE:
+            if (login_utente(client_sock, &lista, client_message.data) == 0){
+                pthread_mutex_lock(&clients_mutex);
+                Client* current = clients->head;
+                
+                while (current != NULL) {
+                    if (pthread_equal(current->thread_id, pthread_self())) {
+                        current->username = strdup(client_message.data);
+                        current->isPlayer = 1;
+                        break;
+                    }
+                    current = current->next;
+                }
+
+                pthread_mutex_unlock(&clients_mutex);
             }
-            pthread_mutex_unlock(&lista_mutex);
-            break;
+        break;
 
         case MSG_POST_BACHECA:
-         //printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
-            if (add_message(client_message.data, utente -> username)){
-                send_message(client_sock, MSG_OK, "Messaggio postato con successo");
-            } else {
-                send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
+            if (utente->isPlayer == 0){
+                send_message(client_sock, MSG_ERR, "Devi essere loggato per postare un messaggio");
+                break;
             }
+             //printf("\nDebug: Ricevuto MSG_POST_BACHECA\nusername:%s\n",utente->username);
+             // DEVO FARE L'IF O NON è NECESSARIO?  
+             if (add_message(client_message.data, utente->username)){
+                    send_message(client_sock, MSG_OK, "Messaggio postato con successo");
+                } else {
+                    send_message(client_sock, MSG_ERR, "Errore nel postare il messaggio");
+                }
         break; 
+    
 
         case MSG_SHOW_BACHECA:
+        if (utente->isPlayer == 1){
             pthread_mutex_lock(&mess);
             char* buffer = show_bacheca();
             pthread_mutex_unlock(&mess);
             send_message(client_sock, MSG_SHOW_BACHECA, buffer);
-        break; 
+        } else {
+            send_message(client_sock, MSG_ERR, "Loggati  per vedere i messaggi in bacheca");
+        }    
+        break;
 
 
         default:
