@@ -200,15 +200,13 @@ void invia_SIG(listaGiocatori *lista, int SIG, pthread_mutex_t lista_mutex){
     pthread_mutex_unlock(&clients_mutex);
 }
 
+int classifica_inviata = 0;
 void sigusr2_classifica_handler(int sig) {
-    static int handler_chiamato = 0;
-
-
-    if (handler_chiamato) {
+    if (classifica_inviata) {
         printf("DEBUG: Il gestore SIGUSR2 è già stato chiamato, salto.\n");
         return;
     }
-    handler_chiamato = 1;
+    classifica_inviata = 1;
 
     printf("Gestore del segnale SIGUSR2 chiamato \n");
     pthread_mutex_lock(&lista_mutex);
@@ -241,7 +239,7 @@ void sigusr2_classifica_handler(int sig) {
     pausa_gioco = 1;
     pthread_mutex_unlock(&pausa_gioco_mutex);
     alarm(durata_pausa);
-    handler_chiamato = 0;   
+    
 }
 
 void sigint_handler(int sig){
@@ -687,7 +685,7 @@ void *game(void *arg) {
         //pthread_mutex_unlock(&lista_mutex);
 
         printf("DEBUG: classifica_inviata resettata a 0\n");
-
+        classifica_inviata = 0;
         // 
         time(&tempo_iniziale);
         alarm(durata_pausa);
