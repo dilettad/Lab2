@@ -11,7 +11,7 @@ SORGENTE = ../Sorgente/
 # Eseguibili
 SERVER = Server
 CLIENT = Client
-TEST = Test
+#TEST = Test
 LISTA = Lista
 TRIE = Trie
 MATRICE = Matrice
@@ -28,7 +28,7 @@ HDRS_LISTA = $(HEADER)$(LISTA).h
 HDRS_FILELOG = $(HEADER)$(FILELOG).h
 SERVER_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE)
 CLIENT_HEADERS = $(HDRS_MATRICE)  $(HDRS_COMUNICAZIONE)
-TEST_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE) 
+#TEST_HEADERS = $(HDRS_MATRICE) $(HDRS_TRIE) $(HDRS_LISTA) $(HDRS_COMUNICAZIONE) 
 HDRS_GIOCATORE = $(HEADER)$(GIOCATORE).h
 HDRS_BACHECA = $(HEADER)$(BACHECA).h
 
@@ -39,13 +39,13 @@ OBJHM = $(MATRICE).o
 OBJHT = $(TRIE).o
 OBJHL = $(LISTA).o
 OBJHCS = $(COMMS).o
-OBJT = $(TEST).o
+#OBJT = $(TEST).o
 OBJG = $(GIOCATORE).o
 OBJB = $(BACHECA).o
 OBJFL = $(FILELOG).o
 SERVER_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
 CLIENT_OBJS = $(OBJHM) $(OBJHT) $(OBJHL) $(OBJHCS)
-TEST_OBJS = $(OBHM) $(OBJHL)
+#TEST_OBJS = $(OBHM) $(OBJHL)
 
 # Sorgenti
 SRCS = $(SORGENTE)$(SERVER).c
@@ -54,7 +54,7 @@ SRCHM = $(SORGENTE)$(MATRICE).c
 SRCHT = $(SORGENTE)$(TRIE).c
 SRCHCS = $(SORGENTE)$(COMMS).c
 SRCHL = $(SORGENTE)$(LISTA).c
-SRCT = $(SORGENTE)$(TEST).c
+#SRCT = $(SORGENTE)$(TEST).c
 SRCG = $(SORGENTE)$(GIOCATORE).c
 SRCB = $(SORGENTE)$(BACHECA).c
 SRCFL = $(SORGENTE)$(FILELOG).c
@@ -69,7 +69,7 @@ SERVER_RUN = ./$(SERVER) $(HOST) $(PORT) --matrici ../Text/Matrici.txt --diz ../
 CLIENT_RUN = ./$(CLIENT) $(HOST) $(PORT)
 SERVER_RUN2 = ./$(SERVER) $(HOST) 3000 --matrici ../Text/Matrici.txt --diz ../Text/Dizionario.txt 
 CLIENT_RUN2 = ./$(CLIENT) $(HOST) 3000
-TEST_RUN = ./$(TEST)
+#TEST_RUN = ./$(TEST)
 
 # Target principali
 all: $(SERVER) $(CLIENT) $(TEST) clean_objs
@@ -82,9 +82,7 @@ $(CLIENT): $(CLIENT_OBJS)
 	@echo Compilazione del Client
 	@$(CC) $(CFLAGS)  $(SRCC) $(SRCHCS) $(SRCHM) $(SRCFL) $(CLIENT_HEADERS) -o $(CLIENT)
 
-$(TEST): $(TEST_OBJS)
-	@echo Compilazione dei Test
-	@$(CC) $(CFLAGS) $(SRCT) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(TEST_HEADERS) $(TEST_HEADERS) -o $(TEST)
+
 
 
 $(OBJHM):$(SRCHM)
@@ -113,9 +111,6 @@ $(OBJS):$(SRCS)
 #Client.o
 $(OBJC):$(SRCC)
 	@$(CC) $(CFLAGS) -c $(SRCC) $(CLIENT_HEADERS)
-#Test.o
-$(OBJT):$(SRCT)
-	@$(CC) $(CFLAGS) -c $(SRCT) 
 
 $(OBJHT):$(SRCHT)
 	@$(CC) $(CFLAGS) -c $(SRCHT) $(HDRS_TRIE)
