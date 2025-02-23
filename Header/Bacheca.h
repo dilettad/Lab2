@@ -11,15 +11,13 @@ typedef struct {
    // int   count [MAX_MESSAGES];
 } Message; 
 
-//Funzione per aggiungere messaggi in bacheca
+//Funzione per aggiungere messaggi nella bacheca
 int add_message(char* text, char* username);
+
+//Funzione per mostrare i messaggi all'interno della bacheca
 char* show_bacheca();
 
-
-
-//Funzione per post messaggi sulla bacheca
+//Funzione per postare i messaggi sulla bacheca facendone una copia
 Message *post_messaggi(int message_count);
 
-void bacheca_csv(char *filename);
 
-void libera_messaggi(Message * messaggi, int num_messaggi);
