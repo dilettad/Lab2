@@ -239,7 +239,7 @@ void sigusr2_classifica_handler(int sig) {
     pausa_gioco = 1;
     pthread_mutex_unlock(&pausa_gioco_mutex);
     alarm(durata_pausa);
-    
+
 }
 
 void sigint_handler(int sig){
@@ -289,7 +289,7 @@ void alarm_handler(int sig){
         if (lista.count > 0) {
             invia_SIG(&lista, SIGUSR2, lista_mutex);
             printf("Invio segnale SIGUSR2\n");
-         //   sigusr2_inviato = 1; // Impedisce invii multipli per lo stesso round
+            sigusr2_inviato = 1; // Impedisce invii multipli per lo stesso round
 
         } else {
             printf("DEBUG: Nessun giocatore registrato, SIGUSR2 non inviato.\n");
@@ -490,43 +490,84 @@ void *thread_func(void *args){
             // Chiude il socket in modo sicuro
             close(client_sock);
             printf("[Handler] thread terminato\n");
-            pthread_exit(NULL);
-
-        case MSG_CANCELLA_UTENTE:
+            pthread_exit(NULL);        
+        
+        /*case MSG_CANCELLA_UTENTE:
             printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);
             if (utente->isPlayer == 0) {
                 send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnetterti");
                 break;
             }
-            if (strcmp(utente->username, client_message.data) == 0 ){
+
+            if (pthread_equal(utente->thread_id, pthread_self()) == 0) {
+                send_message(client_sock, MSG_ERR, "Non puoi cancellare un altro utente.");
+                break;
+            }
+  
+                if (strcmp(utente->username, client_message.data) == 0 ){
+                    pthread_mutex_lock(&lista_mutex);
+                    elimina_giocatore(&lista, client_message.data);
+                    send_message(client_sock, MSG_FINE, "Utente cancellato correttamente");
+                    pthread_mutex_unlock(&lista_mutex);
+
+                    pthread_mutex_lock(&clients_mutex);
+                    deleteClient(clients, pthread_self());
+                    pthread_mutex_unlock(&clients_mutex);
+                    //lista.count --;
+                    //clients->size --; 
+
+                    printf("lista: %d, clients: %d", lista.count, clients->size);
+                    shutdown(client_sock, SHUT_RDWR);  
+                    close(client_sock);
+
+                    printf("[Handler] Cancellazione avvenuta con successo\n");
+
+                    // Termina il thread in modo pulito
+                    pthread_exit(NULL);
+                } else {
+                send_message(client_sock, MSG_ERR, "Utente non esiste");
+                }
+            break; */
+
+
+            case MSG_CANCELLA_UTENTE:
+            printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);
+            if (utente->isPlayer == 0) {
+                send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnetterti");
+                break;
+            }
+        
+            // Verifica che il nome utente fornito corrisponda all'utente del thread
+            if (strcmp(utente->username, client_message.data) != 0) {
+                send_message(client_sock, MSG_ERR, "Nome utente non corrisponde.");
+                break;
+            }
+        
+            //verifica che il thread che richiede la cancellazione sia lo stesso che ha creato l'utente.
+            if (pthread_equal(utente->thread_id, pthread_self()) == 0) {
+                send_message(client_sock, MSG_ERR, "Non puoi cancellare un altro utente.");
+                break;
+            }
+        
+            // Cancellazione dell'utente
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
             send_message(client_sock, MSG_FINE, "Utente cancellato correttamente");
             pthread_mutex_unlock(&lista_mutex);
-
-            
-           
+        
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients, pthread_self());
             pthread_mutex_unlock(&clients_mutex);
-            //lista.count --;
-            //clients->size --; 
-
+        
             printf("lista: %d, clients: %d", lista.count, clients->size);
-            shutdown(client_sock, SHUT_RDWR);  
+            shutdown(client_sock, SHUT_RDWR);
             close(client_sock);
-
+        
             printf("[Handler] Cancellazione avvenuta con successo\n");
-
-            // Termina il thread in modo pulito
+        
             pthread_exit(NULL);
-            
-            } else {
-                send_message(client_sock, MSG_ERR, "Utente non esiste");
-            }
-
+        
             break;
-
 
 
         case MSG_LOGIN_UTENTE:
