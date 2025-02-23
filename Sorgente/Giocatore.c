@@ -14,68 +14,64 @@
 // in lista struttura client
 #include "../Header/Giocatore.h"
 
-int registra_bool = 0; // Per vedere se è loggato o no
+int registra_bool = 0; // Per vedere se è registrato o no
 
 //Funzione per aggiungere client alla lista
 void add_client(listaGiocatori* lista, int client_fd, char* username){
+    // Allocazione di memoria per un nuovo giocatore
     giocatore *new_giocatore = (giocatore *)malloc(sizeof(giocatore));
-    new_giocatore->username = strdup(username);
-    //new_giocatore->client_fd = client_fd;
-    new_giocatore->tid = pthread_self();
-    // strcpy(new_giocatore->username, username);
-    
-    new_giocatore->next = NULL;
+  
+    new_giocatore->username = strdup(username);   //Duplicazione dell'username
+    new_giocatore->tid = pthread_self();          //Assegnazione tid al thread corrente
+    new_giocatore->next = NULL;                   // Inizializzato puntatore al giocatore successivo a NULL
 
-    if (lista->count == 0)
-    {
-        // Testa e coda sono NULL, assegno il nuovo cliente come  coda
+    if (lista->count == 0){                       // Testa e coda sono NULL, assegno il nuovo cliente come  coda
         lista->tail = new_giocatore;
     }
-    new_giocatore->next = lista->head; // Collega il nuovo cliente alla testa
-    lista->head = new_giocatore;       // Aggiorno la testa della lista
-
-    lista->count++;
+    new_giocatore->next = lista->head;            // Collega il nuovo cliente alla testa
+    lista->head = new_giocatore;                  // Aggiorno la testa della lista
+    lista->count++;                               // aggiorno contatore della lista
     return;
 }
 
 // Controllo caratteri dell'username: non deve contenere caratteri ASCII
-int controlla_caratteri(const char *username)
-{
-    while (*username)
-    {
-        if ((unsigned char)*username >= 128)
-        {             // Controlla se il carattere è ASCII
-            return 0; // Se contiene caratteri ASCII, restituisci 0
+int controlla_caratteri(const char *username){
+    while (*username){
+        if ((unsigned char)*username >= 128){   // Controlla se il carattere è ASCII
+            return 0;                          
         }
         username++;
     }
-    return 1; // Se tutti i caratteri sono validi (non ASCII), restituisci 1
+    return 1;                                   // Se tutti i caratteri sono validi (non ASCII), restituisci 1
 }
 
 //Funzione per controllare se username è già esistente
 int username_esiste(listaGiocatori* lista, char *username){
-    if (lista == NULL || lista->head == NULL){
+    //Controllo se la lista è vuota
+    if (lista == NULL || lista->head == NULL){ 
         return 0;
     }
+    // Inizializzo il puntatore current alla testa della lista
     giocatore *current = lista->head;
-    while (current != NULL){
-        if (strcmp(current->username, username) == 0){
-            return 1;
+    while (current != NULL){ 
+        if (strcmp(current->username, username) == 0){ // Se corrisponde vuol dire che esiste
+            return 1; 
         }
-        current = current->next;
+        current = current->next;    
     }
+
     return 0;
 }
 
 // Funzione per registrazione del cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
-    // Controllo se l'username contiene solo caratteri validi
+    // Controllo se l'username contiene solo caratteri validi e mando un messaggio in caso di errore
     if (!controlla_caratteri(username)){
         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
         return; 
     }
 
-    // Controllo se l'username esiste già
+    // Controllo se l'username esiste già e mando un messaggio in caso di errore
     if (username_esiste(lista, username)){
         printf("Tentativo di registrazione con username già presente: %s\n", username);
         fflush(0);
@@ -83,176 +79,102 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
         return; 
     }
 
-    add_client(lista, client_fd, username);
-    //setto l'username come usato -> impostare booleano nella lista ad 1
-    // Se l'username è valido, invio un messaggio di conferma
+    add_client(lista, client_fd, username); //Aggiungo alla lista se passa i controlli, mando un messaggio di OK
     send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
     registra_bool = 1;
-    
 }
 
-/*Funzione che recupera il nome utente di un giocatore dalla lista
-giocatore* RecuperaUtente(listaGiocatori* newLista, char* username){
-    pthread_mutex_lock(&newLista->lock);
-    // listaGiocatori head = newLista->lista;
-    giocatore* lista = newLista->head;
-    //Fino a che la lista non è vuota, controllo se il nome utente coincide con quello nella lista
-    while (lista != NULL) {
-        if (strcmp(lista->username, username) == 0) {
-            pthread_mutex_unlock(&newLista->lock);
-            return lista; //?
-        }
-        lista = lista->next;
-    }
-    //Non ho trovato il nome utente dentro la lista
-    pthread_mutex_unlock(&newLista->lock);
-    return NULL;
-}
-*/
-/*
-int login_utente(int client_fd,listaGiocatori *lista, char *username){
-    giocatore *current = lista->head;
-    if (current -> active == 1){
-        send_message(client_fd, MSG_ERR, "Login già avvenuto, non è possibile registrarsi");
-    }
-    //controllo se l'utente è già registrato
-    if(registra_bool== 1){
-        send_message(client_fd, MSG_ERR, "Una registrazione è avvenuta, non è possibile registrarsi nuovamente");
-        return 1;
-    }
-    //controllo se l'utente è in gioco
-    if (!username_esiste(lista, username)){
-        return 1; 
-    }
-    //controllo se il nome utente è gia preso da qualcuno
-    //loggo l'utente
-     send_message(client_fd, MSG_OK, "Login avvenuto con successo");
-    current -> active = 1;
-    return 0;
-}*/
-
+//Funzione per loggare l'utente
 int login_utente(int client_fd, listaGiocatori *lista, char *username){
-   // pthread_mutex_lock(&lista_mutex);
+
+    //Inizializzo il puntatore current alla testa della lista
     giocatore *current = lista->head;
-    // Scansiona la lista per trovare il giocatore
+
+    // Scansione la lista per trovare il giocatore
     while (current != NULL) {
-        if (strcmp(current->username, username) == 0) {
-            if (current->active == 1) {
-             //   pthread_mutex_unlock(&lista_mutex);
+        if (strcmp(current->username, username) == 0) { // Controllo corrisponde l'username
+            if (current->active == 1) {                 // Controllo se è attivo e in tal caso mando un messaggio di Errore
                 send_message(client_fd, MSG_ERR, "Sei già loggato");
                 return 1;
             }
-
-            // Attiva il giocatore
-            current->active = 1;
-           // pthread_mutex_unlock(&lista_mutex);
-            send_message(client_fd, MSG_OK, "Login avvenuto con successo");
+        // Se non risulta attivo lo loggo e cambio il flag active in 1, mandando un messaggio di OK
+        current->active = 1;
+        send_message(client_fd, MSG_OK, "Login avvenuto con successo");
             return 0;
         }
-        current = current->next;
+        current = current->next;                       
     }
-
-    //  pthread_mutex_unlock(&lista_mutex);
-  //  send_message(client_fd, MSG_ERR, "Errore: username non trovato.");
+    send_message(client_fd, MSG_ERR, "Errore: username non trovato.");
     return 1;
 }
 
-
-// //Funzione per stampare la lista dei client
-void stampa_lista_clienti(Fifo *lista){
-    if (lista->head == NULL)
-    {
-        printf("Lista dei clienti vuota\n");
-        fflush(0);
-        return;
-    }
-    Client *current = lista->head;
-    while (current != NULL)
-    {
-        printf("client_fd: %d, Username: %s\n", current->fd, current->username);
-        fflush(0);
-        current = current->next;
-    }
-}
-
+//Funzione per eliminare il giocatore dalla lista dei giocatori
 void elimina_giocatore(listaGiocatori *lista, char *username){
-   // pthread_mutex_lock(&lista_mutex);
+
+    //Inizializzo corrente con la testa della lista e precedente a NULL
     giocatore *corrente = lista->head;
     giocatore *precedente = NULL;
 
+    //Scansione lista per trovare il giocatore 
     while (corrente != NULL){
-        if (strcmp(corrente->username, username) == 0){
-            printf("Trovato giocatore da eliminare: %s\n", username);
+        if (strcmp(corrente->username, username) == 0){                 //Controllo se corrisponde l'username
+            printf("Trovato giocatore da eliminare: %s\n", username);   
             fflush(0);
-            if (precedente == NULL){
-                lista->head = corrente->next;
+
+            if (precedente == NULL){                                   
+                lista->head = corrente->next;                           //Punto la testa della lista al successivo
             } else {
-                precedente->next = corrente->next;
+                precedente->next = corrente->next;                      //Punto il precedente al prossimo giocatore
             }
-            if (corrente == lista->tail) {
-                lista->tail = precedente;
+            if (corrente == lista->tail) {                              //Se giocatore è alla coda
+                lista->tail = precedente;                               //Punto la coda della lista al precedente
             }
-            free(corrente->username);
+            free(corrente->username);                                   //Libero la memoria allocata e decremento il contantore delle lista
             free(corrente);
             lista->count--;
-            // pthread_mutex_unlock(&lista_mutex);
+
             printf("Giocatore eliminato con successo: %s\n", username);
             fflush(0);
             return;
         }
-        precedente = corrente;
-        corrente = corrente->next;
+        precedente = corrente;                                          //Aggiorna il puntatore precedente
+        corrente = corrente->next;                                      //Passa al prossimo giocatore
     }
-   // pthread_mutex_unlock(&lista_mutex);
-    printf("Giocatore non trovato: %s\n", username);
-    fflush(0);
 }
 
+//Funzione per eliminare un thread dalla lista dei clients dopo un periodo di inattività
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex) {
-    printf("[elimina_thread]inizio\n");
-                
-    //pthread_mutex_lock(clients_mutex);
-    
-    printf("[elimina_thread]preso info client\n");
+
+    //Inizializzo current alla testa dei clients e prev a NULL
     Client *current = clients->head;
-    printf("[elimina_thread]preso info client\n");
     Client *prev = NULL;
-
-    printf("[elimina_thread]preso info client\n");
+    
+    // Scansione dei clients
     while (current != NULL) {
-        if (pthread_equal(current->thread_id, thread_id)) { 
-            printf("[SERVER] Eliminazione del thread per il client %s (tid: %ld)\n", 
-            current->username ? current->username : "Sconosciuto", thread_id);
-            send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");
-            // Cancella il thread solo se è ancora attivo
-            pthread_cancel(current->thread_id);
-            pthread_join(current->thread_id, NULL);
-            // Chiude il socket del client
-            //if (current->fd >= 0) {
+        if (pthread_equal(current->thread_id, thread_id)) {                                 //Controllo corrispondenza tra ID e thread corrispondente
+           
+            printf("[SERVER] Eliminazione del thread per il client %s (tid: %ld)\n", current->username ? current->username : "Sconosciuto", thread_id);
+            send_message(current->fd, MSG_FINE, "Sei stato disconnesso per inattività.");   //Invio messaggio di disconessione
+     
+            pthread_cancel(current->thread_id);                                             //Cancellazione del thread
+            pthread_join(current->thread_id, NULL);                                         // Attende terminazione del thread 
+
             printf("[SERVER] Chiudo il socket del client %s (fd: %d)\n", current->username, current->fd);
-            close(current->fd);
-                //current->fd = -1;
-            //}
-
-
+            close(current->fd);                                                             //Chiusura del socket del client
             
             // Rimuove il client dalla lista
             if (prev == NULL) {
-                clients->head = current->next;
+                clients->head = current->next;                                              //Punta testa dei client al prossimo
             } else {
-                prev->next = current->next;
+                prev->next = current->next;                                                 //Punta prev al prossimo 
             }
 
-            // Libera la memoria
-            free(current->username);
+            free(current->username);                                                        // Libera la memoria
             free(current);
-            //pthread_mutex_unlock(clients_mutex);
             return;
         }
-        prev = current;
+        prev = current;                                                                     //Aggiorna puntatore prev e passa al prossimo
         current = current->next;
     }
-
-    //pthread_mutex_unlock(clients_mutex);
 }
 
