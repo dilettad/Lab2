@@ -6,50 +6,54 @@
 #include <netinet/in.h>
 #include "Matrice.h"
 #define MSG_SERVER_SHUTDOWN 'B'
+
 struct Client;
 
+//Definizione della struttura client
 typedef struct Client{
-    char *username;      // Nome utente
-    int fd;              // File descriptor del client
-    int score;           // Punteggio utente
-    int socket;          // Socket del client
-    int isPlayer;        // Stato del client
-    struct Client *next; // Puntatore al prossimo utente (per la lista)
-    struct sockaddr_in address; // Indirizzo del client 
-    pthread_t thread_id; // ID del thread
-    time_t last_activity; // Ultima attività dell'utente 
-    paroleTrovate *paroleTrovate;
+    char *username;                 // Nome utente 
+    int fd;                         // File descriptor
+    int score;                      // Punteggio utente
+    int socket;                     // Socket 
+    int isPlayer;                   // Stato (attivo o non)
+    struct Client *next;            // Puntatore al prossimo utente (per la lista)
+    struct sockaddr_in address;     // Indirizzo del client 
+    pthread_t thread_id;            // ID del thread
+    time_t last_activity;           // Ultima attività dell'utente 
+    paroleTrovate *paroleTrovate;   // Puntatore alle parole trovate dal client
 } Client;
 
-
+//Definizione della struttura Fifo 
 typedef struct Fifo{
-    Client *head;
-    Client *tail;
-    int size;
+    Client *head;                   // Puntatore alla testa 
+    Client *tail;                   // Puntatore alla coda
+    int size;                       // Contatore
 } Fifo;
 
-// Struttura del giocatore registrato
+//Definizione delle struttura giocatore
 typedef struct giocatore{
-    char *username;
-    pthread_t tid;
-    //int client_fd;//sta cosa deve morire capisci dove viene usato e distruggilo
-    int punteggio;
-    int count;
-    int active; // Se il giocatore è attivo (loggato) oppure no
-    struct giocatore *next;
+    char *username;                 // Username
+    pthread_t tid;                  // ID del thread associato
+    int punteggio;                  // Punteggio giocatore
+    int count;                      // Contatore
+    int active;                     // Stato giocatore (attivo o no)
+    struct giocatore *next;         // Puntatore al prossimo giocatore
 } giocatore;
 
-// Lista giocatori registrati
+//Definizione della struttura lista giocatori
 typedef struct{
-    giocatore *head;
-    giocatore *tail;
-    int count;
+    giocatore *head;                //Puntatore alla testa
+    giocatore *tail;                //Puntatore alla coda
+    int count;                      //Contatore
 } listaGiocatori;
 
+//Funzione per aggiungere un client alla coda
 void push(Fifo *lista, Client *new_client);
-Client *pop(Fifo *list);
+
+//Funzione per elimina un client dalla Fifo
 void deleteClient(Fifo *lista,pthread_t tid);
-int seek(Fifo *list, char *username); // 1 se trova un cliente con quel username 0 altrimenti
+
+//Funzione per creare una nuova Fifo
 Fifo *create();
-void aggiorna_punteggio(listaGiocatori *lista, char *username, int punteggio);
-void distruggi_lista(listaGiocatori *lista);
+
+

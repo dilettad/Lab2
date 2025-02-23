@@ -12,121 +12,63 @@
 #include "../Header/FunzioniServer.h"
 #include "../Header/Giocatore.h"
 
-// Creo la prima lista assegnando la testa e la coda del cliente
-Fifo *create()
-{
-    Fifo *lista = (Fifo *)malloc(sizeof(Fifo));
-    lista->head = NULL;
+// Funzione per creare una lista FIFO
+Fifo *create(){
+    Fifo *lista = (Fifo *)malloc(sizeof(Fifo));               //Alloca la memoria per una nuova struttura
+    lista->head = NULL;                                       //Inizializza testa e coda a NULL
     lista->tail = NULL;
-    lista->size = 0;
+    lista->size = 0;                                          //Inizializzo il contatore a 0
     return lista;
 }
 
-// Funzione per aggiungere un nuovo cliente alla lista
-void push(Fifo *lista, Client *new_client)
-{
-    // Controllo se la lista è vuota
-    if (lista->size == 0)
-    {
-        // Testa e coda sono NULL, assegno il nuovo cliente come  coda
+// Funzione per aggiungere un nuovo cliente alla lista Fifo
+void push(Fifo *lista, Client *new_client){
+    if (lista->size == 0){                                    //Controllo se lista è vuota in tal caso la testa punta al nuovo client
         lista->tail = new_client;
     }
-    new_client->next = lista->head; // Collega il nuovo cliente alla testa
-    lista->head = new_client;       // Aggiorno la testa della lista
-    lista->size++;
-}
-
-// Funzione rimuove e restituisce il cliente dalla coda
-Client *pop(Fifo *list)
-{
-    if (list->size == 0)
-    { // Se lista vuota restituisce NULL
-        return NULL;
-    }
-    Client *temp = list->head;     // Salva il cliente da restituire
-    list->head = list->head->next; // Aggiorna la testa della lista
-    if (list->head == NULL)
-    {                      // Se la lista è vuota dopo la rimozione
-        list->tail = NULL; // Imposta la coda come NULL
-    }
-    list->size--; // Decrementa la dimensione della lista
-    return temp;  // Restituisce il cliente
-}
-
-// Funzione cerca un cliente nella lista in base all'username
-int seek(Fifo *list, char *username)
-{                              // 1 se trova un cliente con quel username, 0 altrimenti
-    Client *temp = list->head; // Inizializzo il puntatore alla testa della lista
-    while (temp != NULL)
-    {
-        if (temp->username != NULL && strcmp(temp->username, username) == 0)
-        {
-            return 1; // Return 1 se trova un cliente con lo stesso username
-        }
-        temp = temp->next; // Successivo
-    }
-    return 0; // Non trova cliente
-}
-
-// Funzione aggiorna punteggio del giocatore
-void aggiorna_punteggio(listaGiocatori *lista, char *username, int punteggio)
-{
-    giocatore *current = lista->head;
-    while (current != NULL)
-    {
-        if (strcmp(current->username, username) == 0)
-        {                                   // Controllo se corrisponde l'username del giocatore con quello corrente
-            current->punteggio = punteggio; // Aggiorna punteggio
-            return;
-        }
-        current = current->next; // Successivo
-    }
-}
-
-// Funzione per eliminare la lista dei giocatori
-void distruggi_lista(listaGiocatori *lista)
-{
-    giocatore *current = lista->head; // Inizializza un puntatore alla testa della lista
-    giocatore *next = NULL;           // Inizilizza un puntatore per il nodo successivo
-    while (current != NULL)
-    { //
-        next = current->next;
-        free(current);
-        current = next;
-    }
-    lista->head = NULL;
-    lista->tail = NULL;
-    lista->count = 0;
+    new_client->next = lista->head;                           //Punto il nuovo client alla testa della lista
+    lista->head = new_client;                                 //Punto la testa della lista al nuovo client
+    lista->size++;                                            //Incrementa la dimensione della lista
 }
 
 // Funzione per eliminare un cliente dalla lista
 void deleteClient(Fifo *lista, pthread_t tid) {
-    if (lista->head == NULL) {
+
+    if (lista->head == NULL) {                                //Controlla se la testa dalla lista è vuota
         return;
     }
 
+    //Inizializza il puntatore current alla testa della lista e prev a NULL
     Client *current = lista->head;
-    Client *previous = NULL;
+    Client *prev = NULL;
 
+    //Scansione lista 
     while (current != NULL) {
-        if (current->thread_id == tid) {
-            if (previous == NULL) {
+        if (current->thread_id == tid) {                      //Controllo se tid e thread_id corrispondono
+            if (prev == NULL) {                               //Se devo eliminare la testa, aggiono la testa al prossimo
                 lista->head = current->next;
-            } else {
-                previous->next = current->next;
+            } else {                                          //altrimenti, collego il precedente al successivo
+                prev->next = current->next;
             }
 
-            if (current == lista->tail) {
-                lista->tail = previous;
+            if (current == lista->tail) {                     //Se devo eliminare la coda, aggiorno la coda al precedente
+                lista->tail = prev;
             }
-            if(current->username!=NULL)free(current->username);
-            free(current);
+
+            if(current->username!=NULL){                      //Libera memoria allocata per il l'username del client
+                free(current->username);
+            }
+
+            free(current);                                    //Libera memoria per il client e decrementa il contatore 
             lista->size--;
             return;
         }
 
-        previous = current;
-        if(current->next == NULL)return;
-        current = current->next;
+    //Aggiorna il prev con il corrente
+        prev = current;
+        if(current->next == NULL){                           // Se il successivo è NULL, allora return
+            return;
+        }    
+        current = current->next;                            //Punto il puntatore al successivo
     }
 }
