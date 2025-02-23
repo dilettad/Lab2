@@ -488,6 +488,7 @@ void *thread_func(void *args){
             pthread_mutex_unlock(&clients_mutex);    
             lista.count --;
             // Chiude il socket in modo sicuro
+            utente->isPlayer = 0;
             close(client_sock);
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);        
