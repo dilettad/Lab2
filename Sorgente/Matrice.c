@@ -13,6 +13,21 @@
 pthread_mutex_t parole_trovate_mutex = PTHREAD_MUTEX_INITIALIZER;
 // DA SISTEMARE STAMPA MATRICE 
 
+void Caps_Lock(char* string){
+    //recupero la lunghezza della stringa
+    int len = strlen(string);
+    //ciclo sulla stringa
+    for(int i =0;i<len;i++){
+        //controllo se il carattere è in lower case
+        if (string[i]>= 'a' && string[i]<= 'z'){
+            //lo porto in uppercase
+            string[i]-= 32;
+        }
+    }
+    return;
+}
+
+
 // Funzione per generare una matrice
 cella **generateMatrix(){
     // Allocazione memoria le celle della matrice
