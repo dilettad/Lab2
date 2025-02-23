@@ -92,33 +92,3 @@ Message *post_messaggi(int message_count) {
     pthread_mutex_unlock(&mess);
     return read_message;
 }
-
-/* Funzione per generare il contenuto della bacheca in formato CSV
-void bacheca_csv(char *filename){
-    //Apre il file specificato da 'filename' in modalità scrittura
-    FILE *file = fopen(filename, "w");
-    //Se file è null, errore nell'apertura
-    if (file == NULL) {
-        printf("Errore nell'apertura del file\n");
-        return;
-    }
-    //Scrive l'intestazione nel file CSV, scrivendo username o text
-    fprintf(file, "username,text\n");
-    // Iterare ciclo e scrivo nel file i dettagli di ogni messaggio
-    for (int i = 0; i < message_count; i++) {
-        fprintf(file, "%s,%s\n", messages[i].username, messages[i].text);
-    }
-
-    // Chiusura file
-    fclose(file); 
-}
-*/
-
-//Funzione per liberare i messaggi dalla memoria
-void libera_messaggi(Message * messaggi, int num_messaggi) {
-    for (int i = 0; i < num_messaggi; i++) {
-        free(messaggi[i].text);
-        free(messaggi[i].username);
-    }
-    free(messaggi);
-}
