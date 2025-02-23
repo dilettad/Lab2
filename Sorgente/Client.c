@@ -108,6 +108,7 @@ void *receiver(void *args)
         case MSG_FINE:
             //pthread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
+            close(client_sock);
             exit(EXIT_SUCCESS);
             break;
 

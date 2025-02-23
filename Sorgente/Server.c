@@ -111,7 +111,7 @@ void sendClassifica(listaGiocatori *lista, pthread_t tid, char *classifica, time
             if (current->isPlayer == 1) { 
                 //printf("DEBUG: Invio classifica a %s\n", current->username);
                 printf("DEBUG: Invio classifica a %s: %s\n", current->username, classifica);
-                send_message(current->socket, MSG_PUNTI_FINALI, classifica);
+                //send_message(current->socket, MSG_PUNTI_FINALI, classifica);
                 send_message(current->fd, MSG_PUNTI_FINALI, classifica);
                 printf("DEBUG: Classifica inviata a %s: %s\n", current->username, classifica);
             } else {
@@ -437,34 +437,7 @@ void *thread_func(void *args){
             //pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
-        // domanda: devo modificare per inserire la registrazione qua dentro o posso lasciarla in giocatore?
-        /*case MSG_REGISTRA_UTENTE:
-   
-            pthread_mutex_lock(&lista_mutex);
-            registrazione_client(client_sock, client_message.data, &lista);
-            pthread_mutex_unlock(&lista_mutex);
-
-
-            pthread_mutex_lock(&clients_mutex);
- 
-            Client* current = clients->head;
-
-            while(current!=NULL){
-                if(pthread_equal(current->thread_id,pthread_self())){
-                    current->isPlayer = 1;
-                    current->username = client_message.data;
-                    pthread_mutex_unlock(&clients_mutex);
-                    break;
-                }
-            }
-
-            utente->username = strdup(client_message.data);
-            utente->isPlayer = 1;
-            pthread_mutex_unlock(&clients_mutex);
-
-            //file_log(utente->username, "Registrazione avvenuta con successo"); //-> appena lo aggiungo sminchia le parole
-            break;*/
-            case MSG_REGISTRA_UTENTE:
+        case MSG_REGISTRA_UTENTE:
             pthread_mutex_lock(&lista_mutex);
             registrazione_client(client_sock, client_message.data, &lista);
             
@@ -496,50 +469,52 @@ void *thread_func(void *args){
             
 
         case MSG_PUNTI_FINALI:
-            //pthread_mutex_lock(&pausa_gioco_mutex);
+            pthread_mutex_lock(&pausa_gioco_mutex);
             printf("Debug: RICHIESTA CLASSIFICA RICEVUTA, pausa gioco %d, classifica:%s\n", pausa_gioco, classifica ? classifica: "NULL");
 
             if (pausa_gioco == 1 && classifica != NULL){
                 send_message(client_sock, MSG_PUNTI_FINALI, classifica);
                 char *temp = calcola_tempo_rimanente(tempo_iniziale, durata_pausa);
                 send_message(client_sock, MSG_TEMPO_ATTESA, temp);
-            }
-            else
-            {
+            } else {
                 send_message(client_sock, MSG_ERR, "Classifica non disponibile");
             }
-            //pthread_mutex_unlock(&pausa_gioco_mutex);
+            pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
+
 
        case MSG_FINE:      
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients,pthread_self());
             pthread_mutex_unlock(&clients_mutex);    
+            lista.count --;
             // Chiude il socket in modo sicuro
             close(client_sock);
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);
 
-            case MSG_CANCELLA_UTENTE:
+        case MSG_CANCELLA_UTENTE:
             printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);
-
-            
             if (utente->isPlayer == 0) {
                 send_message(client_sock, MSG_ERR, "Devi essere loggato per disconnetterti");
                 break;
             }
-
+            if (strcmp(utente->username, client_message.data) == 0 ){
             pthread_mutex_lock(&lista_mutex);
             elimina_giocatore(&lista, client_message.data);
+            send_message(client_sock, MSG_FINE, "Utente cancellato correttamente");
             pthread_mutex_unlock(&lista_mutex);
 
-            send_message(client_sock, MSG_FINE, "Utente cancellato correttamente");
+            
            
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients, pthread_self());
             pthread_mutex_unlock(&clients_mutex);
+            //lista.count --;
+            //clients->size --; 
 
+            printf("lista: %d, clients: %d", lista.count, clients->size);
             shutdown(client_sock, SHUT_RDWR);  
             close(client_sock);
 
@@ -547,6 +522,11 @@ void *thread_func(void *args){
 
             // Termina il thread in modo pulito
             pthread_exit(NULL);
+            
+            } else {
+                send_message(client_sock, MSG_ERR, "Utente non esiste");
+            }
+
             break;
 
 
@@ -627,16 +607,15 @@ void *scorer() {
         if (!classifica) {
             printf("Errore di allocazione memoria per classifica\n");
         // free(scorerVector);
-        pthread_mutex_unlock(&classifica_mutex);
+            pthread_mutex_unlock(&classifica_mutex);
             return NULL;
         }
         //reset_punteggi();
         memset(classifica,0,max_length);
         printf("Scorer in esecuzione\n");
+    
     pthread_mutex_unlock(&classifica_mutex);
 
-
-    printf("Scorer in esecuzione\n");
     pthread_mutex_lock(&lista_mutex);
     int num_giocatori = lista.count;
     pthread_mutex_unlock(&lista_mutex);
@@ -696,14 +675,16 @@ void *game(void *arg) {
 
     while (1) {
   
-        pthread_mutex_lock(&lista_mutex);
-        while (lista.count == 0) {
+       // pthread_mutex_lock(&lista_mutex);
+        if (lista.count == 0) {
             pthread_mutex_unlock(&lista_mutex);
             printf("Nessun giocatore registrato, attesa...\n");
-            sleep(1);
-            pthread_mutex_lock(&lista_mutex);
+            while (lista.count == 0){
+                time(&tempo_iniziale);
+            }
+        // pthread_mutex_lock(&lista_mutex);
         }
-        pthread_mutex_unlock(&lista_mutex);
+        //pthread_mutex_unlock(&lista_mutex);
 
         printf("DEBUG: classifica_inviata resettata a 0\n");
 
@@ -739,7 +720,7 @@ void *game(void *arg) {
         while (pausa_gioco) {
             sleep(1);
         }
-
+        
         //Se alla fine della pausa non ci sono giocatori, ripeti il ciclo
         pthread_mutex_lock(&lista_mutex);
         if (lista.count == 0) {
