@@ -77,11 +77,15 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) {
     if (i < 0 || i >= MATRIX_SIZE || j < 0 || j >= MATRIX_SIZE) {
         return 0;
     }
-
+    //Controllo se sono già passata sopra quella cella
+    if (matrice[i][j].usato){
+        return 0;
+    }
     //Caso speciale: gestione della lettera "Q"
     if (matrice[i][j].value == 'Q' && index + 1 < strlen(parola) && parola[index] == 'Q' && parola[index + 1] == 'U') {
         printf("DEBUG: Trovata 'QU' in (%d, %d)\n", i, j);
 
+        matrice[i][j].usato = true;
         //Cerco in tutte le 8 direzioni adiacenti
         return trovaParolaAux(matrice, i + 1, j, parola, index + 2) ||  
                trovaParolaAux(matrice, i - 1, j, parola, index + 2) ||  
@@ -98,7 +102,7 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) {
         return 0;
     }
     printf("DEBUG: Lettera %c trovata in (%d, %d), index %d\n", parola[index], i, j, index);
-
+    matrice[i][j].usato = true;
     // Controlla in tutte le 8 direzioni adiacenti
     return trovaParolaAux(matrice, i + 1, j, parola, index + 1) ||  
            trovaParolaAux(matrice, i - 1, j, parola, index + 1) || 
@@ -107,7 +111,9 @@ int trovaParolaAux(cella** matrice, int i, int j, char* parola, int index) {
            trovaParolaAux(matrice, i + 1, j + 1, parola, index + 1) || 
            trovaParolaAux(matrice, i - 1, j - 1, parola, index + 1) ||  
            trovaParolaAux(matrice, i + 1, j - 1, parola, index + 1) ||  
-           trovaParolaAux(matrice, i - 1, j + 1, parola, index + 1);  
+           trovaParolaAux(matrice, i - 1, j + 1, parola, index + 1); 
+    
+    matrice[i][j].usato = false;        
 }
 
 //Funzione per cercare parola nella matrice
