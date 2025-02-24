@@ -21,56 +21,46 @@
 #include "../Header/FileLog.h"
 
 #define MAX_CLIENTS 32
-#define MAX_LENGTH_USERNAME 10 // Numero massimo di lunghezza dell'username
-#define NUM_THREADS 5          // Numero di thread da creare
-#define BUFFER_SIZE 1024       // dimensione del buffer
+#define MAX_LENGTH_USERNAME 10              // Numero massimo di lunghezza dell'username
+#define BUFFER_SIZE 1024                    // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
-#define TIMEOUT_MINUTES 2 // 2 minuti di inattività
+#define TIMEOUT_MINUTES 2                   // 2 minuti di inattività
 
-// DEFINIZIONE delle funzioni
-void *scorer();
-
-typedef struct{
-    char *matrix_file;
-    float durata_partita;
-    long seed;
-    char *file_dizionario;
-} Parametri;
+// DEFINIZIONE delle funzioni in FunzioniServer.h
 
 
 int turno = 0;
-
 int game_started = 0;
-listaGiocatori lista; // Lista giocatori
-Fifo *clients;        // Lista clienti
-pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
-time_t tempo_iniziale;
-int pausa_gioco = 0;     // Gioco
-int durata_partita = 8; // La partita dura 5 minuti quindi 30s
-int durata_pausa = 5;    // La pausa della partita dura 1 minuti
+int pausa_gioco = 0;                        //Se 0 gioco, se 1 sono in pausa
+int durata_partita = 8;                     //La partita dura 5 minuti quindi 300s
+int durata_pausa = 5;                       //La pausa della partita dura 1 minuti
 int punteggio = 0;
-char *classifica; // Classifica non disponibile
-
+char *classifica;                           //Classifica
 int server_fd;
+
+time_t tempo_iniziale;
+
 cella **matrice;
 paroleTrovate *listaParoleTrovate = NULL;
 Trie *Dizionario;
 Parametri parametri;
+listaGiocatori lista;                       //Lista giocatori
+Fifo *clients;                              //Lista clienti
 
 // MUTEX
 pthread_mutex_t pausa_gioco_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t matrix_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lista_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scorer_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t scorer_cond, game_cond, lista_cond;
+//pthread_cond_t scorer_cond, game_cond, lista_cond;
 pthread_mutex_t classifica_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t game_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t turno_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t scorer_tid;
 
-// FUNZIONI
-// Calcola tempo rimanente
+//FUNZIONI 
 char *calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita){
     time_t tempo_attuale = time(NULL);
     double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);

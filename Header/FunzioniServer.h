@@ -8,27 +8,30 @@
 #include <errno.h>
 #include <signal.h>
 
-//#include "../Header/Comunicazione.h"
+typedef struct{
+    char *matrix_file;
+    float durata_partita;
+    long seed;
+    char *file_dizionario;
+} Parametri;
 
-//typedef struct Fifo Fifo;
-
+//Funzione per calcolare il tempo rimanente della partita
 char*  calcola_tempo_rimanente(time_t tempo_iniziale, int durata_partita);
 
-//void sendClassifica(listaGiocatori* lista, pthread_t tid, pthread_mutex_t lista_mutex, char* classifica, time_t tempo_iniziale, int durata_pausa);
+//Funzione per inviare la classifica ai giocatori
 void sendClassifica(listaGiocatori* lista, pthread_t tid, char* classifica, time_t tempo_iniziale, int durata_pausa);
 
+//Funzione per confrontare i punteggi dei giocatori -> qsort
+int compare_score(const void *a, const void *b);
+
+//Funzione per gestire i punteggio, cercandoli nella lista dei giocatori tramite tid
 int prendi_punteggi(listaGiocatori* lista, pthread_t tid);
-/* Calcola tempo rimanente
-void calcola_tempo_rimanente(time_t tempo_iniziale, int durata) {
-    time_t tempo_attuale = time(NULL);
-    double tempo_trascorso = difftime(tempo_attuale, tempo_iniziale);
-    int tempo_rimanente_secondi = durata - (int)tempo_trascorso;
 
-    if (tempo_rimanente_secondi < 0) {
-        printf("Il gioco è già terminato\n");
-    } else {
-        printf("Il tempo rimanente è: %d secondi\n", tempo_rimanente_secondi);
-    }
-}
-*/
+//Funzione per caricare in memoria il dizionario
+void Load_Dictionary(Trie *Dictionary, char *path_to_dict);
 
+//Funzione per identificare il giocatore
+giocatore* trova_giocatore(listaGiocatori* lista, pthread_t tid);
+
+//Funzione per resettare i punteggi 
+void reset_punteggi();
