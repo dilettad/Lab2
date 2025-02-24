@@ -450,8 +450,13 @@ void *thread_func(void *args){
 
             case MSG_REGISTRA_UTENTE:                                               //Richiesta di registrazione
             pthread_mutex_lock(&lista_mutex);
-            registrazione_client(client_sock, client_message.data, &lista);         //Registrazione di un nuovo client
-            
+
+            //Controllo se la registrazione ha avuto successo
+            if (registrazione_client(client_sock, client_message.data, &lista) == -1){     //Registrazione di un nuovo client
+                pthread_mutex_unlock(&lista_mutex);
+                break;
+            }
+
             //Inizializzo un newplayer alla testa della lista
             giocatore *newPlayer = lista.head;
             int aggiunto = 0; 
@@ -459,7 +464,7 @@ void *thread_func(void *args){
                 while (newPlayer != NULL) {
                     if (strcmp(newPlayer->username, client_message.data) == 0){     //Controllo se username corrisponde
                         newPlayer->active = 1;
-                        aggiunto = 1;                                      //Attivo il giocatore
+                        aggiunto = 1;                                               //Attivo il giocatore
                         break;
                     }
                     newPlayer = newPlayer->next;
@@ -797,7 +802,7 @@ void *thread_func_activity() {
         while (current != NULL) {
 
             //Controllo se la differenza dell'ultima attività dell'utente supera i 2 minuti
-            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 60) { 
+            if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 10) { 
                 printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
                 int retvalue;
                 writef(retvalue,"[SERVER]: Inattività da due minuti\n");

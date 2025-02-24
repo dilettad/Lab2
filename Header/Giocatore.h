@@ -4,7 +4,7 @@
 void add_client(listaGiocatori *lista, int client_fd, char *username);
 
 // Funzione per registrazione del cliente
-void registrazione_client(int client_fd, char *username, listaGiocatori *lista);
+int registrazione_client(int client_fd, char *username, listaGiocatori *lista);
 
 //Funzione per controllare se username è già esistente
 int username_esiste(listaGiocatori* lista, char *username);

@@ -64,19 +64,19 @@ int username_esiste(listaGiocatori* lista, char *username){
 }
 
 // Funzione per registrazione del cliente
-void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
+int registrazione_client(int client_fd, char *username, listaGiocatori *lista){
     
     //Controllo se l'username è massimo di 10 caratteri
     int lunghezza = strlen(username);
     if (lunghezza > MAX_LENGTH_USERNAME) {
         send_message(client_fd, MSG_ERR, "Username non valido, deve essere di massimo 10 caratteri");
-        return;
+        return -1;
     }
 
     // Controllo se l'username contiene solo caratteri validi e mando un messaggio in caso di errore
     if (!controlla_caratteri(username)){
         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
-        return; 
+        return -1; 
     }
 
     // Controllo se l'username esiste già e mando un messaggio in caso di errore
@@ -84,11 +84,12 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
         printf("Tentativo di registrazione con username già presente: %s\n", username);
         fflush(0);
         send_message(client_fd, MSG_ERR, "Username già in uso, per favore scegli un altro nome");
-        return; 
+        return -1; 
     }
-    add_client(lista, client_fd, username); //Aggiungo alla lista se passa i controlli, mando un messaggio di OK
+    add_client(lista, client_fd, username); //Aggiungo alla lista se passa i controlli
     //send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
     registra_bool = 1;
+    return 0;
 }
 
 //Funzione per loggare l'utente
