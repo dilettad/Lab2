@@ -13,6 +13,7 @@
 #include "../Header/Lista.h"
 #include "../Header/Giocatore.h"
 
+#define MAX_LENGTH_USERNAME 10              // Numero massimo di lunghezza dell'username
 int registra_bool = 0; // Per vedere se è registrato o no
 
 //Funzione per aggiungere client alla lista
@@ -64,6 +65,14 @@ int username_esiste(listaGiocatori* lista, char *username){
 
 // Funzione per registrazione del cliente
 void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
+    
+    //Controllo se l'username è massimo di 10 caratteri
+    int lunghezza = strlen(username);
+    if (lunghezza > MAX_LENGTH_USERNAME) {
+        send_message(client_fd, MSG_ERR, "Username non valido, deve essere di massimo 10 caratteri");
+        return;
+    }
+
     // Controllo se l'username contiene solo caratteri validi e mando un messaggio in caso di errore
     if (!controlla_caratteri(username)){
         send_message(client_fd, MSG_ERR, "Username non valido, non deve contenere caratteri ASCII");
@@ -77,9 +86,8 @@ void registrazione_client(int client_fd, char *username, listaGiocatori *lista){
         send_message(client_fd, MSG_ERR, "Username già in uso, per favore scegli un altro nome");
         return; 
     }
-
     add_client(lista, client_fd, username); //Aggiungo alla lista se passa i controlli, mando un messaggio di OK
-    send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
+    //send_message(client_fd, MSG_OK, "Registrazione avvenuta con successo");
     registra_bool = 1;
 }
 

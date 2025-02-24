@@ -23,7 +23,6 @@
 // DEFINIZIONE delle funzioni in FunzioniServer.h
 
 #define MAX_CLIENTS 32
-#define MAX_LENGTH_USERNAME 10              // Numero massimo di lunghezza dell'username
 #define BUFFER_SIZE 1024                    // dimensione del buffer
 #define MATRIX_SIZE 4
 #define DIZIONARIO "../Dizionario.txt"
@@ -455,34 +454,39 @@ void *thread_func(void *args){
             
             //Inizializzo un newplayer alla testa della lista
             giocatore *newPlayer = lista.head;
-
+            int aggiunto = 0; 
                 //Scansione
                 while (newPlayer != NULL) {
                     if (strcmp(newPlayer->username, client_message.data) == 0){     //Controllo se username corrisponde
-                        newPlayer->active = 1;                                      //Attivo il giocatore
+                        newPlayer->active = 1;
+                        aggiunto = 1;                                      //Attivo il giocatore
                         break;
                     }
                     newPlayer = newPlayer->next;
                 }
             pthread_mutex_unlock(&lista_mutex);
-        
-            pthread_mutex_lock(&clients_mutex);
+            
+            if (aggiunto){
+                pthread_mutex_lock(&clients_mutex);
 
-            //Inizializzo current alla testa dei client
-            Client* current = clients->head;
-        
-                while(current != NULL){
-                    if(pthread_equal(current->thread_id, pthread_self())){          //Controllo se corrisponde il tid
-                        current->isPlayer = 1;                                      //Attivo il client
-                        current->username = strdup(client_message.data);            //Duplico la stringa dell'username    
-                        break;
+                //Inizializzo current alla testa dei client
+                Client* current = clients->head;
+            
+                    while(current != NULL){
+                        if(pthread_equal(current->thread_id, pthread_self())){          //Controllo se corrisponde il tid
+                            current->isPlayer = 1;                                      //Attivo il client
+                            current->username = strdup(client_message.data);            //Duplico la stringa dell'username    
+                            break;
+                        }
+                        current = current->next;
                     }
-                    current = current->next;
-                }
-            pthread_mutex_unlock(&clients_mutex);
-            send_message(client_sock, MSG_OK, "Registrazione avvenuta con successo e login automatico.");
+                pthread_mutex_unlock(&clients_mutex);
+                send_message(client_sock, MSG_OK, "Registrazione avvenuta con successo e login automatico.");
+                printf("[REGISTRAZIONE] avvenuta");
+            }
             break;
             
+
             case MSG_PUNTI_FINALI:                                                      //Richiesta di invio, classifica
             pthread_mutex_lock(&pausa_gioco_mutex);
             printf("[CLASSIFICA] RICHIESTA CLASSIFICA RICEVUTA, pausa gioco %d, classifica:%s\n", pausa_gioco, classifica ? classifica: "NULL");
