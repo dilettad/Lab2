@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <signal.h>
+#include "../Header/Trie.h"
 
 typedef struct{
     char *matrix_file;

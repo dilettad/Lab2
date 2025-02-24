@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
     stampaMatrice(matrice);
 
     // Svuota la matrice
-    svuotaMatrice(matrice);
+    //svuotaMatrice(matrice);
 
    // Inizializza la lista di parole trovate
     paroleTrovate* head = NULL;
@@ -117,16 +117,15 @@ int main(int argc, char* argv[]){
 
 
 
-    /*TEST SERVER
+    TEST SERVER
     TEST SERVER
     time_t tempo_iniziale = time(NULL) - 18; // Simula che il gioco è iniziato 18 secondi fa
     int durata_partita = 20;    
     char* messaggio = calcola_tempo_rimanente(tempo_iniziale, durata_partita);
     printf("%s\n", messaggio);  // Usa %s per stampare una stringa
     return 0;
-    */
+    
 
-/*
 #include <stdio.h>
 #include "../Header/Matrice.h"
 #include "../Header/Lista.h"
@@ -160,5 +159,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
-
 */
