@@ -1,3 +1,6 @@
+//questa serve per non avere gli error squiggles sulla sigaction
+#define _XOPEN_SOURCE 700
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +9,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <ctype.h>
+#include <signal.h>
 
 #include "../Header/macro.h"
 #include "../Header/Comunicazione.h"
@@ -25,17 +29,11 @@ pthread_mutex_t message_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Definisco la funzione che gestisce la SIGINT
 void GestoreSigint(int sig){
-    int retvalue;
-    retvalue = pthread_mutex_destroy(&message_mutex);                   //Distrugge il mutex utilizzato per la gestione dei messaggi
-    printf("\nChiusura Client tramite SIGINT\n");
-    fflush(stdout);                                        
-    
-    if (fd_server >= 0){                                                //Controllo se il fd dell server è valido prima di chiuderlo
-        SYSC(retvalue, close(fd_server), "Errore nella close Client");  //Chiude il socket del server, gestendo errori
-    }
-    
-    close(client_sock);                                                 //Chiude il socket del client e del server
-    close(fd_server);
+    //int retvalue;
+    pthread_mutex_destroy(&message_mutex);                   //Distrugge il mutex utilizzato per la gestione dei messaggi
+    printf("\nChiusura Client tramite SIGINT\n");                               
+    send_message(client_sock, MSG_FINE, "");               //Messaggio di chiusura del client
+    close(client_sock);
     exit(EXIT_SUCCESS);
 }
 
@@ -133,9 +131,11 @@ void *receiver(void *args){
 
 
 int main(int argc, char *argv[]){
-    int client_sock, retvalue;
+    int  retvalue;
     struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE];
+    struct sigaction azione_segnale;
+    sigset_t maschera_segnale;
     
     //Controllo se sono stati passati i 3 parametri
     if (argc < 3){
@@ -143,6 +143,18 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+    /*IMPOSTO LA MASCHERA DEI SEGNALI*/
+    sigemptyset(&maschera_segnale);
+    SYSC(retvalue,sigaddset(&maschera_segnale,SIGINT),"aggiunta SIGINT alla maschera");
+    SYSC(retvalue,sigaddset(&maschera_segnale,SIGQUIT),"aggiunta SIGQUIT alla maschera");
+
+    /*IMPOSTO LA SIGACTION*/
+    azione_segnale.sa_handler = GestoreSigint;
+    azione_segnale.sa_mask = maschera_segnale;
+  
+    /*IMPOSTO IL GESTORE*/
+    sigaction(SIGINT,&azione_segnale,NULL);
+    sigaction(SIGQUIT,&azione_segnale,NULL);
 
     //Creazione socket
     SYSC(client_sock, socket(AF_INET, SOCK_STREAM, 0), "Errore nella socket"); 

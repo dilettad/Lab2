@@ -347,11 +347,12 @@ void *thread_func(void *args){
     //Ciclo del thread
     while (1){
         message client_message = receive_message(client_sock);  //Ricezione del messsaggio
+        printf("ciao\n");
         pthread_mutex_lock(&lista_mutex);                       //Mutex per accesso esclusivo della lista
         utente->last_activity = time(NULL);                     //Aggiorna il timestamp dell'attività
         pthread_mutex_unlock(&lista_mutex);                     //Rilascio mutex
 
-        writef(retvalue, client_message.data);                  //Per visualizzare il messaggio ricevuto
+        //writef(retvalue, client_message.data);                  //Per visualizzare il messaggio ricevuto
 
         //Gestione del messaggio in base al tipo
         switch (client_message.type){
@@ -733,8 +734,7 @@ void *game(void *arg) {
             while (lista.count == 0){
                 time(&tempo_iniziale);
             }
-
-        pthread_mutex_lock(&lista_mutex);
+            
         }
 
     pthread_mutex_unlock(&lista_mutex);
