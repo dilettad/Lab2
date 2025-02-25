@@ -556,7 +556,7 @@ void *thread_func(void *args){
             pthread_exit(NULL);                                                             //Terminazione
             break;
 
-
+            /*
             case MSG_LOGIN_UTENTE:                                                          //Richiesta login utente
                 //Controllo se corrisponde l'username
                 if (login_utente(client_sock, &lista, client_message.data) == 0){
@@ -575,6 +575,37 @@ void *thread_func(void *args){
                     pthread_mutex_unlock(&clients_mutex);
                 }
             break;
+            */
+            case MSG_LOGIN_UTENTE:
+            // Controllo se il login è andato a buon fine
+            if (login_utente(client_sock, &lista, client_message.data) == 0) {
+                pthread_mutex_lock(&clients_mutex);
+                //Inizializzo current alla testa dei client
+                Client* current = clients->head;
+                //Scansione 
+                while (current != NULL) {
+                    if (pthread_equal(current->thread_id, pthread_self())) {            //Controllo se tid corrisponde
+                        current->username = strdup(client_message.data);                //Copio l'username
+                        current->isPlayer = 1;                                          // Riattiva il client
+                        break;
+                    }
+                    current = current->next;
+                }
+                pthread_mutex_unlock(&clients_mutex);
+        
+                pthread_mutex_lock(&lista_mutex);
+                giocatore *player = lista.head;
+                while (player != NULL) {
+                    if (strcmp(player->username, client_message.data) == 0) {
+                        player->active = 1; // Riattiva il giocatore nella lista
+                        break;
+                    }
+                    player = player->next;
+                }
+                pthread_mutex_unlock(&lista_mutex);
+            }
+            break;
+       
 
             case MSG_POST_BACHECA:                                                          //Richiesta post dei messaggi sulla bacheca
                 //Controllo se utente attivo
@@ -789,10 +820,10 @@ void *game(void *arg) {
 }
 
 
-//Funzione per la disconnessione attività dopo un periodo di tempo 
+
 void *thread_func_activity() {
     while (1) {
-        sleep(10);                                                                   
+        sleep(10);                                                                    
         time_t now = time(NULL);
 
         pthread_mutex_lock(&clients_mutex);
@@ -800,15 +831,30 @@ void *thread_func_activity() {
         Client *current = clients->head;
 
         while (current != NULL) {
-
-            //Controllo se la differenza dell'ultima attività dell'utente supera i 2 minuti
+            // Controllo tempo di inattività
             if (difftime(now, current->last_activity) > TIMEOUT_MINUTES * 10) { 
-                printf("Il client %s è inattivo da troppo tempo e verrà disconnesso.\n", current->username ? current->username : "Client non registrato");
-                int retvalue;
-                writef(retvalue,"[SERVER]: Inattività da due minuti\n");
-                elimina_thread(clients, current->thread_id, &clients_mutex);                //Eliminazione del thread
-                
-                // Ripristina il puntatore per continuare la scansione della lista
+                printf("[DISCONNESSIONE] Il client %s è inattivo da %d minuti e verrà espulso dalla partita.\n", 
+                       current->username ? current->username : "Sconosciuto", TIMEOUT_MINUTES);
+
+                // Imposta il client come non più giocante
+                current->isPlayer = 0;
+
+                // Rimuove il giocatore dalla lista giocatori
+                pthread_mutex_lock(&lista_mutex);
+                giocatore *player = lista.head;
+                while (player != NULL) {
+                    if (strcmp(player->username, current->username) == 0) {
+                        player->active = 0; // Segnala che non è più attivo
+                        break;
+                    }
+                    player = player->next;
+                }
+                pthread_mutex_unlock(&lista_mutex);
+
+                // Elimina il thread del client
+                elimina_thread(clients, current->thread_id, &clients_mutex); 
+
+                // Continua con il prossimo client
                 if (prev == NULL) {
                     current = clients->head;
                 } else {
@@ -822,6 +868,8 @@ void *thread_func_activity() {
         pthread_mutex_unlock(&clients_mutex);
     }
 }
+
+
 
 /*******/
 /*MAIN*/
