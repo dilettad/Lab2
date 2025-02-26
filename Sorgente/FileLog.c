@@ -23,8 +23,6 @@ void file_log(char* utente, char* testo) {
         pthread_mutex_unlock(&log_mutex);
         return;
     }
-
-    utente[strcspn(utente, "\n")] = ' '; //Sostituisce l'invio con uno spazio
     
     // Scrivi l'evento nel file di log
     fprintf(log_file, "[%s]%s\n",utente, testo);

@@ -434,8 +434,7 @@ void *thread_func(void *args){
                             }
                         pthread_mutex_unlock(&lista_mutex);
 
-                        //file_log(utente->username, client_message.data);
-
+            
                         char messaggiopuntiparola[90];
                         printf("Punti inviati %d, \n", punti_parola);
                         sprintf(messaggiopuntiparola, "Con questa parola hai ottenuto %d punti", punti_parola);
@@ -488,6 +487,7 @@ void *thread_func(void *args){
                         current = current->next;
                     }
                 pthread_mutex_unlock(&clients_mutex);
+                file_log(client_message.data, "Registrazione utente");
                 send_message(client_sock, MSG_OK, "Registrazione avvenuta con successo e login automatico.");
                 printf("[REGISTRAZIONE] avvenuta");
             }
@@ -551,6 +551,8 @@ void *thread_func(void *args){
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients, pthread_self());
             pthread_mutex_unlock(&clients_mutex);
+            
+            file_log(client_message.data, "Cancellazione utente");
 
             shutdown(client_sock, SHUT_RDWR);                                               //Chiusura del socket
             close(client_sock);
@@ -713,7 +715,20 @@ void *scorer() {
 
     classifica[offset] = '\0';
 
+    
     printf("Classifica generata:\n%s\n", classifica);                   //Stampa la classifica
+        
+    pthread_mutex_lock(&lista_mutex);
+        current = lista.head;
+        while (current != NULL) {
+            char log_entry[128];
+            snprintf(log_entry, sizeof(log_entry), "Punteggio finale: %d punti", current->punteggio);
+            file_log(current->username, log_entry);
+            current = current->next;
+        }
+    pthread_mutex_unlock(&lista_mutex);
+
+    
     free(scorerVector);                                                 //Libera scoreVector
     reset_punteggi();                                                   //Reset dei punteggi
     return NULL;

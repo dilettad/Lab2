@@ -30,13 +30,12 @@ message receive_message(int client_socket){
     int retvalue;
     // ricevo la lunghezza del messaggio
     SYSC(retvalue, read(client_socket, &msg.length, sizeof(int)), "errore lettura lunghezza messaggio\n");
-    // ricevo tipo messaggio
     SYSC(retvalue, read(client_socket, &msg.type, sizeof(char)), "errore lettura tipo messaggio\n")
     // alloco campo data del messaggio
     msg.data = (char *)malloc(msg.length + 1); // Alloca in memoria lo spazio necessario per il data
     // ricevo messagio
     SYSC(retvalue, read(client_socket, msg.data, msg.length), "nella ricezione del payload");
-    msg.data[msg.length + 1] = '\0';
+    msg.data[msg.length] = '\0';
     return msg;
 }
 

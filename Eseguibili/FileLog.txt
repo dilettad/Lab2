@@ -1,35 +1,3 @@
-[ pino ]Registrazione avvenuta con successo
-[ pino ]Registrazione avvenuta con successo
-[ pino ]Punteggio finale: 0 punti
-[ pino  ]CASI
-[ pino   ]QUASI
-[ pino  ]Punteggio finale: 9 punti
-[ pino ]Registrazione avvenuta con successo
-[ pino ]Punteggio finale: 0 punti
-[ pino ]Registrazione avvenuta con successo
-[ pino ]Registrazione avvenuta con successo
-[ pino ]Punteggio finale: 0 punti
-[ pino  ]Punteggio finale: 0 punti
-[ erne ]Registrazione avvenuta con successo
-[ erne  ]CASI
-[ erne ]Punteggio finale: 4 punti
-[ erne  ]Punteggio finale: 4 punti
-[ loren ]Registrazione avvenuta con successo
-[ loren  ]CASI
-[ francesco ]Registrazione avvenuta con successo
-[ francesco  ]CASI
-[ francesco   ]QUASI
-[ francesco    ]COSE
-[ pino ]Registrazione avvenuta con successo
-[ pino  ]CASI
-[ pino   ]CASE
-[ matteo ]Registrazione avvenuta con successo
-[ classifica ]Registrazione avvenuta con successo
-[ loren ]Registrazione avvenuta con successo
-[ dilettaaa ]Registrazione avvenuta con successo
-[ madonna ]Registrazione avvenuta con successo
-[ porcocane ]Registrazione avvenuta con successo
-[paolo ]CASI
-[pippo ]CASI
-[dile ]CASE
-[dile  ]VOLTA
+[dile]Registrazione utente
+[dile]Punteggio finale: 12 punti
+[dile]Cancellazione utente
