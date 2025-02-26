@@ -1,3 +1,11 @@
 [dile]Registrazione utente
 [dile]Punteggio finale: 12 punti
 [dile]Cancellazione utente
+[dile]Registrazione utente
+[dile]Punteggio finale: 8 punti
+[dile]Punteggio finale: 0 punti
+[daria]Registrazione utente
+[daria]Punteggio finale: 8 punti
+[dile]Punteggio finale: 8 punti
+[daria]Punteggio finale: 0 punti
+[dile]Punteggio finale: 0 punti

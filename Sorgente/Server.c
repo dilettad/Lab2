@@ -410,7 +410,9 @@ void *thread_func(void *args){
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                     else{
                         printf("Aggiungo la parola alla lista delle parole trovate \n");
+                        pthread_mutex_lock(&lista_mutex);
                         utente->paroleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
+                        pthread_mutex_unlock(&lista_mutex);
                         // Recupero il punteggio del giocatore attuale
                         int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
                             if(punteggio_corrente == -1){
@@ -560,26 +562,6 @@ void *thread_func(void *args){
             pthread_exit(NULL);                                                             //Terminazione
             break;
 
-            /*
-            case MSG_LOGIN_UTENTE:                                                          //Richiesta login utente
-                //Controllo se corrisponde l'username
-                if (login_utente(client_sock, &lista, client_message.data) == 0){
-                    pthread_mutex_lock(&clients_mutex);
-                    //Inizializzo current alla testa del client
-                    Client* current = clients->head;
-                    //Scansione
-                    while (current != NULL) {
-                        if (pthread_equal(current->thread_id, pthread_self())) {            //Controllo se il tid corrisponde  
-                            current->username = strdup(client_message.data);                //Copio l'username
-                            current->isPlayer = 1;                                          //Attivo il client    
-                            break;
-                        }
-                        current = current->next;                                            //Prossimo giocatore
-                    }
-                    pthread_mutex_unlock(&clients_mutex);
-                }
-            break;
-            */
             case MSG_LOGIN_UTENTE:
             // Controllo se il login è andato a buon fine
             if (login_utente(client_sock, &lista, client_message.data) == 0) {
