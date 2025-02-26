@@ -76,7 +76,7 @@ all: $(SERVER) $(CLIENT) $(TEST) clean_objs
 
 $(SERVER): $(SERVER_OBJS)
 	@echo Compilazione del Server
-	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB)  -o $(SERVER)
+	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL) -o $(SERVER)
 	@$(CC) $(CFLAGS) $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL) -o $(SERVER)
 
 $(CLIENT): $(CLIENT_OBJS)
@@ -110,7 +110,7 @@ $(OBJFL):$(SRCFL)
 #Server.o
 $(OBJS):$(SRCS)
 	@echo compilo 
-	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SERVER_HEADERS)
+	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL)  $(SERVER_HEADERS)
 	@$(CC) $(CFLAGS) -c $(SRCS) $(SRCHCS) $(SRCHM) $(SRCHL) $(SRCHT) $(SRCG) $(SRCB) $(SRCFL)  $(SERVER_HEADERS)
 
 #Client.o
