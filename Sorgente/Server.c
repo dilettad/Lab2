@@ -525,26 +525,22 @@ void *thread_func(void *args){
             break;
 
             case MSG_FINE:   
-        
+           
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
             
-           // Cancellazione dell'utente
-            pthread_mutex_lock(&lista_mutex);
-            printf("[DEBUG] Tentativo di eliminazione del giocatore %s\n", utente->username);
-            elimina_giocatore(&lista, utente->username);
-            printf("[DEBUG] Eliminazione completata per %s\n", utente->username);
-            pthread_mutex_unlock(&lista_mutex);
-        
-            //Cancellazione del Client
-            pthread_mutex_lock(&clients_mutex);
-            deleteClient(clients, pthread_self());
-            pthread_mutex_unlock(&clients_mutex);
-        
-
-            close(client_sock);                                                         //Chiusura socket
-            printf("[Handler] thread terminato\n");
-            pthread_exit(NULL);                                                         //Terminazione
-            break;
+                // Procedo con la disconnessione
+                pthread_mutex_lock(&lista_mutex);
+                elimina_giocatore(&lista, utente->username);
+                pthread_mutex_unlock(&lista_mutex);
+            
+                pthread_mutex_lock(&clients_mutex);
+                deleteClient(clients, pthread_self());
+                pthread_mutex_unlock(&clients_mutex);
+            
+                close(client_sock);
+                printf("[Handler] thread terminato\n");
+                pthread_exit(NULL);
+                break;      
 
             case MSG_CANCELLA_UTENTE:                                                   //Richiesta cancellazione utente
             printf("[SERVER] Il client %s ha richiesto la cancellazione dell'utente.\n", utente->username);

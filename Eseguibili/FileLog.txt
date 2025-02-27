@@ -101,3 +101,6 @@
 [dile] Punteggio finale: -1 punti
 [daria] Punteggio finale: -1 punti
 [dile] Punteggio finale: 0 punti
+[dile] Registrazione utente
+[dile] Registrazione utente
+[dile] Registrazione utente
