@@ -236,6 +236,17 @@ void sigusr2_classifica_handler(int sig){
     pthread_mutex_unlock(&lista_mutex);                                         //Rilascio mutex
 
     printf("Segnale SIGUSR2 ricevuto, la classifica è pronta per essere inviata ai giocatori\n");
+    pthread_mutex_lock(&lista_mutex);
+    // Rimuove i giocatori inattivi dalla classifica
+    giocatore *current = lista.head;
+    while (current != NULL) {
+        if (current->active == 0) {
+            current->punteggio = -1; // Escludiamo il giocatore dalla classifica
+        }
+        current = current->next;
+    }
+    pthread_mutex_unlock(&lista_mutex);
+
 
     // Genera la classifica
     pthread_create(&scorer_tid, NULL, scorer, NULL);
@@ -656,7 +667,7 @@ void *scorer() {
             return NULL;
         }
         memset(classifica,0,max_length);                                //Azzera la classifica
-        //classifica = NULL;
+
     pthread_mutex_unlock(&classifica_mutex);
 
     printf("Scorer in esecuzione\n");
@@ -681,12 +692,23 @@ void *scorer() {
     pthread_mutex_lock(&lista_mutex);
     giocatore *current = lista.head;                                    //Inizializzo current alla testa della lista
         
-        //Copia i puntatori ai giocatori nell'array scorerVector.
+        /*//Copia i puntatori ai giocatori nell'array scorerVector.
         for (int i = 0; i < num_giocatori; i++) {
             if (current == NULL) break;
             scorerVector[i] = current;
             current = current->next;
+        }*/
+       // Copia solo i giocatori attivi nell'array per ordinarli
+        int count = 0;
+        for (int i = 0; i < num_giocatori; i++) {
+            if (current == NULL) break;
+            if (current->active == 1) { // Aggiunge solo giocatori attivi
+                scorerVector[count++] = current;
+            }
+            current = current->next;
         }
+        num_giocatori = count; // Aggiorno il numero di giocatori effettivi
+
 
     pthread_mutex_unlock(&lista_mutex);
 
@@ -865,7 +887,7 @@ void *thread_func_activity() {
 
                 // Elimina il thread del client
                 elimina_thread(clients, current->thread_id, &clients_mutex); 
-
+              
                 // Continua con il prossimo client
                 if (prev == NULL) {
                     current = clients->head;
