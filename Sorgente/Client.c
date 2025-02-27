@@ -51,14 +51,14 @@ void *receiver(void *args){
 
         case MSG_OK:
             printf("\n%s\n", received_msg.data);
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             fflush(0);
             break;
 
         case MSG_ERR:
             pthread_mutex_unlock(&message_mutex);
             printf("\n%s\n", received_msg.data);
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             fflush(0);
             break;
 
@@ -82,24 +82,24 @@ void *receiver(void *args){
 
         case MSG_PUNTI_PAROLA:
             printf("\n%s\n", received_msg.data);                        //Messaggio con i punti parola
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;
 
         case MSG_TEMPO_PARTITA:
             printf("\n%s\n", received_msg.data);                        //Messaggio con tempo partita 
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
     
             break;
         case MSG_TEMPO_ATTESA:
             printf("\n Tempo di attesa per la prossima partita: %d\n", durata_pausa); 
             printf("\n%s\n", received_msg.data);                        //Messaggio con tempo di attesa
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;
 
         case MSG_PUNTI_FINALI:
             printf("\nClassifica generale e punteggio personale ricevuti:\n");
             printf("%s\n", received_msg.data);                          //Messaggio con punti finali
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;
         
         case MSG_SERVER_SHUTDOWN:
@@ -110,18 +110,18 @@ void *receiver(void *args){
         case MSG_SHOW_BACHECA:
             printf("\nMessaggi sulla bacheca:\n");
             printf("%s\n", (char *)received_msg.data);                  //Stampa i messaggi sulla bacheca (utente:messaggio)
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;
 
         case MSG_POST_BACHECA:
             printf("\nMessaggio postato sulla bacheca:\n");
             printf("%s\n", (char *)received_msg.data);                  //Stampa del conferma del messaggio postato sulla bacheca
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;    
 
         default:
             fprintf(stderr, "Tipo di messaggio sconosciuto: %d\n", received_msg.type); //Messaggio stampato di default
-            printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+            //printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
             break;
         }
         pthread_mutex_unlock(&message_mutex);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
 
     //Creazione del thread receiver
     SYST(retvalue, pthread_create(&receiver_thread, NULL, receiver, &client_sock), "errore creazione thread receiver");
-    printf("Inserisci il messaggio da inviare al server (o 'fine' per uscire): \n");
+    printf("Inserisci il messaggio da inviare al server (aiuto per avere la lista dei comandi) \n");
     
     while (1){
         int nread;
