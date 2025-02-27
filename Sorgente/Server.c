@@ -389,8 +389,10 @@ void *thread_func(void *args){
                 fflush(0);
 
                 //Controllo se la parola è già stata trovata
+               // pthread_mutex_lock(&lista_mutex);
                 if (esiste_paroleTrovate(utente->paroleTrovate, client_message.data)){
                     send_message(client_sock, MSG_PUNTI_PAROLA, "0");
+                   // pthread_mutex_unlock(&lista_mutex);
                     break;
                 }
                 // Controllo se parola è in matrice
@@ -400,18 +402,20 @@ void *thread_func(void *args){
                     stampaMatrice(matrice);                                       
                     printf("Debug: La parola non è stata trovata. \n");
                     send_message(client_sock, MSG_ERR, "Parola nella matrice non trovata");
+                   // pthread_mutex_unlock(&lista_mutex);
                     break;
                 }
                 // Controllo se parola è nel dizionario
                 else if (search_Trie(client_message.data, Dizionario) == -1){
                     send_message(client_sock, MSG_ERR, "Parola nel dizionario non trovata");
+                   // pthread_mutex_unlock(&lista_mutex);
                     break;
                     }
                 // Se i controlli hanno esito positivo, allora aggiungo parola alla lista delle parole trovate
                     else{
                         printf("Aggiungo la parola alla lista delle parole trovate \n");
                         pthread_mutex_lock(&lista_mutex);
-                        utente->paroleTrovate = aggiungi_parolaTrovata(listaParoleTrovate, client_message.data); 
+                        utente->paroleTrovate = aggiungi_parolaTrovata(utente->paroleTrovate, client_message.data); 
                         pthread_mutex_unlock(&lista_mutex);
                         // Recupero il punteggio del giocatore attuale
                         int punteggio_corrente = prendi_punteggi(&lista, pthread_self());
@@ -509,10 +513,10 @@ void *thread_func(void *args){
             pthread_mutex_unlock(&pausa_gioco_mutex);
             break;
 
-            case MSG_FINE:      
+            case MSG_FINE:   
+        
             printf("[SERVER] Il client %s ha richiesto la disconnessione.\n", utente->username);
             
-        
            // Cancellazione dell'utente
             pthread_mutex_lock(&lista_mutex);
             printf("[DEBUG] Tentativo di eliminazione del giocatore %s\n", utente->username);
@@ -524,7 +528,8 @@ void *thread_func(void *args){
             pthread_mutex_lock(&clients_mutex);
             deleteClient(clients, pthread_self());
             pthread_mutex_unlock(&clients_mutex);
-            
+        
+
             close(client_sock);                                                         //Chiusura socket
             printf("[Handler] thread terminato\n");
             pthread_exit(NULL);                                                         //Terminazione
@@ -651,6 +656,7 @@ void *scorer() {
             return NULL;
         }
         memset(classifica,0,max_length);                                //Azzera la classifica
+        //classifica = NULL;
     pthread_mutex_unlock(&classifica_mutex);
 
     printf("Scorer in esecuzione\n");
