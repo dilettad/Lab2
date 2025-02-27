@@ -13,21 +13,25 @@
 
 //Inizializza il mutex 
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 void file_log(char* utente, char* testo) {
     pthread_mutex_lock(&log_mutex);
-    FILE* log_file = fopen(FILELOG, "a"); // Apri il file in modalità append
-    
+    FILE* log_file = fopen(FILELOG, "a");
+
     if (log_file == NULL) {
         perror("Errore nell'apertura del file di log");
         pthread_mutex_unlock(&log_mutex);
         return;
     }
-    
-    // Scrivi l'evento nel file di log
-    fprintf(log_file, "[%s]%s\n",utente, testo);
-    fflush(log_file); // Svuota il buffer di output del file
 
-    fclose(log_file); // Chiudi il file
+    // Verifica stringhe valide
+    char* safe_utente = utente ? utente : "UNKNOWN";
+    char* safe_testo = testo ? testo : "Nessun messaggio";
+
+    if (fprintf(log_file, "[%s] %s\n", safe_utente, safe_testo) < 0) {
+        perror("Errore nella scrittura su file di log");
+    }
+    
+    fflush(log_file);
+    fclose(log_file);
     pthread_mutex_unlock(&log_mutex);
 }
