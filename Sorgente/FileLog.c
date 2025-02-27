@@ -17,12 +17,18 @@ void file_log(char* utente, char* testo) {
     pthread_mutex_lock(&log_mutex);
     FILE* log_file = fopen(FILELOG, "a");
 
+    if (!utente || !testo) {
+        fprintf(stderr, "Errore: parametri nulli in file_log\n");
+        pthread_mutex_unlock(&log_mutex);
+        return;
+    }
+
     if (log_file == NULL) {
         perror("Errore nell'apertura del file di log");
         pthread_mutex_unlock(&log_mutex);
         return;
     }
-
+    
     // Verifica stringhe valide
     char* safe_utente = utente ? utente : "UNKNOWN";
     char* safe_testo = testo ? testo : "Nessun messaggio";
@@ -31,7 +37,9 @@ void file_log(char* utente, char* testo) {
         perror("Errore nella scrittura su file di log");
     }
     
-    fflush(log_file);
+    printf("DEBUG: Entrato in file_log con utente=%s, testo=%s\n", utente, testo);
+
+    //fflush(log_file);
     fclose(log_file);
     pthread_mutex_unlock(&log_mutex);
 }

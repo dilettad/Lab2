@@ -116,39 +116,36 @@ int login_utente(int client_fd, listaGiocatori *lista, char *username){
     return 1;
 }
 
-//Funzione per eliminare il giocatore dalla lista dei giocatori
-void elimina_giocatore(listaGiocatori *lista, char *username){
+void elimina_giocatore(listaGiocatori *lista, char *username) {
+    
+    giocatore *prev = NULL;
+    giocatore *current = lista->head;
 
-    //Inizializzo corrente con la testa della lista e precedente a NULL
-    giocatore *corrente = lista->head;
-    giocatore *precedente = NULL;
+    while (current != NULL) { 
+        if (strcmp(current->username, username) == 0) {                                          //Controllo se corrisponde l'username
+            printf("[DEBUG] Giocatore %s trovato, eliminazione in corso...\n", username);
 
-    //Scansione lista per trovare il giocatore 
-    while (corrente != NULL){
-        if (strcmp(corrente->username, username) == 0){                 //Controllo se corrisponde l'username
-            printf("Trovato giocatore da eliminare: %s\n", username);   
-            fflush(0);
-
-            if (precedente == NULL){                                   
-                lista->head = corrente->next;                           //Punto la testa della lista al successivo
+            if (prev == NULL) {
+                lista->head = current->next;                                                     //Rimuove il primo elemento puntando al successivo
             } else {
-                precedente->next = corrente->next;                      //Punto il precedente al prossimo giocatore
+                prev->next = current->next;
             }
-            if (corrente == lista->tail) {                              //Se giocatore è alla coda
-                lista->tail = precedente;                               //Punto la coda della lista al precedente
-            }
-            free(corrente->username);                                   //Libero la memoria allocata e decremento il contantore delle lista
-            free(corrente);
-            lista->count--;
+            
+            free(current->username);                                                             //Libero la memoria allocata e decremento il contantore delle lista
+            free(current);
+            lista->count--;                                                                      //Decremento il contatore dei giocatori
+            
+            printf("[DEBUG] Giocatore %s eliminato con successo.\n", username);
 
-            printf("Giocatore eliminato con successo: %s\n", username);
-            fflush(0);
             return;
         }
-        precedente = corrente;                                          //Aggiorna il puntatore precedente
-        corrente = corrente->next;                                      //Passa al prossimo giocatore
+        prev = current;
+        current = current->next;
     }
+
+    printf("[DEBUG] Giocatore %s non trovato nella lista.\n", username);
 }
+
 
 //Funzione per eliminare un thread dalla lista dei clients dopo un periodo di inattività
 void elimina_thread(Fifo *clients, pthread_t thread_id, pthread_mutex_t *clients_mutex) {
