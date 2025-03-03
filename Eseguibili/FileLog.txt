@@ -104,3 +104,27 @@
 [dile] Registrazione utente
 [dile] Registrazione utente
 [dile] Registrazione utente
+[pino] Registrazione utente
+[pino] Punteggio finale: 0 punti
+[pino] Punteggio finale: 0 punti
+[pino] Punteggio finale: 0 punti
+[pino] Registrazione utente
+[pino] Registrazione utente
+[pino] Punteggio finale: 0 punti
+[pino] Punteggio finale: 0 punti
+[pino] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti
+[pippo] Registrazione utente
+[pippo] Punteggio finale: 0 punti
+[pino] Punteggio finale: 0 punti
+[pippo] Punteggio finale: 0 punti
+[pino] Punteggio finale: -1 punti
+[pippo] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti
+[pippo] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti
+[pippo] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti
+[pippo] Punteggio finale: -1 punti
+[pino] Punteggio finale: -1 punti

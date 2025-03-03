@@ -851,7 +851,7 @@ void *game(void *arg) {
 
 
 
-void *thread_func_activity() {
+void *thread_func_inactivity() {
     while (1) {
         sleep(10);                                                                    
         time_t now = time(NULL);
@@ -868,10 +868,12 @@ void *thread_func_activity() {
 
                 // Imposta il client come non più giocante
                 current->isPlayer = 0;
-
+                //printf("[DISCONNESSIONE] Il client è inattivo da minuti e verrà espulso dalla partita.\n");
                 // Rimuove il giocatore dalla lista giocatori
                 pthread_mutex_lock(&lista_mutex);
                 giocatore *player = lista.head;
+                //printf("[DISCONNESSIONE] Il client è inattivo da minuti e verrà espulso dalla partita.\n");
+                
                 while (player != NULL) {
                     if (strcmp(player->username, current->username) == 0) {
                         player->active = 0; // Segnala che non è più attivo
@@ -880,7 +882,8 @@ void *thread_func_activity() {
                     player = player->next;
                 }
                 pthread_mutex_unlock(&lista_mutex);
-
+                //printf("[DISCONNESSIONE] Il client è inattivo da minuti e verrà espulso dalla partita.\n");
+                
                 // Elimina il thread del client
                 elimina_thread(clients, current->thread_id, &clients_mutex); 
               
@@ -977,7 +980,7 @@ int main(int argc, char *argv[]){
 
     //Creazione del thread per la disconnessione
     pthread_t activity_thread;
-    SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_activity, NULL), "nella creazione del thread di attività");
+    SYST(retvalue, pthread_create(&activity_thread, NULL, thread_func_inactivity, NULL), "nella creazione del thread di attività");
 
     while (1){   
         //Accetta la connessione
