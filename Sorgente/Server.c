@@ -687,13 +687,7 @@ void *scorer() {
 
     pthread_mutex_lock(&lista_mutex);
     giocatore *current = lista.head;                                    //Inizializzo current alla testa della lista
-        
-        /*//Copia i puntatori ai giocatori nell'array scorerVector.
-        for (int i = 0; i < num_giocatori; i++) {
-            if (current == NULL) break;
-            scorerVector[i] = current;
-            current = current->next;
-        }*/
+      
        // Copia solo i giocatori attivi nell'array per ordinarli
         int count = 0;
         for (int i = 0; i < num_giocatori; i++) {
@@ -735,9 +729,11 @@ void *scorer() {
     pthread_mutex_lock(&lista_mutex);
         current = lista.head;
         while (current != NULL) {
+            if (current->active == 1){
             char log_entry[128];
             snprintf(log_entry, sizeof(log_entry), "Punteggio finale: %d punti", current->punteggio);
             file_log(current->username, log_entry);
+            }
             current = current->next;
         }
     pthread_mutex_unlock(&lista_mutex);
