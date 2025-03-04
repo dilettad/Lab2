@@ -128,3 +128,21 @@
 [pino] Punteggio finale: -1 punti
 [pippo] Punteggio finale: -1 punti
 [pino] Punteggio finale: -1 punti
+[dile] Registrazione utente
+[dile] Punteggio finale: 8 punti
+[dile] Punteggio finale: 0 punti
+[dile] Cancellazione utente
+[diletta] Registrazione utente
+[diletta] Punteggio finale: 0 punti
+[dile] Registrazione utente
+[dile] Punteggio finale: 0 punti
+[dile] Punteggio finale: 0 punti
+[dile] Registrazione utente
+[dile] Punteggio finale: 0 punti
+[dile] Punteggio finale: 0 punti
+[dile] Registrazione utente
+[dile] Punteggio finale: 0 punti
+[dile] Punteggio finale: 0 punti
+[dile] Registrazione utente
+[dile] Punteggio finale: 0 punti
+[dile] Punteggio finale: 0 punti
